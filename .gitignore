@@ -18,6 +18,8 @@ dist-ssr
 .env.*.local
 
 Designs
+sqlscripts
+CLAUDE.md
 
 # Editor directories and files
 .vscode/*
