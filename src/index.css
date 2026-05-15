@@ -1,27 +1,57 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colours — primary navy */
-  --color-brand-50: oklch(96% 0.02 240);
-  --color-brand-100: oklch(90% 0.05 240);
-  --color-brand-200: oklch(82% 0.08 240);
-  --color-brand-300: oklch(72% 0.11 240);
-  --color-brand-400: oklch(62% 0.13 240);
-  --color-brand-500: oklch(52% 0.14 240);
-  --color-brand-600: oklch(43% 0.14 240);
-  --color-brand-700: oklch(28% 0.12 240); /* #1E3A5F — primary */
-  --color-brand-800: oklch(22% 0.10 240);
-  --color-brand-900: oklch(15% 0.08 240);
+  /* Brand — navy blue derived from PWA theme_color #1E3A5F */
+  --color-brand-50:  #EBF1FA;
+  --color-brand-100: #C8D9F0;
+  --color-brand-200: #A0BDE4;
+  --color-brand-300: #6F99D4;
+  --color-brand-400: #4779C2;
+  --color-brand-500: #2B5CA8;
+  --color-brand-600: #1F4A8A;
+  --color-brand-700: #1E3A5F;
+  --color-brand-800: #162D49;
+  --color-brand-900: #0F1F33;
 
-  /* Job status colours */
-  --color-status-pending: oklch(50% 0 0);
-  --color-status-in-progress: oklch(55% 0.2 250);
-  --color-status-completed: oklch(55% 0.18 150);
-  --color-status-cancelled: oklch(55% 0.22 25);
+  /* Surface tokens */
+  --color-surface:   #FFFFFF;
+  --color-surface-2: #F1F5F9;
+  --color-surface-3: #E2E8F0;
+  --color-border:    #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
-  /* Job priority colours */
-  --color-priority-low: oklch(55% 0.18 150);
-  --color-priority-medium: oklch(72% 0.18 85);
-  --color-priority-high: oklch(65% 0.2 45);
-  --color-priority-urgent: oklch(55% 0.22 25);
+  /* Text tokens */
+  --color-text-base:   #0F172A;
+  --color-text-muted:  #64748B;
+  --color-text-subtle: #94A3B8;
+
+  /* Status colours (exact from design theme.jsx) */
+  --color-status-pending-bg:     #FEF3C7;
+  --color-status-pending-text:   #92400E;
+  --color-status-pending-dot:    #D97706;
+  --color-status-progress-bg:    #DBEAFE;
+  --color-status-progress-text:  #1E40AF;
+  --color-status-progress-dot:   #2563EB;
+  --color-status-completed-bg:   #D1FAE5;
+  --color-status-completed-text: #065F46;
+  --color-status-completed-dot:  #059669;
+  --color-status-cancelled-bg:   #F1F5F9;
+  --color-status-cancelled-text: #475569;
+  --color-status-cancelled-dot:  #94A3B8;
+
+  /* Priority colours */
+  --color-priority-low-bg:      #F1F5F9;
+  --color-priority-low-text:    #475569;
+  --color-priority-medium-bg:   #FEF3C7;
+  --color-priority-medium-text: #92400E;
+  --color-priority-high-bg:     #FFE4E6;
+  --color-priority-high-text:   #9F1239;
+  --color-priority-urgent-bg:   #FEE2E2;
+  --color-priority-urgent-text: #991B1B;
+
+  /* Semantic */
+  --color-danger:  #E11D48;
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-info:    #0284C7;
 }
