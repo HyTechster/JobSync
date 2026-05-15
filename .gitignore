@@ -20,6 +20,7 @@ dist-ssr
 Designs
 sqlscripts
 CLAUDE.md
+.claude
 
 # Editor directories and files
 .vscode/*

@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+@theme {
+  /* Brand colours — primary navy */
+  --color-brand-50: oklch(96% 0.02 240);
+  --color-brand-100: oklch(90% 0.05 240);
+  --color-brand-200: oklch(82% 0.08 240);
+  --color-brand-300: oklch(72% 0.11 240);
+  --color-brand-400: oklch(62% 0.13 240);
+  --color-brand-500: oklch(52% 0.14 240);
+  --color-brand-600: oklch(43% 0.14 240);
+  --color-brand-700: oklch(28% 0.12 240); /* #1E3A5F — primary */
+  --color-brand-800: oklch(22% 0.10 240);
+  --color-brand-900: oklch(15% 0.08 240);
+
+  /* Job status colours */
+  --color-status-pending: oklch(50% 0 0);
+  --color-status-in-progress: oklch(55% 0.2 250);
+  --color-status-completed: oklch(55% 0.18 150);
+  --color-status-cancelled: oklch(55% 0.22 25);
+
+  /* Job priority colours */
+  --color-priority-low: oklch(55% 0.18 150);
+  --color-priority-medium: oklch(72% 0.18 85);
+  --color-priority-high: oklch(65% 0.2 45);
+  --color-priority-urgent: oklch(55% 0.22 25);
+}
