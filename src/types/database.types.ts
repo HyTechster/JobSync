@@ -390,6 +390,14 @@ export type Database = {
         }
         Returns: string
       }
+      create_organization: {
+        Args: { org_name: string }
+        Returns: Json
+      }
+      is_org_admin_or_manager: {
+        Args: { org_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

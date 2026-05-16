@@ -12,7 +12,16 @@ interface AuthState {
   initAuth: () => () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single()
+  return data ?? null
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   profile: null,
   isLoading: true,
@@ -22,22 +31,49 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearSession: () => set({ session: null, profile: null, isLoading: false }),
 
   initAuth: () => {
+    // Resolve isLoading the instant we know the session — no network call needed.
+    // getSession() reads from the in-memory/localStorage cache synchronously.
+    // We do NOT wait for the profile fetch to unblock routing.
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      // Unblock the loading gate immediately
+      set({ session, isLoading: false })
+
+      // Then load the profile in the background without blocking
+      if (session) {
+        void fetchProfile(session.user.id).then((profile) => {
+          // Only update if the session hasn't changed while we were fetching
+          if (get().session?.user.id === session.user.id) {
+            set({ profile })
+          }
+        })
+      }
+    })
+
+    // Listen for ongoing auth events (sign-in, sign-out, token refresh).
+    // Skip INITIAL_SESSION — the getSession() call above handles that.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!session) {
-          set({ session: null, profile: null, isLoading: false })
-          return
+      (event, session) => {
+        if (event === 'INITIAL_SESSION') return
+        set({ session, isLoading: false })
+
+        if (session) {
+          void fetchProfile(session.user.id).then((profile) => {
+            if (get().session?.user.id === session.user.id) {
+              set({ profile })
+            }
+          })
+        } else {
+          set({ profile: null })
         }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-
-        set({ session, profile: profile ?? null, isLoading: false })
       }
     )
+
     return () => subscription.unsubscribe()
   },
 }))
+
+// Call initAuth at module load so it re-executes on every HMR cycle.
+const unsubAuth = useAuthStore.getState().initAuth()
+if (import.meta.hot) {
+  import.meta.hot.dispose(unsubAuth)
+}
