@@ -7,6 +7,7 @@ const LoginPage         = lazy(() => import('../pages/LoginPage'))
 const AdminDashboard    = lazy(() => import('../pages/admin/AdminDashboard'))
 const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
+const AdminJobSheets    = lazy(() => import('../pages/admin/AdminJobSheets'))
 const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
 const TechnicianJobs    = lazy(() => import('../pages/technician/TechnicianJobs'))
 
@@ -14,15 +15,6 @@ function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-2">
       <span className="w-8 h-8 border-[3px] border-brand-200 border-t-brand-700 rounded-full animate-spin" />
-    </div>
-  )
-}
-
-function AdminPlaceholder({ title }: { title: string }) {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-text-base">{title}</h1>
-      <p className="text-text-muted mt-1 text-sm">This section is being built in an upcoming phase.</p>
     </div>
   )
 }
@@ -51,7 +43,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard',  element: wrap(AdminDashboard) },
       { path: 'jobs',       element: wrap(AdminJobs) },
-      { path: 'job-sheets', element: <AdminPlaceholder title="Job Sheets" /> },
+      { path: 'job-sheets', element: wrap(AdminJobSheets) },
       { path: 'users',      element: wrap(AdminUsers) },
       { path: 'alerts',     element: wrap(AdminAlerts) },
     ],
