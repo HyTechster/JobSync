@@ -32,6 +32,23 @@ export function useCreateAlert() {
   })
 }
 
+export function useMarkAlertRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('alert_recipients')
+        .update({ read_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['my-alerts'] })
+      void qc.invalidateQueries({ queryKey: ['unread-alert-counts'] })
+    },
+  })
+}
+
 export function useDeleteAlert() {
   const qc = useQueryClient()
   return useMutation({

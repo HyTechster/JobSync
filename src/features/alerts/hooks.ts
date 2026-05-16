@@ -17,6 +17,35 @@ export type AlertWithDetail = {
   alert_recipients: AlertRecipient[]
 }
 
+export type MyAlertRow = {
+  id: string
+  alert_id: string
+  read_at: string | null
+  created_at: string
+  alerts: {
+    title: string
+    message: string
+    created_at: string
+    profiles: { full_name: string } | null
+  } | null
+}
+
+export function useMyAlerts() {
+  return useQuery<MyAlertRow[]>({
+    queryKey: ['my-alerts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('alert_recipients')
+        .select(
+          '*, alerts:alert_id(title, message, created_at, profiles:created_by(full_name))'
+        )
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return (data ?? []) as MyAlertRow[]
+    },
+  })
+}
+
 export function useUnreadAlertCount() {
   return useQuery<number>({
     queryKey: ['unread-alert-counts'],

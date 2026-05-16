@@ -14,15 +14,8 @@ const TechnicianJobs       = lazy(() => import('../pages/technician/TechnicianJo
 const TechnicianHistory    = lazy(() => import('../pages/technician/TechnicianHistory'))
 const JobDetailPage        = lazy(() => import('../pages/technician/JobDetailPage'))
 const SubmitJobSheetPage   = lazy(() => import('../pages/technician/SubmitJobSheetPage'))
-
-function TechPlaceholder({ title }: { title: string }) {
-  return (
-    <div className="px-4 pt-6">
-      <h1 className="text-[22px] font-bold text-text-base">{title}</h1>
-      <p className="text-text-muted mt-1.5 text-sm">This section is coming in an upcoming phase.</p>
-    </div>
-  )
-}
+const TechnicianAlertsPage = lazy(() => import('../pages/technician/TechnicianAlertsPage'))
+const TechnicianProfilePage = lazy(() => import('../pages/technician/TechnicianProfilePage'))
 
 function PageLoader() {
   return (
@@ -71,8 +64,8 @@ export const router = createBrowserRouter([
       { path: 'jobs/:jobId',        element: wrap(JobDetailPage) },
       { path: 'jobs/:jobId/submit', element: wrap(SubmitJobSheetPage) },
       { path: 'history',            element: wrap(TechnicianHistory) },
-      { path: 'alerts',    element: <TechPlaceholder title="Alerts" /> },
-      { path: 'profile',   element: <TechPlaceholder title="Profile" /> },
+      { path: 'alerts',    element: wrap(TechnicianAlertsPage) },
+      { path: 'profile',   element: wrap(TechnicianProfilePage) },
     ],
   },
 ])
