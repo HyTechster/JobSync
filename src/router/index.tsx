@@ -5,6 +5,7 @@ import { TechnicianRoutes } from './TechnicianRoutes'
 
 const LoginPage         = lazy(() => import('../pages/LoginPage'))
 const AdminDashboard    = lazy(() => import('../pages/admin/AdminDashboard'))
+const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const TechnicianJobs    = lazy(() => import('../pages/technician/TechnicianJobs'))
 
 function PageLoader() {
@@ -47,7 +48,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard',  element: wrap(AdminDashboard) },
-      { path: 'jobs',       element: <AdminPlaceholder title="Jobs" /> },
+      { path: 'jobs',       element: wrap(AdminJobs) },
       { path: 'job-sheets', element: <AdminPlaceholder title="Job Sheets" /> },
       { path: 'users',      element: <AdminPlaceholder title="Users" /> },
       { path: 'alerts',     element: <AdminPlaceholder title="Alerts" /> },

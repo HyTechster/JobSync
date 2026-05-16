@@ -1,7 +1,15 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import type { JobOrder } from '../../types'
+import type { JobOrder, JobStatus, JobPriority, Profile } from '../../types'
+
+export interface JobFilters {
+  status?: JobStatus | 'all'
+  priority?: JobPriority
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+}
 
 interface DashboardStats {
   total: number
@@ -58,6 +66,49 @@ export function useRecentJobs() {
 
       if (error) throw error
       return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
+export function useJobs(filters?: JobFilters) {
+  return useQuery<RecentJobRow[]>({
+    queryKey: ['jobs', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('job_orders')
+        .select(
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+        )
+        .order('created_at', { ascending: false })
+
+      if (filters?.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status)
+      }
+      if (filters?.priority) {
+        query = query.eq('priority', filters.priority)
+      }
+      if (filters?.dateFrom) query = query.gte('scheduled_date', filters.dateFrom)
+      if (filters?.dateTo) query = query.lte('scheduled_date', filters.dateTo)
+
+      const { data, error } = await query
+      if (error) throw error
+      return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
+export function useTechnicians() {
+  return useQuery<Profile[]>({
+    queryKey: ['technicians'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'technician')
+        .eq('is_active', true)
+        .order('full_name')
+      if (error) throw error
+      return data ?? []
     },
   })
 }
