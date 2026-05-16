@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom'
 import { queryClient } from './lib/queryClient'
 import { router } from './router'
 import { useAuthStore } from './store/authStore'
+import { OrganizationProvider } from './context/OrganizationContext'
 
 function App() {
   useEffect(() => {
@@ -12,7 +13,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <OrganizationProvider>
+        <RouterProvider router={router} />
+      </OrganizationProvider>
     </QueryClientProvider>
   )
 }

@@ -1,8 +1,10 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
+import type { Profile } from '../../types'
 
 export const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -11,12 +13,29 @@ export const loginSchema = z.object({
 
 export type LoginFormData = z.infer<typeof loginSchema>
 
+export const signUpSchema = z
+  .object({
+    fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+    email: z.string().email('Enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+export type SignUpFormData = z.infer<typeof signUpSchema>
+
+type SignUpResult =
+  | { needsEmailConfirmation: true }
+  | { needsEmailConfirmation: false; session: Session; profile: Profile }
+
 export function useAuth() {
   const session = useAuthStore((s) => s.session)
   const profile = useAuthStore((s) => s.profile)
-  const role = useAuthStore((s) => s.role)
   const isLoading = useAuthStore((s) => s.isLoading)
-  return { session, profile, role, isLoading }
+  return { session, profile, isLoading }
 }
 
 export function useLogin() {
@@ -36,7 +55,6 @@ export function useLogin() {
         .select('*')
         .eq('id', authData.user.id)
         .single()
-
       if (profileError) throw profileError
 
       if (!profile.is_active) {
@@ -44,12 +62,65 @@ export function useLogin() {
         throw new Error('Your account has been deactivated. Contact your administrator.')
       }
 
-      return { session: authData.session, profile }
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id, role')
+        .eq('user_id', authData.user.id)
+        .order('joined_at', { ascending: true })
+
+      return { session: authData.session, profile, memberships: memberships ?? [] }
     },
 
-    onSuccess: ({ session, profile }) => {
+    onSuccess: ({ session, profile, memberships }) => {
       setSession(session, profile)
-      navigate(profile.role === 'admin' ? '/admin/dashboard' : '/technician/jobs')
+
+      if (memberships.length === 0) {
+        navigate('/dashboard/welcome')
+      } else if (memberships.length === 1) {
+        const m = memberships[0]
+        navigate(m.role === 'technician' ? '/technician/jobs' : '/admin/dashboard')
+      } else {
+        navigate('/dashboard/select-organization')
+      }
+    },
+  })
+}
+
+export function useSignUp() {
+  const { setSession } = useAuthStore()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: async ({
+      fullName,
+      email,
+      password,
+    }: SignUpFormData): Promise<SignUpResult> => {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName } },
+      })
+      if (authError) throw authError
+
+      if (!authData.session || !authData.user) {
+        return { needsEmailConfirmation: true }
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single()
+      if (profileError) throw profileError
+
+      return { needsEmailConfirmation: false, session: authData.session, profile }
+    },
+
+    onSuccess: (result) => {
+      if (result.needsEmailConfirmation) return
+      setSession(result.session, result.profile)
+      navigate('/dashboard/welcome')
     },
   })
 }

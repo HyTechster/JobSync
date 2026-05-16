@@ -1,9 +1,7 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from 'react-router-dom'
 import { loginSchema, type LoginFormData, useLogin } from './hooks'
-
-type RoleTab = 'admin' | 'technician'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -19,7 +17,6 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function LoginForm() {
-  const [activeRole, setActiveRole] = useState<RoleTab>('admin')
   const login = useLogin()
 
   const {
@@ -29,11 +26,6 @@ export function LoginForm() {
   } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) })
 
   const onSubmit = (data: LoginFormData) => login.mutate(data)
-
-  const ROLE_TABS: { id: RoleTab; label: string; sub: string }[] = [
-    { id: 'admin', label: 'Administrator', sub: 'Office' },
-    { id: 'technician', label: 'Technician', sub: 'Field' },
-  ]
 
   return (
     <div className="flex items-center justify-center bg-white min-h-screen md:min-h-0 p-8 md:p-12">
@@ -50,28 +42,6 @@ export function LoginForm() {
 
         <h2 className="text-2xl font-bold text-text-base tracking-tight">Welcome back</h2>
         <p className="text-sm text-text-muted mt-1.5 mb-7">Sign in to continue to your workspace</p>
-
-        {/* Role tabs */}
-        <div className="grid grid-cols-2 gap-1 p-1 bg-surface-2 rounded-xl mb-6">
-          {ROLE_TABS.map((tab) => {
-            const active = activeRole === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveRole(tab.id)}
-                className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-lg text-left transition-all duration-100 ${
-                  active
-                    ? 'bg-white text-text-base shadow-sm ring-1 ring-border'
-                    : 'text-text-muted hover:text-text-base'
-                }`}
-              >
-                <span className="text-sm font-semibold leading-none">{tab.label}</span>
-                <span className="text-xs text-text-subtle font-medium">{tab.sub}</span>
-              </button>
-            )
-          })}
-        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
           {/* Email */}
@@ -94,14 +64,9 @@ export function LoginForm() {
 
           {/* Password */}
           <div>
-            <div className="flex justify-between items-baseline mb-1.5">
-              <label htmlFor="password" className="text-xs font-semibold text-text-base">
-                Password
-              </label>
-              <button type="button" className="text-xs font-semibold text-brand-700 hover:text-brand-600">
-                Forgot?
-              </button>
-            </div>
+            <label htmlFor="password" className="text-xs font-semibold text-text-base block mb-1.5">
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -132,7 +97,7 @@ export function LoginForm() {
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                Sign in to {activeRole === 'admin' ? 'office dashboard' : 'field app'}
+                Sign in
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 12h14M13 5l7 7-7 7" />
                 </svg>
@@ -144,7 +109,9 @@ export function LoginForm() {
         {/* Footer */}
         <p className="text-sm text-text-muted text-center mt-6">
           New to JobSync?{' '}
-          <span className="text-brand-700 font-semibold">Contact your administrator</span>
+          <Link to="/signup" className="text-brand-700 font-semibold hover:text-brand-600">
+            Create your company
+          </Link>
         </p>
       </div>
     </div>

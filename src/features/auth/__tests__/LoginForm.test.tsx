@@ -37,10 +37,9 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
   })
 
-  it('renders role tab buttons', () => {
+  it('renders sign-up link', () => {
     renderLoginForm()
-    expect(screen.getByRole('button', { name: /administrator/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /technician/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /create your company/i })).toBeInTheDocument()
   })
 
   it('shows email validation error when submitting empty form', async () => {

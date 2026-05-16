@@ -5,6 +5,10 @@ import { AdminRoutes } from './AdminRoutes'
 import { TechnicianRoutes } from './TechnicianRoutes'
 
 const LoginPage         = lazy(() => import('../pages/LoginPage'))
+const SignUpPage        = lazy(() => import('../pages/SignUpPage'))
+const WelcomePage              = lazy(() => import('../pages/dashboard/WelcomePage'))
+const CreateOrganizationPage   = lazy(() => import('../pages/dashboard/CreateOrganizationPage'))
+const SelectOrganizationPage   = lazy(() => import('../pages/dashboard/SelectOrganizationPage'))
 const AdminDashboard    = lazy(() => import('../pages/admin/AdminDashboard'))
 const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
@@ -42,6 +46,19 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Suspense fallback={<PageLoader />}><LoginPage /></Suspense>,
+  },
+  {
+    path: '/signup',
+    element: <Suspense fallback={<PageLoader />}><SignUpPage /></Suspense>,
+  },
+  {
+    path: '/dashboard',
+    children: [
+      { index: true, element: <Navigate to="welcome" replace /> },
+      { path: 'welcome',              element: wrap(WelcomePage) },
+      { path: 'create-organization',  element: wrap(CreateOrganizationPage) },
+      { path: 'select-organization',  element: wrap(SelectOrganizationPage) },
+    ],
   },
   {
     path: '/admin',

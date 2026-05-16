@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Icons } from '../ui/Icons'
 import { useAuthStore } from '../../store/authStore'
 import { useLogout } from '../../features/auth/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
@@ -15,6 +17,16 @@ export function AdminSidebar() {
   const profile = useAuthStore((s) => s.profile)
   const logout = useLogout()
   const navigate = useNavigate()
+  const { activeOrg, memberships, setActiveOrganization } = useOrganization()
+  const [showOrgMenu, setShowOrgMenu] = useState(false)
+
+  const otherOrgs = memberships.filter((m) => m.organization_id !== activeOrg?.id)
+
+  function switchOrg(orgId: string, role: string) {
+    setActiveOrganization(orgId)
+    setShowOrgMenu(false)
+    navigate(role === 'technician' ? '/technician/jobs' : '/admin/dashboard', { replace: true })
+  }
 
   return (
     <aside className="sticky top-0 h-screen flex flex-col bg-white border-r border-border overflow-y-auto">
@@ -25,6 +37,56 @@ export function AdminSidebar() {
         <span className="ml-auto text-[9.5px] font-bold tracking-widest px-1.5 py-0.5 rounded bg-brand-100 text-brand-700">
           OFFICE
         </span>
+      </div>
+
+      {/* Organization switcher */}
+      <div className="px-3.5 mb-3 relative">
+        <button
+          type="button"
+          onClick={() => setShowOrgMenu((v) => !v)}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors text-left"
+        >
+          <div className="w-7 h-7 rounded-md bg-brand-700 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+            {(activeOrg?.name ?? 'O').slice(0, 2).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-text-base truncate leading-none">
+              {activeOrg?.name ?? 'Organization'}
+            </div>
+            {memberships.length > 1 && (
+              <div className="text-[10px] text-text-muted mt-0.5">Switch organization</div>
+            )}
+          </div>
+          {memberships.length > 1 && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`flex-shrink-0 transition-transform ${showOrgMenu ? 'rotate-180' : ''}`}>
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          )}
+        </button>
+
+        {showOrgMenu && otherOrgs.length > 0 && (
+          <div className="absolute left-3.5 right-3.5 top-full mt-1 bg-white border border-border rounded-xl shadow-lg z-50 overflow-hidden">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Switch to</p>
+            </div>
+            {otherOrgs.map((m) => (
+              <button
+                key={m.organization_id}
+                type="button"
+                onClick={() => switchOrg(m.organization_id, m.role)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface-2 transition-colors text-left"
+              >
+                <div className="w-7 h-7 rounded-md bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+                  {m.organizations.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-text-base truncate">{m.organizations.name}</div>
+                  <div className="text-[10px] text-text-muted capitalize">{m.role}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* New job button */}

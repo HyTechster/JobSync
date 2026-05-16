@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LoginBrandPanel } from '../features/auth/LoginBrandPanel'
-import { LoginForm } from '../features/auth/LoginForm'
+import { SignUpForm } from '../features/auth/SignUpForm'
 import { useAuth } from '../features/auth/hooks'
 import { useOrganization } from '../context/OrganizationContext'
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const { session, isLoading: isAuthLoading } = useAuth()
   const { memberships, userRole, isLoading: isOrgLoading } = useOrganization()
   const navigate = useNavigate()
@@ -33,7 +33,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen md:grid md:grid-cols-[1.05fr_1fr]">
       <LoginBrandPanel />
-      <LoginForm />
+      <SignUpForm />
     </main>
   )
 }

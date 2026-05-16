@@ -4,6 +4,7 @@ import { Icons } from '../../components/ui/Icons'
 import { UsersTable } from '../../features/users/UsersTable'
 import { CreateUserModal } from '../../features/users/CreateUserModal'
 import { EditUserModal } from '../../features/users/EditUserModal'
+import { AddToCompanyModal } from '../../features/users/AddToCompanyModal'
 import { useUsers, type UserWithAlertCount } from '../../features/users/hooks'
 
 type RoleFilter = 'all' | 'admin' | 'technician'
@@ -18,6 +19,7 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showAddToCompany, setShowAddToCompany] = useState(false)
   const [editUser, setEditUser] = useState<UserWithAlertCount | null>(null)
 
   const { data: allUsers = [], isLoading, isError, error } = useUsers()
@@ -44,13 +46,22 @@ export default function AdminUsers() {
         title="Users"
         subtitle="Manage staff accounts and access"
         right={
-          <button
-            onClick={() => setShowCreate(true)}
-            className="h-[38px] px-4 rounded-lg bg-brand-700 text-white text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-2"
-          >
-            <Icons.plus size={15} color="white" />
-            Add user
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddToCompany(true)}
+              className="h-[38px] px-4 rounded-lg border border-slate-200 bg-white text-text-base text-[14px] font-semibold hover:bg-surface-2 transition-colors inline-flex items-center gap-2"
+            >
+              <Icons.plus size={15} color="currentColor" />
+              Add by email
+            </button>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="h-[38px] px-4 rounded-lg bg-brand-700 text-white text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-2"
+            >
+              <Icons.plus size={15} color="white" />
+              Create user
+            </button>
+          </div>
         }
       >
         <div className="flex items-center gap-2 mt-4 flex-wrap">
@@ -118,6 +129,7 @@ export default function AdminUsers() {
 
       <CreateUserModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
       <EditUserModal user={editUser} onClose={() => setEditUser(null)} />
+      <AddToCompanyModal isOpen={showAddToCompany} onClose={() => setShowAddToCompany(false)} />
     </>
   )
 }

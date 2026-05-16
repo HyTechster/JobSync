@@ -1,9 +1,14 @@
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useOrganization } from '../context/OrganizationContext'
 import { AdminShell } from '../components/layout/AdminShell'
 
 export function AdminRoutes() {
-  const { session, role, isLoading } = useAuthStore()
+  const session = useAuthStore((s) => s.session)
+  const isAuthLoading = useAuthStore((s) => s.isLoading)
+  const { userRole, memberships, isLoading: isOrgLoading } = useOrganization()
+
+  const isLoading = isAuthLoading || isOrgLoading
 
   if (isLoading) {
     return (
@@ -14,7 +19,9 @@ export function AdminRoutes() {
   }
 
   if (!session) return <Navigate to="/login" replace />
-  if (role !== 'admin') return <Navigate to="/technician/jobs" replace />
+  if (memberships.length === 0) return <Navigate to="/dashboard/welcome" replace />
+  if (userRole === 'technician') return <Navigate to="/technician/jobs" replace />
+  if (!userRole) return <Navigate to="/dashboard/select-organization" replace />
 
   return <AdminShell />
 }

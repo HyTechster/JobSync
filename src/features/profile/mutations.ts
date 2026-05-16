@@ -19,8 +19,8 @@ export function useUpdateProfile() {
       return data as Profile
     },
     onSuccess: (updated) => {
-      const { session } = useAuthStore.getState()
-      if (session) useAuthStore.getState().setSession(session, updated)
+      const { session, setSession } = useAuthStore.getState()
+      if (session) setSession(session, updated)
       void qc.invalidateQueries({ queryKey: ['users'] })
     },
   })

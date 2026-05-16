@@ -7,16 +7,21 @@ export type JobSheet = Database['public']['Tables']['job_sheets']['Row']
 export type Attachment = Database['public']['Tables']['attachments']['Row']
 export type Alert = Database['public']['Tables']['alerts']['Row']
 export type AlertRecipient = Database['public']['Tables']['alert_recipients']['Row']
+export type Organization = Database['public']['Tables']['organizations']['Row']
+export type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
 
 export type JobStatus = JobOrder['status']
 export type JobPriority = JobOrder['priority']
 export type UserRole = Profile['role']
+export type OrgRole = OrganizationMember['role']
 
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 export type JobOrderInsert = Database['public']['Tables']['job_orders']['Insert']
 export type JobOrderUpdate = Database['public']['Tables']['job_orders']['Update']
 export type JobSheetInsert = Database['public']['Tables']['job_sheets']['Insert']
 export type AlertInsert = Database['public']['Tables']['alerts']['Insert']
+export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
+export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert']
 
 export const JOB_STATUS = {
   PENDING: 'pending',
@@ -34,5 +39,11 @@ export const JOB_PRIORITY = {
 
 export const USER_ROLE = {
   ADMIN: 'admin',
+  TECHNICIAN: 'technician',
+} as const
+
+export const ORG_ROLE = {
+  ADMIN: 'admin',
+  MANAGER: 'manager',
   TECHNICIAN: 'technician',
 } as const

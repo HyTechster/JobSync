@@ -297,6 +297,84 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organizations_owner_id_fkey'
+            columns: ['owner_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          added_by: string | null
+          id: string
+          joined_at: string
+          organization_id: string
+          role: 'admin' | 'manager' | 'technician'
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          id?: string
+          joined_at?: string
+          organization_id: string
+          role: 'admin' | 'manager' | 'technician'
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          role?: 'admin' | 'manager' | 'technician'
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_members_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'organization_members_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'organization_members_added_by_fkey'
+            columns: ['added_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
