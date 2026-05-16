@@ -7,6 +7,7 @@ const LoginPage         = lazy(() => import('../pages/LoginPage'))
 const AdminDashboard    = lazy(() => import('../pages/admin/AdminDashboard'))
 const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
+const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
 const TechnicianJobs    = lazy(() => import('../pages/technician/TechnicianJobs'))
 
 function PageLoader() {
@@ -52,7 +53,7 @@ export const router = createBrowserRouter([
       { path: 'jobs',       element: wrap(AdminJobs) },
       { path: 'job-sheets', element: <AdminPlaceholder title="Job Sheets" /> },
       { path: 'users',      element: wrap(AdminUsers) },
-      { path: 'alerts',     element: <AdminPlaceholder title="Alerts" /> },
+      { path: 'alerts',     element: wrap(AdminAlerts) },
     ],
   },
   {
