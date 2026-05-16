@@ -70,7 +70,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         activeOrg: activeMembership?.organizations ?? null,
         activeOrgId: activeMembership?.organization_id ?? null,
         userRole: activeMembership?.role ?? null,
-        isLoading: isAuthLoading || isMembershipsLoading,
+        isLoading: isAuthLoading || (!!session && isMembershipsLoading),
         setActiveOrganization,
         refreshMemberships: () => { void refetch() },
       }}
