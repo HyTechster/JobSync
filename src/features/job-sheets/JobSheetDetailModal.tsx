@@ -2,6 +2,7 @@ import { Modal } from '../../components/ui/Modal'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { supabase } from '../../lib/supabase'
+import { formatDuration } from '../../utils/formatters'
 import type { JobSheetWithDetail } from './hooks'
 
 interface JobSheetDetailModalProps {
@@ -28,13 +29,6 @@ function formatDate(iso: string): string {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h} hr ${m} min` : `${h} hr`
 }
 
 function getPublicUrl(storagePath: string): string {

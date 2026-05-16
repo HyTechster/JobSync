@@ -1,5 +1,6 @@
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { formatDuration } from '../../utils/formatters'
 import type { JobSheetWithDetail } from './hooks'
 
 interface JobSheetsTableProps {
@@ -16,13 +17,6 @@ function formatSubmitted(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h} hr ${m} min` : `${h} hr`
 }
 
 function SkeletonRow() {

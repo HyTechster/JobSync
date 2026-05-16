@@ -4,6 +4,7 @@ import { offlineDb, type OfflineJobSheet } from '../../offline/db'
 import { syncPendingJobSheets } from '../../offline/sync'
 import { useJobSheets } from '../../features/job-sheets/hooks'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { formatDuration } from '../../utils/formatters'
 import { Icons } from '../../components/ui/Icons'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
 
@@ -46,12 +47,6 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
       )}
     </div>
   )
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60), m = minutes % 60
-  return m > 0 ? `${h} hr ${m} min` : `${h} hr`
 }
 
 function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
