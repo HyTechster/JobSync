@@ -8,18 +8,31 @@ export interface OfflineJobSheet {
   workPerformed: string
   timeSpentMinutes: number
   notes?: string
-  attachmentPaths?: string[]
   createdAt: string
   syncStatus: 'pending' | 'syncing' | 'synced' | 'failed'
 }
 
+export interface OfflineAttachment {
+  id?: number
+  sheetLocalId: string
+  fileName: string
+  mimeType: string
+  size: number
+  data: Blob
+}
+
 class JobSyncOfflineDB extends Dexie {
   jobSheets!: Table<OfflineJobSheet>
+  attachments!: Table<OfflineAttachment>
 
   constructor() {
     super('jobsync-offline')
     this.version(1).stores({
       jobSheets: '++id, localId, jobOrderId, syncStatus',
+    })
+    this.version(2).stores({
+      jobSheets: '++id, localId, jobOrderId, syncStatus',
+      attachments: '++id, sheetLocalId',
     })
   }
 }

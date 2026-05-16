@@ -5,6 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useJob } from '../../features/jobs/hooks'
 import { useSubmitJobSheet } from '../../features/job-sheets/mutations'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { useAuthStore } from '../../store/authStore'
+import { offlineDb } from '../../offline/db'
 import { Icons } from '../../components/ui/Icons'
 
 const formSchema = z.object({
@@ -27,14 +30,39 @@ export default function SubmitJobSheetPage() {
   const navigate = useNavigate()
   const { data: job } = useJob(jobId ?? '')
   const { mutate, isPending, error } = useSubmitJobSheet()
+  const isOnline = useOnlineStatus()
 
   const [photos, setPhotos] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
+  const [offlineError, setOfflineError] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { hours: 0, minutes: 0 },
   })
+
+  async function saveOffline(data: FormData, timeSpentMinutes: number) {
+    try {
+      const technicianId = useAuthStore.getState().profile?.id
+      if (!technicianId) throw new Error('Not authenticated')
+      const localId = crypto.randomUUID()
+      await offlineDb.jobSheets.add({
+        localId, jobOrderId: jobId!, technicianId,
+        workPerformed: data.work_performed, timeSpentMinutes,
+        notes: data.notes, createdAt: new Date().toISOString(),
+        syncStatus: 'pending',
+      })
+      for (const photo of photos) {
+        await offlineDb.attachments.add({
+          sheetLocalId: localId, fileName: photo.name,
+          mimeType: photo.type, size: photo.size, data: photo,
+        })
+      }
+      navigate('/technician/history')
+    } catch (err) {
+      setOfflineError(err instanceof Error ? err.message : 'Failed to save offline')
+    }
+  }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return
@@ -53,6 +81,10 @@ export default function SubmitJobSheetPage() {
 
   function onSubmit(data: FormData) {
     const time_spent_minutes = data.hours * 60 + data.minutes
+    if (!isOnline) {
+      void saveOffline(data, time_spent_minutes)
+      return
+    }
     mutate(
       { jobOrderId: jobId!, form: { work_performed: data.work_performed, time_spent_minutes, notes: data.notes }, photos },
       { onSuccess: () => navigate('/technician/history') }
@@ -139,7 +171,14 @@ export default function SubmitJobSheetPage() {
           )}
         </div>
 
-        {error && <p className="text-[12.5px] text-danger">{(error as Error).message}</p>}
+        {(error || offlineError) && (
+          <p className="text-[12.5px] text-danger">{error ? (error as Error).message : offlineError}</p>
+        )}
+        {!isOnline && (
+          <p className="text-[12px] text-[#D97706] bg-[#FEF3C7] rounded-lg px-3 py-2">
+            You're offline. This submission will be saved and synced automatically when you reconnect.
+          </p>
+        )}
 
         <button
           type="submit"

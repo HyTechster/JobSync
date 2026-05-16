@@ -11,6 +11,7 @@ const AdminJobSheets    = lazy(() => import('../pages/admin/AdminJobSheets'))
 const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
 const TechnicianDashboard  = lazy(() => import('../pages/technician/TechnicianDashboard'))
 const TechnicianJobs       = lazy(() => import('../pages/technician/TechnicianJobs'))
+const TechnicianHistory    = lazy(() => import('../pages/technician/TechnicianHistory'))
 const JobDetailPage        = lazy(() => import('../pages/technician/JobDetailPage'))
 const SubmitJobSheetPage   = lazy(() => import('../pages/technician/SubmitJobSheetPage'))
 
@@ -69,7 +70,7 @@ export const router = createBrowserRouter([
       { path: 'jobs',               element: wrap(TechnicianJobs) },
       { path: 'jobs/:jobId',        element: wrap(JobDetailPage) },
       { path: 'jobs/:jobId/submit', element: wrap(SubmitJobSheetPage) },
-      { path: 'history',            element: <TechPlaceholder title="Job History" /> },
+      { path: 'history',            element: wrap(TechnicianHistory) },
       { path: 'alerts',    element: <TechPlaceholder title="Alerts" /> },
       { path: 'profile',   element: <TechPlaceholder title="Profile" /> },
     ],
