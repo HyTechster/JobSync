@@ -113,6 +113,22 @@ export function useTechnicians() {
   })
 }
 
+export function useMyJobs() {
+  return useQuery<RecentJobRow[]>({
+    queryKey: ['my-jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+        )
+        .order('updated_at', { ascending: false })
+      if (error) throw error
+      return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
 export function useRealtimeDashboard() {
   const queryClient = useQueryClient()
 

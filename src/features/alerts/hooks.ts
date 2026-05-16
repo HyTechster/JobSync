@@ -17,6 +17,20 @@ export type AlertWithDetail = {
   alert_recipients: AlertRecipient[]
 }
 
+export function useUnreadAlertCount() {
+  return useQuery<number>({
+    queryKey: ['unread-alert-counts'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('alert_recipients')
+        .select('id', { count: 'exact', head: true })
+        .is('read_at', null)
+      if (error) throw error
+      return count ?? 0
+    },
+  })
+}
+
 export function useAlerts() {
   return useQuery<AlertWithDetail[]>({
     queryKey: ['alerts'],

@@ -9,7 +9,17 @@ const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
 const AdminJobSheets    = lazy(() => import('../pages/admin/AdminJobSheets'))
 const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
-const TechnicianJobs    = lazy(() => import('../pages/technician/TechnicianJobs'))
+const TechnicianDashboard = lazy(() => import('../pages/technician/TechnicianDashboard'))
+const TechnicianJobs      = lazy(() => import('../pages/technician/TechnicianJobs'))
+
+function TechPlaceholder({ title }: { title: string }) {
+  return (
+    <div className="px-4 pt-6">
+      <h1 className="text-[22px] font-bold text-text-base">{title}</h1>
+      <p className="text-text-muted mt-1.5 text-sm">This section is coming in an upcoming phase.</p>
+    </div>
+  )
+}
 
 function PageLoader() {
   return (
@@ -52,8 +62,12 @@ export const router = createBrowserRouter([
     path: '/technician',
     element: <TechnicianRoutes />,
     children: [
-      { index: true, element: <Navigate to="jobs" replace /> },
-      { path: 'jobs', element: wrap(TechnicianJobs) },
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: 'dashboard', element: wrap(TechnicianDashboard) },
+      { path: 'jobs',      element: wrap(TechnicianJobs) },
+      { path: 'history',   element: <TechPlaceholder title="Job History" /> },
+      { path: 'alerts',    element: <TechPlaceholder title="Alerts" /> },
+      { path: 'profile',   element: <TechPlaceholder title="Profile" /> },
     ],
   },
 ])
