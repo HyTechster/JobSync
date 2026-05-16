@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import type { JobOrderFormData } from './jobSchema'
+import type { JobStatus } from '../../types'
 
 function invalidateDashboard(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: ['jobs'] })
@@ -59,6 +60,21 @@ export function useUpdateJob() {
       }
     },
     onSuccess: () => invalidateDashboard(qc),
+  })
+}
+
+export function useUpdateJobStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
+      const { error } = await supabase.from('job_orders').update({ status }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_data, { id }) => {
+      void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['job', id] })
+      invalidateDashboard(qc)
+    },
   })
 }
 

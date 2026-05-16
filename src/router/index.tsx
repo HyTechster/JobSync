@@ -9,8 +9,10 @@ const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
 const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
 const AdminJobSheets    = lazy(() => import('../pages/admin/AdminJobSheets'))
 const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
-const TechnicianDashboard = lazy(() => import('../pages/technician/TechnicianDashboard'))
-const TechnicianJobs      = lazy(() => import('../pages/technician/TechnicianJobs'))
+const TechnicianDashboard  = lazy(() => import('../pages/technician/TechnicianDashboard'))
+const TechnicianJobs       = lazy(() => import('../pages/technician/TechnicianJobs'))
+const JobDetailPage        = lazy(() => import('../pages/technician/JobDetailPage'))
+const SubmitJobSheetPage   = lazy(() => import('../pages/technician/SubmitJobSheetPage'))
 
 function TechPlaceholder({ title }: { title: string }) {
   return (
@@ -64,8 +66,10 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: wrap(TechnicianDashboard) },
-      { path: 'jobs',      element: wrap(TechnicianJobs) },
-      { path: 'history',   element: <TechPlaceholder title="Job History" /> },
+      { path: 'jobs',               element: wrap(TechnicianJobs) },
+      { path: 'jobs/:jobId',        element: wrap(JobDetailPage) },
+      { path: 'jobs/:jobId/submit', element: wrap(SubmitJobSheetPage) },
+      { path: 'history',            element: <TechPlaceholder title="Job History" /> },
       { path: 'alerts',    element: <TechPlaceholder title="Alerts" /> },
       { path: 'profile',   element: <TechPlaceholder title="Profile" /> },
     ],

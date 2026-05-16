@@ -113,6 +113,24 @@ export function useTechnicians() {
   })
 }
 
+export function useJob(id: string) {
+  return useQuery<RecentJobRow | null>({
+    queryKey: ['job', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+        )
+        .eq('id', id)
+        .maybeSingle()
+      if (error) throw error
+      return data as RecentJobRow | null
+    },
+  })
+}
+
 export function useMyJobs() {
   return useQuery<RecentJobRow[]>({
     queryKey: ['my-jobs'],
