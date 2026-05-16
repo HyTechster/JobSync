@@ -12,12 +12,11 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>
 
 export function useAuth() {
-  return useAuthStore((state) => ({
-    session: state.session,
-    profile: state.profile,
-    role: state.role,
-    isLoading: state.isLoading,
-  }))
+  const session = useAuthStore((s) => s.session)
+  const profile = useAuthStore((s) => s.profile)
+  const role = useAuthStore((s) => s.role)
+  const isLoading = useAuthStore((s) => s.isLoading)
+  return { session, profile, role, isLoading }
 }
 
 export function useLogin() {
