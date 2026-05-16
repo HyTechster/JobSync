@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
+import { useAuthStore } from '../../store/authStore'
 import type { JobOrder, JobStatus, JobPriority, Profile } from '../../types'
 
 export interface JobFilters {
@@ -147,24 +148,82 @@ export function useMyJobs() {
   })
 }
 
-export function useRealtimeDashboard() {
-  const queryClient = useQueryClient()
+export function useRealtimeDashboard(): { isLive: boolean } {
+  const qc = useQueryClient()
+  const [isLive, setIsLive] = useState(false)
 
   useEffect(() => {
+    let pollTimer: ReturnType<typeof setInterval> | null = null
+
+    function invalidate() {
+      void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs'] })
+    }
+
+    function startPolling() {
+      if (pollTimer) return
+      pollTimer = setInterval(invalidate, 30_000)
+    }
+
+    function stopPolling() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+    }
+
     const channel = supabase
       .channel('dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'job_orders' }, invalidate)
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsLive(true)
+          stopPolling()
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setIsLive(false)
+          startPolling()
+        }
+      })
+
+    return () => {
+      stopPolling()
+      void supabase.removeChannel(channel)
+    }
+  }, [qc])
+
+  return { isLive }
+}
+
+export function useRealtimeTechnicianJobs() {
+  const qc = useQueryClient()
+  const userId = useAuthStore((s) => s.profile?.id)
+
+  useEffect(() => {
+    if (!userId) return
+
+    function invalidate() {
+      void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+    }
+
+    const channel = supabase
+      .channel('technician-jobs-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'job_orders' },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
-          void queryClient.invalidateQueries({ queryKey: ['recent-jobs'] })
-        }
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_assignments',
+          filter: `technician_id=eq.${userId}`,
+        },
+        invalidate
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'job_orders' },
+        invalidate
       )
       .subscribe()
 
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [queryClient])
+  }, [qc, userId])
 }

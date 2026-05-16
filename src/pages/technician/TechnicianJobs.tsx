@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useMyJobs } from '../../features/jobs/hooks'
+import { useMyJobs, useRealtimeTechnicianJobs } from '../../features/jobs/hooks'
 import { TechnicianJobCard } from '../../features/jobs/TechnicianJobCard'
 import { Icons } from '../../components/ui/Icons'
 import type { RecentJobRow } from '../../features/jobs/hooks'
@@ -44,6 +44,7 @@ function SkeletonCard() {
 }
 
 export default function TechnicianJobsPage() {
+  useRealtimeTechnicianJobs()
   const { data: jobs = [], isLoading, isError } = useMyJobs()
 
   const groups = useMemo(

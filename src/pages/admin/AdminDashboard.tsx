@@ -109,7 +109,7 @@ function RecentJobsTable() {
 export default function AdminDashboard() {
   const profile = useAuthStore((s) => s.profile)
   const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
-  useRealtimeDashboard()
+  const { isLive } = useRealtimeDashboard()
 
   const STAT_CARDS = [
     { label: 'Total Jobs',          value: stats?.total ?? 0,       icon: <Icons.jobs size={16} />,  accent: '#1E3A5F' },
@@ -124,10 +124,17 @@ export default function AdminDashboard() {
         title={`${getGreeting()}, ${profile?.full_name?.split(' ')[0] ?? 'there'}`}
         subtitle="Here's what's happening across your jobs today."
         right={
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success">
-            <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_0_3px_rgba(5,150,105,0.2)]" />
-            Live
-          </span>
+          isLive ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success">
+              <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_0_3px_rgba(5,150,105,0.2)]" />
+              Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-muted">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              Polling
+            </span>
+          )
         }
       />
 
