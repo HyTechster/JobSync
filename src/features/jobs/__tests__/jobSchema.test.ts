@@ -17,8 +17,13 @@ describe('jobOrderSchema', () => {
   })
 
   it('accepts optional fields omitted', () => {
-    const { customer_phone: _cp, scheduled_time: _st, ...rest } = { ...validJob, customer_phone: undefined, scheduled_time: undefined }
-    expect(jobOrderSchema.safeParse(rest).success).toBe(true)
+    const minimal = {
+      title: validJob.title, description: validJob.description,
+      customer_name: validJob.customer_name, location: validJob.location,
+      priority: validJob.priority, scheduled_date: validJob.scheduled_date,
+      technician_ids: validJob.technician_ids,
+    }
+    expect(jobOrderSchema.safeParse(minimal).success).toBe(true)
   })
 
   it('accepts technician_ids as empty array', () => {
