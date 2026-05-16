@@ -302,7 +302,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_staff_account: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_full_name: string
+          p_role: string
+          p_phone?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
