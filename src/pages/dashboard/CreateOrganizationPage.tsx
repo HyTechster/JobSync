@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -60,15 +60,16 @@ export default function CreateOrganizationPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm w-full max-w-md p-10">
-        <Link
-          to="/dashboard/welcome"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-base mb-6 transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Back
-        </Link>
+        </button>
 
         <h1 className="text-xl font-bold text-text-base mb-1">Create your organization</h1>
         <p className="text-sm text-text-muted mb-7 leading-relaxed">

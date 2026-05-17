@@ -22,7 +22,6 @@ export function AdminSidebar() {
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const [showOrgMenu, setShowOrgMenu] = useState(false)
 
-  const otherOrgs = memberships.filter((m) => m.organization_id !== activeOrg?.id)
   const orgMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -81,43 +80,64 @@ export function AdminSidebar() {
             <div className="text-xs font-semibold text-text-base truncate leading-none">
               {activeOrg?.name ?? 'Organization'}
             </div>
-            {memberships.length > 1 && (
-              <div className="text-[10px] text-text-muted mt-0.5">Switch organization</div>
-            )}
+            <div className="text-[10px] text-text-muted mt-0.5">Switch organization</div>
           </div>
-          {memberships.length > 1 && (
-            <svg
-              width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              aria-hidden="true"
-              className={`flex-shrink-0 transition-transform ${showOrgMenu ? 'rotate-180' : ''}`}
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          )}
+          <svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            aria-hidden="true"
+            className={`flex-shrink-0 transition-transform ${showOrgMenu ? 'rotate-180' : ''}`}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </button>
 
-        {showOrgMenu && otherOrgs.length > 0 && (
+        {showOrgMenu && (
           <div className="absolute left-3.5 right-3.5 top-full mt-1 bg-white border border-border rounded-xl shadow-lg z-50 overflow-hidden">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Switch to</p>
+              <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Your organizations</p>
             </div>
-            {otherOrgs.map((m) => (
+
+            {memberships.map((m) => {
+              const isActive = m.organization_id === activeOrg?.id
+              return (
+                <button
+                  key={m.organization_id}
+                  type="button"
+                  onClick={() => !isActive && switchOrg(m.organization_id, m.role)}
+                  disabled={isActive}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface-2 disabled:hover:bg-white transition-colors text-left"
+                >
+                  <div className={`w-7 h-7 rounded-md text-[11px] font-bold flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-brand-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    {m.organizations.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-text-base truncate">{m.organizations.name}</div>
+                    <div className="text-[10px] text-text-muted capitalize">{m.role}</div>
+                  </div>
+                  {isActive && (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+
+            <div className="border-t border-border">
               <button
-                key={m.organization_id}
                 type="button"
-                onClick={() => switchOrg(m.organization_id, m.role)}
+                onClick={() => { setShowOrgMenu(false); flushSync(() => navigate('/dashboard/create-organization')) }}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-surface-2 transition-colors text-left"
               >
-                <div className="w-7 h-7 rounded-md bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center flex-shrink-0">
-                  {m.organizations.name.slice(0, 2).toUpperCase()}
+                <div className="w-7 h-7 rounded-md border border-dashed border-slate-300 flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-text-base truncate">{m.organizations.name}</div>
-                  <div className="text-[10px] text-text-muted capitalize">{m.role}</div>
-                </div>
+                <div className="text-xs font-semibold text-text-muted">New organization</div>
               </button>
-            ))}
+            </div>
           </div>
         )}
       </div>
