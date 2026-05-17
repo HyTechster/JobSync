@@ -44,41 +44,42 @@ export default function AdminAlerts() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-10">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[22px] font-bold text-text-base">Alerts</h1>
-          <p className="text-[13px] text-text-muted mt-0.5">
+          <h1 className="text-[20px] md:text-[22px] font-bold text-text-base">Alerts</h1>
+          <p className="text-[12.5px] md:text-[13px] text-text-muted mt-0.5">
             Send important notices to your field technicians
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="h-[38px] px-4 rounded-lg bg-brand-700 text-white text-sm font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-2"
+          className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-sm font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5 md:gap-2"
         >
-          <Icons.plus size={15} color="white" />
-          New alert
+          <Icons.plus size={14} color="white" />
+          <span className="hidden sm:inline">New alert</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
       {deleteTarget && (
-        <div className="mb-4 flex items-center justify-between gap-3 bg-[#FFF1F2] border border-[#FFD6DB] rounded-xl px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Icons.trash size={15} color="#E11D48" />
-            <p className="text-[13px] text-danger font-medium">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-[#FFF1F2] border border-[#FFD6DB] rounded-xl px-4 py-3">
+          <div className="flex items-start gap-2">
+            <Icons.trash size={15} color="#E11D48" className="mt-0.5 flex-shrink-0" />
+            <p className="text-[13px] text-danger font-medium leading-snug">
               Delete &ldquo;{deleteTarget.title}&rdquo;? This cannot be undone.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:flex-shrink-0">
             <button
               onClick={() => setDeleteTarget(null)}
-              className="h-[32px] px-3 rounded-lg border border-slate-300 text-[12.5px] font-semibold text-text-base hover:bg-surface-2 transition-colors"
+              className="flex-1 sm:flex-none h-[32px] px-3 rounded-lg border border-slate-300 text-[12.5px] font-semibold text-text-base hover:bg-surface-2 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="h-[32px] px-3 rounded-lg bg-danger text-white text-[12.5px] font-semibold hover:bg-red-700 transition-colors"
+              className="flex-1 sm:flex-none h-[32px] px-3 rounded-lg bg-danger text-white text-[12.5px] font-semibold hover:bg-red-700 transition-colors"
             >
               Delete
             </button>

@@ -46,54 +46,54 @@ export default function AdminUsers() {
         title="Users"
         subtitle="Manage staff accounts and access"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button
               onClick={() => setShowAddToCompany(true)}
-              className="h-[38px] px-4 rounded-lg border border-slate-200 bg-white text-text-base text-[14px] font-semibold hover:bg-surface-2 transition-colors inline-flex items-center gap-2"
+              className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg border border-slate-200 bg-white text-text-base text-[13px] md:text-[14px] font-semibold hover:bg-surface-2 transition-colors inline-flex items-center gap-1.5"
             >
-              <Icons.plus size={15} color="currentColor" />
-              Add by email
+              <Icons.plus size={14} color="currentColor" />
+              <span className="hidden sm:inline">Add by email</span>
+              <span className="sm:hidden">Add</span>
             </button>
             <button
               onClick={() => setShowCreate(true)}
-              className="h-[38px] px-4 rounded-lg bg-brand-700 text-white text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-2"
+              className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5"
             >
-              <Icons.plus size={15} color="white" />
-              Create user
+              <Icons.plus size={14} color="white" />
+              <span className="hidden sm:inline">Create user</span>
+              <span className="sm:hidden">Create</span>
             </button>
           </div>
         }
       >
-        <div className="flex items-center gap-2 mt-4 flex-wrap">
-          {ROLE_TABS.map(({ value, label }) => {
-            const count =
-              value === 'all'
-                ? allUsers.length
-                : allUsers.filter((u) => u.role === value).length
-            const active = roleFilter === value
-            return (
-              <button
-                key={value}
-                onClick={() => setRoleFilter(value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-[7px] rounded-lg border text-[13px] font-semibold transition-colors ${
-                  active
-                    ? 'border-brand-700 bg-brand-50 text-brand-700'
-                    : 'border-slate-200 bg-white text-text-base hover:bg-surface-2'
-                }`}
-              >
-                {label}
-                <span
-                  className={`text-[11px] font-semibold ${
-                    active ? 'text-brand-700' : 'text-text-muted'
+        <div className="flex flex-col gap-2 mt-3 md:mt-4 md:flex-row md:flex-wrap md:items-center">
+          <div className="flex flex-wrap gap-2">
+            {ROLE_TABS.map(({ value, label }) => {
+              const count =
+                value === 'all'
+                  ? allUsers.length
+                  : allUsers.filter((u) => u.role === value).length
+              const active = roleFilter === value
+              return (
+                <button
+                  key={value}
+                  onClick={() => setRoleFilter(value)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-[6px] rounded-lg border text-[12.5px] md:text-[13px] font-semibold transition-colors ${
+                    active
+                      ? 'border-brand-700 bg-brand-50 text-brand-700'
+                      : 'border-slate-200 bg-white text-text-base hover:bg-surface-2'
                   }`}
                 >
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+                  {label}
+                  <span className={`text-[11px] font-semibold ${active ? 'text-brand-700' : 'text-text-muted'}`}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
 
-          <div className="ml-auto">
+          <div className="md:ml-auto">
             <div className="relative">
               <Icons.search
                 size={14}
@@ -104,14 +104,14 @@ export default function AdminUsers() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search users…"
-                className="h-[34px] w-[220px] pl-8 pr-3 border border-slate-200 rounded-lg text-[13px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all"
+                className="h-[34px] w-full md:w-[220px] pl-8 pr-3 border border-slate-200 rounded-lg text-[13px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all"
               />
             </div>
           </div>
         </div>
       </AdminTopbar>
 
-      <div className="p-8 pb-12">
+      <div className="p-4 pb-4 md:p-8 md:pb-12">
         {isError ? (
           <div className="text-sm text-danger bg-[#FFE4E6] rounded-lg px-4 py-3">
             Failed to load users: {(error as Error).message}

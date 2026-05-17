@@ -146,7 +146,7 @@ export function AdminSidebar() {
       <div className="px-3.5 mb-4">
         <button
           type="button"
-          onClick={() => handleNav('/admin/jobs')}
+          onClick={() => handleNav('/admin/jobs?create=1')}
           className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg transition-colors"
         >
           <Icons.plus size={15} color="#fff" />
