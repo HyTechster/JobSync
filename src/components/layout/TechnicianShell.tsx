@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { Suspense } from 'react'
+import { TechnicianSidebar } from './TechnicianSidebar'
+import { TechnicianMobileHeader } from './TechnicianMobileHeader'
 import { TechnicianBottomNav } from './TechnicianBottomNav'
 import { OfflineBanner } from '../shared/OfflineBanner'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -20,12 +22,35 @@ export function TechnicianShell() {
   return (
     <div className="min-h-screen bg-surface-2">
       <OfflineBanner />
-      <main className={`pb-[60px] transition-[padding-top] duration-150 ${!isOnline ? 'pt-[42px]' : ''}`}>
-        <Suspense fallback={<PageSpinner />}>
-          <Outlet />
-        </Suspense>
-      </main>
-      <TechnicianBottomNav />
+
+      {/* Mobile-only top header — shifts down when offline banner is visible */}
+      <div className={`md:hidden transition-[padding-top] duration-150 ${!isOnline ? 'pt-[42px]' : ''}`}>
+        <TechnicianMobileHeader />
+      </div>
+
+      {/* Desktop: sidebar + content grid | Mobile: single column */}
+      <div className="md:grid md:grid-cols-[232px_1fr] md:min-h-screen">
+        {/* Sidebar — desktop only */}
+        <div className="hidden md:block">
+          <TechnicianSidebar />
+        </div>
+
+        {/* Main content — offline banner pushes content down on mobile */}
+        <main
+          className={`min-w-0 pb-[60px] md:pb-0 transition-[padding-top] duration-150 ${
+            !isOnline ? 'pt-[42px]' : ''
+          }`}
+        >
+          <Suspense fallback={<PageSpinner />}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
+
+      {/* Mobile-only bottom nav */}
+      <div className="md:hidden">
+        <TechnicianBottomNav />
+      </div>
     </div>
   )
 }
