@@ -5,13 +5,13 @@ import { useUnreadAlertCount } from '../../features/alerts/hooks'
 import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
 
 const LEFT_NAV = [
-  { to: '/technician/jobs',    Icon: Icons.jobs,   label: 'Jobs'    },
-  { to: '/technician/history', Icon: Icons.sheets, label: 'History' },
+  { to: '/technician/jobs',       Icon: Icons.jobs,   label: 'Jobs'       },
+  { to: '/technician/job-sheets', Icon: Icons.sheets, label: 'Job Sheets' },
 ] as const
 
 const RIGHT_NAV = [
-  { to: '/technician/alerts',     Icon: Icons.bell,   label: 'Alerts',     badge: true  },
-  { to: '/technician/job-sheets', Icon: Icons.sheets, label: 'Job Sheets', badge: false },
+  { to: '/technician/history', Icon: Icons.sheets, label: 'History', badge: false },
+  { to: '/technician/alerts',  Icon: Icons.bell,   label: 'Alerts',  badge: true  },
 ] as const
 
 function NavItem({

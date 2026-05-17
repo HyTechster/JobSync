@@ -10,9 +10,9 @@ import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
 
 const NAV_ITEMS = [
   { to: '/technician/jobs',       label: 'My Jobs',    Icon: Icons.jobs   },
+  { to: '/technician/job-sheets', label: 'Job Sheets', Icon: Icons.sheets },
   { to: '/technician/history',    label: 'History',    Icon: Icons.sheets },
   { to: '/technician/alerts',     label: 'Alerts',     Icon: Icons.bell   },
-  { to: '/technician/job-sheets', label: 'Job Sheets', Icon: Icons.sheets },
 ]
 
 export function TechnicianSidebar() {
