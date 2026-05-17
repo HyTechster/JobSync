@@ -6,7 +6,7 @@ const NAV = [
   { to: '/technician/jobs',    Icon: Icons.jobs,   label: 'Jobs' },
   { to: '/technician/history', Icon: Icons.sheets, label: 'History' },
   { to: '/technician/alerts',  Icon: Icons.bell,   label: 'Alerts' },
-  { to: '/technician/profile', Icon: Icons.user,   label: 'Profile' },
+  { to: '/account',            Icon: Icons.user,   label: 'Profile' },
 ] as const
 
 export function TechnicianBottomNav() {

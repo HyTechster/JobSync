@@ -27,6 +27,7 @@ const SignUpPage             = lazy(() => import('../pages/SignUpPage'))
 const WelcomePage            = lazy(() => import('../pages/dashboard/WelcomePage'))
 const CreateOrganizationPage = lazy(() => import('../pages/dashboard/CreateOrganizationPage'))
 const SelectOrganizationPage = lazy(() => import('../pages/dashboard/SelectOrganizationPage'))
+const AccountPage            = lazy(() => import('../pages/account/AccountPage'))
 
 function PageLoader() {
   return (
@@ -65,6 +66,10 @@ export const router = createBrowserRouter([
       { path: 'create-organization', element: wrap(CreateOrganizationPage) },
       { path: 'select-organization', element: wrap(SelectOrganizationPage) },
     ],
+  },
+  {
+    path: '/account',
+    element: <Suspense fallback={<PageLoader />}><AccountPage /></Suspense>,
   },
   {
     path: '/admin',

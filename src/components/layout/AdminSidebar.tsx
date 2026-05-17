@@ -180,7 +180,7 @@ export function AdminSidebar() {
       <div className="px-3.5 py-3.5 border-t border-border">
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">
           <Link
-            to="/admin/profile"
+            to="/account"
             className="flex items-center gap-2.5 flex-1 min-w-0 rounded-lg hover:bg-surface-2 transition-colors -mx-2 px-2 py-1"
           >
             <div className="w-8 h-8 rounded-full bg-brand-700 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">

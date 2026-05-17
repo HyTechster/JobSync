@@ -4,6 +4,22 @@ import { useAuth, useLogout } from '../../features/auth/hooks'
 import { useOrganization, type OrgMembership } from '../../context/OrganizationContext'
 import type { OrgRole } from '../../types'
 
+function ProfileButton({ name }: { name: string }) {
+  const navigate = useNavigate()
+  const initials = name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/account')}
+      title="Account settings"
+      className="w-9 h-9 rounded-full bg-brand-700 text-white text-xs font-bold flex items-center justify-center hover:bg-brand-800 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-700/30"
+      aria-label="Go to account settings"
+    >
+      {initials}
+    </button>
+  )
+}
+
 const ROLE_LABEL: Record<OrgRole, string> = {
   admin: 'Admin',
   manager: 'Manager',
@@ -30,7 +46,7 @@ function orgColor(index: number) {
 }
 
 export default function SelectOrganizationPage() {
-  const { session, isLoading: isAuthLoading } = useAuth()
+  const { session, profile, isLoading: isAuthLoading } = useAuth()
   const { memberships, setActiveOrganization, isLoading: isOrgLoading } = useOrganization()
   const logout = useLogout()
   const navigate = useNavigate()
@@ -58,14 +74,15 @@ export default function SelectOrganizationPage() {
 
   return (
     <main className="min-h-screen bg-surface-2 flex flex-col items-center justify-center p-6">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10">
+      {/* Logo + profile button */}
+      <div className="flex items-center gap-2.5 mb-10 w-full max-w-md">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <rect x="2" y="2" width="28" height="28" rx="8" fill="#1E3A5F" />
           <path d="M10 11.5h12M10 16h8M10 20.5h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
           <circle cx="22" cy="20.5" r="1.6" fill="#fff" />
         </svg>
-        <span className="text-xl font-bold text-text-base tracking-tight">JobSync</span>
+        <span className="text-xl font-bold text-text-base tracking-tight flex-1">JobSync</span>
+        <ProfileButton name={profile?.full_name ?? 'U'} />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm w-full max-w-md overflow-hidden">

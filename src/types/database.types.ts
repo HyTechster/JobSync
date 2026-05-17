@@ -261,37 +261,81 @@ export type Database = {
           },
         ]
       }
+      linked_emails: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          label: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          label?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          label?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'linked_emails_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          country: string | null
           created_at: string
+          display_name: string | null
           email: string
           full_name: string
+          gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null
           id: string
           is_active: boolean
           phone: string | null
+          preferences: Json
           role: 'admin' | 'technician'
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           email: string
           full_name: string
+          gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null
           id: string
           is_active?: boolean
           phone?: string | null
+          preferences?: Json
           role: 'admin' | 'technician'
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string
           full_name?: string
+          gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null
           id?: string
           is_active?: boolean
           phone?: string | null
+          preferences?: Json
           role?: 'admin' | 'technician'
           updated_at?: string
         }

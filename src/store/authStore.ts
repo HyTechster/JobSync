@@ -8,6 +8,7 @@ interface AuthState {
   profile: Profile | null
   isLoading: boolean
   setSession: (session: Session | null, profile: Profile | null) => void
+  setProfile: (profile: Profile | null) => void
   clearSession: () => void
   initAuth: () => () => void
 }
@@ -27,6 +28,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
 
   setSession: (session, profile) => set({ session, profile }),
+
+  setProfile: (profile) => set({ profile }),
 
   clearSession: () => set({ session: null, profile: null, isLoading: false }),
 
