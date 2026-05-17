@@ -44,7 +44,7 @@ export default function AdminAlerts() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto pb-24 md:pb-10">
+    <div className="p-4 md:p-8 pb-24 md:pb-12">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-[20px] md:text-[22px] font-bold text-text-base">Alerts</h1>

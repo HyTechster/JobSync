@@ -49,7 +49,7 @@ export default function AdminJobSheets() {
 
   return (
     /* extra bottom padding ensures content clears the fixed mobile bottom nav */
-    <div className="p-4 md:p-6 max-w-7xl mx-auto pb-24 md:pb-8">
+    <div className="p-4 md:p-8 pb-24 md:pb-12">
 
       {/* ── Page header ───────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 mb-5 md:flex-row md:items-start md:justify-between md:gap-4">
