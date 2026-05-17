@@ -63,6 +63,23 @@ export function SignUpForm() {
           <span className="text-lg font-bold text-text-base tracking-tight">JobSync</span>
         </div>
 
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-7">
+          <div className="flex items-center gap-1.5">
+            <span className="w-6 h-6 rounded-full bg-brand-700 text-white text-[10px] font-bold flex items-center justify-center">
+              1
+            </span>
+            <span className="text-[12px] font-semibold text-brand-700">Account</span>
+          </div>
+          <div className="flex-1 h-px bg-slate-200" />
+          <div className="flex items-center gap-1.5">
+            <span className="w-6 h-6 rounded-full border-2 border-slate-200 text-slate-400 text-[10px] font-bold flex items-center justify-center">
+              2
+            </span>
+            <span className="text-[12px] font-medium text-text-muted">Preferences</span>
+          </div>
+        </div>
+
         <h2 className="text-2xl font-bold text-text-base tracking-tight">Create your account</h2>
         <p className="text-sm text-text-muted mt-1.5 mb-7">
           Join JobSync and get your team organised

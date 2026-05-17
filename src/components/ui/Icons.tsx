@@ -68,6 +68,7 @@ export const Icons = {
   spark:       make(<><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"/></>),
   wifiOff:     make(<><path d="M2 2l20 20"/><path d="M8.5 16a5 5 0 017 0"/><path d="M5 12.5a10 10 0 0110.5-2.3"/><circle cx="12" cy="19.5" r="1"/></>),
   pin:         make(<><path d="M12 22s7-7 7-12a7 7 0 10-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></>),
+  globe:       make(<><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></>),
 }
 
 export type IconName = keyof typeof Icons

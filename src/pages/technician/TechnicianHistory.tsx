@@ -2,20 +2,20 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { offlineDb, type OfflineJobSheet } from '../../offline/db'
 import { syncPendingJobSheets } from '../../offline/sync'
-import { useJobSheets } from '../../features/job-sheets/hooks'
+import { useMyCompletedJobs } from '../../features/jobs/hooks'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
-import { formatDuration } from '../../utils/formatters'
+import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
-import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
+import type { RecentJobRow } from '../../features/jobs/hooks'
 
-const STATUS_ICON: Record<OfflineJobSheet['syncStatus'], React.ReactNode> = {
-  pending:  <Icons.clock size={14} color="#D97706" />,
-  syncing:  <Icons.sync size={14} color="#2563EB" />,
-  synced:   <Icons.check size={14} color="#059669" />,
-  failed:   <Icons.warning size={14} color="#E11D48" />,
+const SYNC_ICON: Record<OfflineJobSheet['syncStatus'], React.ReactNode> = {
+  pending: <Icons.clock   size={14} color="#D97706" />,
+  syncing: <Icons.sync    size={14} color="#2563EB" />,
+  synced:  <Icons.check   size={14} color="#059669" />,
+  failed:  <Icons.warning size={14} color="#E11D48" />,
 }
 
-const STATUS_LABEL: Record<OfflineJobSheet['syncStatus'], string> = {
+const SYNC_LABEL: Record<OfflineJobSheet['syncStatus'], string> = {
   pending: 'Waiting to sync',
   syncing: 'Syncing…',
   synced:  'Synced',
@@ -33,8 +33,8 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
           <p className="text-[12px] text-text-muted mt-0.5">{sheet.createdAt.slice(0, 10)}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {STATUS_ICON[sheet.syncStatus]}
-          <span className="text-[11.5px] text-text-muted">{STATUS_LABEL[sheet.syncStatus]}</span>
+          {SYNC_ICON[sheet.syncStatus]}
+          <span className="text-[11.5px] text-text-muted">{SYNC_LABEL[sheet.syncStatus]}</span>
         </div>
       </div>
       {sheet.syncStatus === 'failed' && (
@@ -49,28 +49,33 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
   )
 }
 
-function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
+function CompletedJobCard({ job }: { job: RecentJobRow }) {
+  const completedOn = new Date(job.updated_at).toLocaleDateString('en-MY', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  })
+  const scheduledOn = new Date(job.scheduled_date).toLocaleDateString('en-MY', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  })
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">
-      <p className="text-[14px] font-semibold text-text-base truncate">
-        {sheet.job_orders?.title ?? 'Unknown Job'}
-      </p>
-      <p className="text-[12.5px] text-text-muted mt-0.5">{sheet.job_orders?.customer_name}</p>
-      <div className="flex items-center gap-3 mt-2.5">
-        <span className="inline-flex items-center gap-1 text-[12px] text-text-muted">
-          <Icons.clock size={12} />
-          {formatDuration(sheet.time_spent_minutes)}
+      <div className="flex items-start gap-2 mb-1">
+        <p className="text-[13.5px] font-semibold text-text-base truncate flex-1">{job.title}</p>
+        <PriorityBadge priority={job.priority} />
+      </div>
+      <p className="text-[12.5px] text-text-muted truncate">{job.customer_name}</p>
+      {job.location && (
+        <p className="text-[12px] text-text-muted truncate mt-0.5">{job.location}</p>
+      )}
+      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+          <Icons.check size={10} />
+          Completed {completedOn}
         </span>
-        <span className="inline-flex items-center gap-1 text-[12px] text-text-muted">
-          <Icons.calendar size={12} />
-          {sheet.submitted_at.slice(0, 10)}
+        <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
+          <Icons.calendar size={11} />
+          Scheduled {scheduledOn}
         </span>
-        {sheet.attachments.length > 0 && (
-          <span className="inline-flex items-center gap-1 text-[12px] text-text-muted">
-            <Icons.camera size={12} />
-            {sheet.attachments.length}
-          </span>
-        )}
       </div>
     </div>
   )
@@ -79,7 +84,7 @@ function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
 export default function TechnicianHistory() {
   const isOnline = useOnlineStatus()
   const qc = useQueryClient()
-  const { data: sheets = [], isLoading } = useJobSheets()
+  const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs()
   const [pending, setPending] = useState<OfflineJobSheet[]>([])
 
   async function loadPending() {
@@ -89,22 +94,22 @@ export default function TechnicianHistory() {
     setPending(records)
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void loadPending() }, [isOnline])
+  useEffect(() => { void loadPending() }, [isOnline])  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleRetry(id: number) {
     await offlineDb.jobSheets.update(id, { syncStatus: 'pending' })
     await syncPendingJobSheets()
-    void qc.invalidateQueries({ queryKey: ['job-sheets'] })
+    void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
     await loadPending()
   }
 
   return (
-    <div className="px-4 pt-6 pb-2 max-w-lg mx-auto">
-      <h1 className="text-[22px] font-bold text-text-base mb-5">Job History</h1>
+    <div className="px-4 pt-6 pb-24 max-w-lg mx-auto">
+      <h1 className="text-[22px] font-bold text-text-base mb-5">History</h1>
 
+      {/* Pending offline sync */}
       {pending.length > 0 && (
-        <div className="mb-5">
+        <section className="mb-5">
           <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
             Pending Sync · {pending.length}
           </p>
@@ -113,13 +118,21 @@ export default function TechnicianHistory() {
               <PendingCard key={s.id} sheet={s} onRetry={() => void handleRetry(s.id!)} />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      <div>
+      {/* Completed jobs */}
+      <section>
         <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
-          Submitted · {isLoading ? '…' : sheets.length}
+          Completed · {isLoading ? '…' : completedJobs.length}
         </p>
+
+        {isError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-3">
+            <p className="text-[13px] text-danger">Failed to load history. Please refresh.</p>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex flex-col gap-2.5">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -127,24 +140,28 @@ export default function TechnicianHistory() {
                 <div className="h-4 w-44 bg-slate-100 rounded mb-2" />
                 <div className="h-3 w-28 bg-slate-100 rounded mb-3" />
                 <div className="flex gap-3">
-                  <div className="h-3 w-16 bg-slate-100 rounded" />
                   <div className="h-3 w-20 bg-slate-100 rounded" />
+                  <div className="h-3 w-24 bg-slate-100 rounded" />
                 </div>
               </div>
             ))}
           </div>
-        ) : sheets.length === 0 ? (
+        ) : completedJobs.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 px-4 py-10 text-center">
-            <Icons.sheets size={28} color="#94A3B8" className="mx-auto mb-2" />
-            <p className="text-[13.5px] font-medium text-text-base mb-1">No submissions yet</p>
-            <p className="text-[12.5px] text-text-muted">Submitted job sheets will appear here.</p>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <Icons.check size={24} color="#059669" />
+            </div>
+            <p className="text-[13.5px] font-medium text-text-base mb-1">No completed jobs yet</p>
+            <p className="text-[12.5px] text-text-muted">
+              Jobs you complete will appear here.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {sheets.map((s) => <SheetCard key={s.id} sheet={s} />)}
+            {completedJobs.map((j) => <CompletedJobCard key={j.id} job={j} />)}
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }

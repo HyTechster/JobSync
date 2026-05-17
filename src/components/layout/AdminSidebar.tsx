@@ -9,6 +9,7 @@ import { useOrganization } from '../../context/OrganizationContext'
 const NAV_ITEMS = [
   { to: '/admin/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
   { to: '/admin/jobs',       label: 'Jobs',        Icon: Icons.jobs      },
+  { to: '/admin/history',    label: 'History',     Icon: Icons.check     },
   { to: '/admin/job-sheets', label: 'Job Sheets',  Icon: Icons.sheets    },
   { to: '/admin/users',      label: 'Users',       Icon: Icons.users     },
   { to: '/admin/alerts',     label: 'Alerts',      Icon: Icons.alerts    },

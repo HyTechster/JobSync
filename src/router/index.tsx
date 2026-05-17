@@ -7,6 +7,7 @@ import { TechnicianRoutes } from './TechnicianRoutes'
 // Admin pages — eagerly imported so navigation never suspends inside startTransition
 import AdminDashboard        from '../pages/admin/AdminDashboard'
 import AdminJobs             from '../pages/admin/AdminJobs'
+import AdminHistory          from '../pages/admin/AdminHistory'
 import AdminJobSheets        from '../pages/admin/AdminJobSheets'
 import AdminUsers            from '../pages/admin/AdminUsers'
 import AdminAlerts           from '../pages/admin/AdminAlerts'
@@ -26,6 +27,7 @@ import TechnicianProfilePage from '../pages/technician/TechnicianProfilePage'
 const LoginPage              = lazy(() => import('../pages/LoginPage'))
 const SignUpPage             = lazy(() => import('../pages/SignUpPage'))
 const WelcomePage            = lazy(() => import('../pages/dashboard/WelcomePage'))
+const AdditionalInfoPage     = lazy(() => import('../pages/dashboard/AdditionalInfoPage'))
 const CreateOrganizationPage = lazy(() => import('../pages/dashboard/CreateOrganizationPage'))
 const SelectOrganizationPage = lazy(() => import('../pages/dashboard/SelectOrganizationPage'))
 const AccountPage            = lazy(() => import('../pages/account/AccountPage'))
@@ -64,6 +66,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="welcome" replace /> },
       { path: 'welcome',             element: wrap(WelcomePage) },
+      { path: 'additional-info',     element: wrap(AdditionalInfoPage) },
       { path: 'create-organization', element: wrap(CreateOrganizationPage) },
       { path: 'select-organization', element: wrap(SelectOrganizationPage) },
     ],
@@ -79,6 +82,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard',  element: <AdminDashboard /> },
       { path: 'jobs',       element: <AdminJobs /> },
+      { path: 'history',    element: <AdminHistory /> },
       { path: 'job-sheets', element: <AdminJobSheets /> },
       { path: 'users',      element: <AdminUsers /> },
       { path: 'alerts',     element: <AdminAlerts /> },

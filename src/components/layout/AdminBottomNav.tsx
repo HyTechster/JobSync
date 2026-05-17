@@ -5,8 +5,8 @@ import { Icons } from '../ui/Icons'
 const NAV = [
   { to: '/admin/dashboard',  Icon: Icons.dashboard, label: 'Dashboard' },
   { to: '/admin/jobs',       Icon: Icons.jobs,      label: 'Jobs'      },
+  { to: '/admin/history',    Icon: Icons.check,     label: 'History'   },
   { to: '/admin/job-sheets', Icon: Icons.sheets,    label: 'Sheets'    },
-  { to: '/admin/users',      Icon: Icons.users,     label: 'Users'     },
   { to: '/admin/alerts',     Icon: Icons.alerts,    label: 'Alerts'    },
 ] as const
 

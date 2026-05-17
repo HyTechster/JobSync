@@ -148,6 +148,23 @@ export function useMyJobs() {
   })
 }
 
+export function useMyCompletedJobs() {
+  return useQuery<RecentJobRow[]>({
+    queryKey: ['my-completed-jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+        )
+        .eq('status', 'completed')
+        .order('updated_at', { ascending: false })
+      if (error) throw error
+      return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
 export function useRealtimeDashboard(): { isLive: boolean } {
   const qc = useQueryClient()
   const [isLive, setIsLive] = useState(false)

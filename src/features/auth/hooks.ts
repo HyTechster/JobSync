@@ -113,7 +113,7 @@ export function useSignUp() {
     onSuccess: (result) => {
       if (result.needsEmailConfirmation) return
       setSession(result.session, result.profile)
-      navigate('/dashboard/welcome')
+      navigate('/dashboard/additional-info')
     },
   })
 }
