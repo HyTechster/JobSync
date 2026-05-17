@@ -5,7 +5,7 @@ import { useOrganization } from '../../context/OrganizationContext'
 
 export default function WelcomePage() {
   const { session, profile, isLoading: isAuthLoading } = useAuth()
-  const { memberships, userRole, isLoading: isOrgLoading } = useOrganization()
+  const { memberships, isLoading: isOrgLoading } = useOrganization()
   const logout = useLogout()
   const navigate = useNavigate()
 
