@@ -17,7 +17,7 @@ function shortDate(iso: string): string {
 }
 
 export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
-  const recipients = alert.alert_recipients
+  const recipients = alert.alert_recipients ?? []
   const readCount = recipients.filter((r) => r.read_at !== null).length
 
   return (

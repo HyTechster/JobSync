@@ -110,7 +110,7 @@ export function LoginForm() {
         <p className="text-sm text-text-muted text-center mt-6">
           New to JobSync?{' '}
           <Link to="/signup" className="text-brand-700 font-semibold hover:text-brand-600">
-            Create your company
+            Create an account
           </Link>
         </p>
       </div>

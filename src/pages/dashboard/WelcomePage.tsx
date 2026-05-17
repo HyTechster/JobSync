@@ -14,10 +14,10 @@ export default function WelcomePage() {
   useEffect(() => {
     if (isLoading) return
     if (!session) { navigate('/login', { replace: true }); return }
-    if (memberships.length > 0 && userRole) {
-      navigate(userRole === 'technician' ? '/technician/jobs' : '/admin/dashboard', { replace: true })
+    if (memberships.length > 0) {
+      navigate('/dashboard/select-organization', { replace: true })
     }
-  }, [isLoading, session, memberships, userRole, navigate])
+  }, [isLoading, session, memberships, navigate])
 
   if (isLoading) {
     return (

@@ -73,15 +73,7 @@ export function useLogin() {
 
     onSuccess: ({ session, profile, memberships }) => {
       setSession(session, profile)
-
-      if (memberships.length === 0) {
-        navigate('/dashboard/welcome')
-      } else if (memberships.length === 1) {
-        const m = memberships[0]
-        navigate(m.role === 'technician' ? '/technician/jobs' : '/admin/dashboard')
-      } else {
-        navigate('/dashboard/select-organization')
-      }
+      navigate(memberships.length === 0 ? '/dashboard/welcome' : '/dashboard/select-organization')
     },
   })
 }

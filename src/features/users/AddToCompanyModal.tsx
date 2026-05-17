@@ -36,12 +36,16 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
     defaultValues: { role: 'technician' },
   })
 
+  // Reset form and mutation state each time the modal opens.
+  // Do NOT put addMember in deps — useMutation returns a new object every render,
+  // which would cause an infinite loop (effect → reset → state change → rerender → effect…).
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
       reset()
       addMember.reset()
     }
-  }, [isOpen, reset, addMember])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   const onSubmit = (data: FormData) => {
     addMember.mutate(data as AddMemberData, {

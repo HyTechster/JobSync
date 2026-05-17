@@ -63,6 +63,7 @@ export function useUnreadAlertCount() {
 export function useAlerts() {
   return useQuery<AlertWithDetail[]>({
     queryKey: ['alerts'],
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('alerts')

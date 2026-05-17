@@ -7,20 +7,17 @@ import { useOrganization } from '../context/OrganizationContext'
 
 export default function LoginPage() {
   const { session, isLoading: isAuthLoading } = useAuth()
-  const { memberships, userRole, isLoading: isOrgLoading } = useOrganization()
+  const { memberships, isLoading: isOrgLoading } = useOrganization()
   const navigate = useNavigate()
   const isLoading = isAuthLoading || isOrgLoading
 
   useEffect(() => {
     if (isLoading || !session) return
-    if (memberships.length === 0) {
-      navigate('/dashboard/welcome', { replace: true })
-    } else if (memberships.length === 1) {
-      navigate(userRole === 'technician' ? '/technician/jobs' : '/admin/dashboard', { replace: true })
-    } else {
-      navigate('/dashboard/select-organization', { replace: true })
-    }
-  }, [isLoading, session, memberships, userRole, navigate])
+    navigate(
+      memberships.length === 0 ? '/dashboard/welcome' : '/dashboard/select-organization',
+      { replace: true }
+    )
+  }, [isLoading, session, memberships, navigate])
 
   if (isLoading) {
     return (

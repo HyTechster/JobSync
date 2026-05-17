@@ -21,8 +21,9 @@ function formatDate(iso: string): string {
 export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
   if (!alert) return null
 
-  const readCount = alert.alert_recipients.filter((r) => r.read_at !== null).length
-  const total = alert.alert_recipients.length
+  const recipients = alert.alert_recipients ?? []
+  const readCount = recipients.filter((r) => r.read_at !== null).length
+  const total = recipients.length
 
   return (
     <Modal
@@ -47,7 +48,7 @@ export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
         </div>
 
         <div className="flex flex-col gap-0.5">
-          {alert.alert_recipients.map((r) => (
+          {recipients.map((r) => (
             <div
               key={r.recipient_id}
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-2 transition-colors"

@@ -4,23 +4,29 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AdminRoutes } from './AdminRoutes'
 import { TechnicianRoutes } from './TechnicianRoutes'
 
-const LoginPage         = lazy(() => import('../pages/LoginPage'))
-const SignUpPage        = lazy(() => import('../pages/SignUpPage'))
-const WelcomePage              = lazy(() => import('../pages/dashboard/WelcomePage'))
-const CreateOrganizationPage   = lazy(() => import('../pages/dashboard/CreateOrganizationPage'))
-const SelectOrganizationPage   = lazy(() => import('../pages/dashboard/SelectOrganizationPage'))
-const AdminDashboard    = lazy(() => import('../pages/admin/AdminDashboard'))
-const AdminJobs         = lazy(() => import('../pages/admin/AdminJobs'))
-const AdminUsers        = lazy(() => import('../pages/admin/AdminUsers'))
-const AdminJobSheets    = lazy(() => import('../pages/admin/AdminJobSheets'))
-const AdminAlerts       = lazy(() => import('../pages/admin/AdminAlerts'))
-const TechnicianDashboard  = lazy(() => import('../pages/technician/TechnicianDashboard'))
-const TechnicianJobs       = lazy(() => import('../pages/technician/TechnicianJobs'))
-const TechnicianHistory    = lazy(() => import('../pages/technician/TechnicianHistory'))
-const JobDetailPage        = lazy(() => import('../pages/technician/JobDetailPage'))
-const SubmitJobSheetPage   = lazy(() => import('../pages/technician/SubmitJobSheetPage'))
-const TechnicianAlertsPage = lazy(() => import('../pages/technician/TechnicianAlertsPage'))
-const TechnicianProfilePage = lazy(() => import('../pages/technician/TechnicianProfilePage'))
+// Admin pages — eagerly imported so navigation never suspends inside startTransition
+import AdminDashboard        from '../pages/admin/AdminDashboard'
+import AdminJobs             from '../pages/admin/AdminJobs'
+import AdminJobSheets        from '../pages/admin/AdminJobSheets'
+import AdminUsers            from '../pages/admin/AdminUsers'
+import AdminAlerts           from '../pages/admin/AdminAlerts'
+import AdminProfile          from '../pages/admin/AdminProfile'
+
+// Technician pages — eagerly imported
+import TechnicianDashboard   from '../pages/technician/TechnicianDashboard'
+import TechnicianJobs        from '../pages/technician/TechnicianJobs'
+import JobDetailPage         from '../pages/technician/JobDetailPage'
+import SubmitJobSheetPage    from '../pages/technician/SubmitJobSheetPage'
+import TechnicianHistory     from '../pages/technician/TechnicianHistory'
+import TechnicianAlertsPage  from '../pages/technician/TechnicianAlertsPage'
+import TechnicianProfilePage from '../pages/technician/TechnicianProfilePage'
+
+// Auth + dashboard pages — lazy, each has its own Suspense (no shell)
+const LoginPage              = lazy(() => import('../pages/LoginPage'))
+const SignUpPage             = lazy(() => import('../pages/SignUpPage'))
+const WelcomePage            = lazy(() => import('../pages/dashboard/WelcomePage'))
+const CreateOrganizationPage = lazy(() => import('../pages/dashboard/CreateOrganizationPage'))
+const SelectOrganizationPage = lazy(() => import('../pages/dashboard/SelectOrganizationPage'))
 
 function PageLoader() {
   return (
@@ -55,9 +61,9 @@ export const router = createBrowserRouter([
     path: '/dashboard',
     children: [
       { index: true, element: <Navigate to="welcome" replace /> },
-      { path: 'welcome',              element: wrap(WelcomePage) },
-      { path: 'create-organization',  element: wrap(CreateOrganizationPage) },
-      { path: 'select-organization',  element: wrap(SelectOrganizationPage) },
+      { path: 'welcome',             element: wrap(WelcomePage) },
+      { path: 'create-organization', element: wrap(CreateOrganizationPage) },
+      { path: 'select-organization', element: wrap(SelectOrganizationPage) },
     ],
   },
   {
@@ -65,11 +71,12 @@ export const router = createBrowserRouter([
     element: <AdminRoutes />,
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: 'dashboard',  element: wrap(AdminDashboard) },
-      { path: 'jobs',       element: wrap(AdminJobs) },
-      { path: 'job-sheets', element: wrap(AdminJobSheets) },
-      { path: 'users',      element: wrap(AdminUsers) },
-      { path: 'alerts',     element: wrap(AdminAlerts) },
+      { path: 'dashboard',  element: <AdminDashboard /> },
+      { path: 'jobs',       element: <AdminJobs /> },
+      { path: 'job-sheets', element: <AdminJobSheets /> },
+      { path: 'users',      element: <AdminUsers /> },
+      { path: 'alerts',     element: <AdminAlerts /> },
+      { path: 'profile',    element: <AdminProfile /> },
     ],
   },
   {
@@ -77,13 +84,13 @@ export const router = createBrowserRouter([
     element: <TechnicianRoutes />,
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: 'dashboard', element: wrap(TechnicianDashboard) },
-      { path: 'jobs',               element: wrap(TechnicianJobs) },
-      { path: 'jobs/:jobId',        element: wrap(JobDetailPage) },
-      { path: 'jobs/:jobId/submit', element: wrap(SubmitJobSheetPage) },
-      { path: 'history',            element: wrap(TechnicianHistory) },
-      { path: 'alerts',    element: wrap(TechnicianAlertsPage) },
-      { path: 'profile',   element: wrap(TechnicianProfilePage) },
+      { path: 'dashboard',          element: <TechnicianDashboard /> },
+      { path: 'jobs',               element: <TechnicianJobs /> },
+      { path: 'jobs/:jobId',        element: <JobDetailPage /> },
+      { path: 'jobs/:jobId/submit', element: <SubmitJobSheetPage /> },
+      { path: 'history',            element: <TechnicianHistory /> },
+      { path: 'alerts',             element: <TechnicianAlertsPage /> },
+      { path: 'profile',            element: <TechnicianProfilePage /> },
     ],
   },
 ])
