@@ -21,9 +21,23 @@ export interface OfflineAttachment {
   data: Blob
 }
 
+export interface DraftJobSheet {
+  id?: number
+  localId: string
+  organizationId: string
+  technicianId: string
+  jobTitle: string
+  workPerformed?: string
+  timeSpentMinutes?: number
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
 class JobSyncOfflineDB extends Dexie {
   jobSheets!: Table<OfflineJobSheet>
   attachments!: Table<OfflineAttachment>
+  draftSheets!: Table<DraftJobSheet>
 
   constructor() {
     super('jobsync-offline')
@@ -33,6 +47,11 @@ class JobSyncOfflineDB extends Dexie {
     this.version(2).stores({
       jobSheets: '++id, localId, jobOrderId, syncStatus',
       attachments: '++id, sheetLocalId',
+    })
+    this.version(3).stores({
+      jobSheets: '++id, localId, jobOrderId, syncStatus',
+      attachments: '++id, sheetLocalId',
+      draftSheets: '++id, localId, organizationId, technicianId',
     })
   }
 }

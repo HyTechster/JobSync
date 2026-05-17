@@ -18,6 +18,7 @@ import TechnicianJobs        from '../pages/technician/TechnicianJobs'
 import JobDetailPage         from '../pages/technician/JobDetailPage'
 import SubmitJobSheetPage    from '../pages/technician/SubmitJobSheetPage'
 import TechnicianHistory     from '../pages/technician/TechnicianHistory'
+import TechnicianJobSheets   from '../pages/technician/TechnicianJobSheets'
 import TechnicianAlertsPage  from '../pages/technician/TechnicianAlertsPage'
 import TechnicianProfilePage from '../pages/technician/TechnicianProfilePage'
 
@@ -93,7 +94,8 @@ export const router = createBrowserRouter([
       { path: 'jobs',               element: <TechnicianJobs /> },
       { path: 'jobs/:jobId',        element: <JobDetailPage /> },
       { path: 'jobs/:jobId/submit', element: <SubmitJobSheetPage /> },
-      { path: 'history',            element: <TechnicianHistory /> },
+      { path: 'history',             element: <TechnicianHistory /> },
+      { path: 'job-sheets',         element: <TechnicianJobSheets /> },
       { path: 'alerts',             element: <TechnicianAlertsPage /> },
       { path: 'profile',            element: <TechnicianProfilePage /> },
     ],

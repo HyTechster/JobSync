@@ -215,8 +215,11 @@ export type Database = {
           created_at: string
           customer_signature_url: string | null
           id: string
-          job_order_id: string
+          job_order_id: string | null
+          job_title: string | null
           notes: string | null
+          organization_id: string | null
+          sheet_number: number | null
           submitted_at: string
           technician_id: string
           time_spent_minutes: number
@@ -226,8 +229,11 @@ export type Database = {
           created_at?: string
           customer_signature_url?: string | null
           id?: string
-          job_order_id: string
+          job_order_id?: string | null
+          job_title?: string | null
           notes?: string | null
+          organization_id?: string | null
+          sheet_number?: number | null
           submitted_at?: string
           technician_id: string
           time_spent_minutes: number
@@ -237,8 +243,11 @@ export type Database = {
           created_at?: string
           customer_signature_url?: string | null
           id?: string
-          job_order_id?: string
+          job_order_id?: string | null
+          job_title?: string | null
           notes?: string | null
+          organization_id?: string | null
+          sheet_number?: number | null
           submitted_at?: string
           technician_id?: string
           time_spent_minutes?: number
@@ -257,6 +266,39 @@ export type Database = {
             columns: ['technician_id']
             isOneToOne: false
             referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_sheets_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      org_sheet_counters: {
+        Row: {
+          last_number: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_number?: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_number?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'org_sheet_counters_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: true
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -441,6 +483,14 @@ export type Database = {
       is_org_admin_or_manager: {
         Args: { org_id: string }
         Returns: boolean
+      }
+      peek_next_sheet_number: {
+        Args: { p_org_id: string }
+        Returns: number
+      }
+      claim_sheet_number: {
+        Args: { p_org_id: string }
+        Returns: number
       }
     }
     Enums: {

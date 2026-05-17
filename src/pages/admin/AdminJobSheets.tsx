@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import { useJobSheets } from '../../features/job-sheets/hooks'
+import { useJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
 import { useTechnicians } from '../../features/jobs/hooks'
 import { JobSheetsTable } from '../../features/job-sheets/JobSheetsTable'
 import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
+import { useOrganization } from '../../context/OrganizationContext'
 import { Icons } from '../../components/ui/Icons'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
 
@@ -10,13 +11,15 @@ const inputCls =
   'h-[38px] px-3 border border-slate-200 rounded-lg text-[13px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
 
 export default function AdminJobSheets() {
+  const { activeOrgId } = useOrganization()
   const { data: sheets = [], isLoading, isError } = useJobSheets()
   const { data: technicians = [] } = useTechnicians()
+  const { data: nextSheetId } = useNextSheetId(activeOrgId)
 
-  const [search, setSearch] = useState('')
-  const [technicianId, setTechnicianId] = useState('')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [search, setSearch]       = useState('')
+  const [technicianId, setTechId] = useState('')
+  const [dateFrom, setDateFrom]   = useState('')
+  const [dateTo, setDateTo]       = useState('')
   const [viewSheet, setViewSheet] = useState<JobSheetWithDetail | null>(null)
 
   const filtered = useMemo(() => {
@@ -26,10 +29,10 @@ export default function AdminJobSheets() {
       if (dateFrom && s.submitted_at < dateFrom) return false
       if (dateTo && s.submitted_at > dateTo + 'T23:59:59') return false
       if (q) {
-        const inJob = s.job_orders?.title.toLowerCase().includes(q)
-        const inCustomer = s.job_orders?.customer_name.toLowerCase().includes(q)
-        const inTech = s.profiles?.full_name.toLowerCase().includes(q)
-        if (!inJob && !inCustomer && !inTech) return false
+        const title    = (s.job_title ?? s.job_orders?.title ?? '').toLowerCase()
+        const customer = (s.job_orders?.customer_name ?? '').toLowerCase()
+        const tech     = (s.profiles?.full_name ?? '').toLowerCase()
+        if (!title.includes(q) && !customer.includes(q) && !tech.includes(q)) return false
       }
       return true
     })
@@ -39,27 +42,50 @@ export default function AdminJobSheets() {
 
   function clearFilters() {
     setSearch('')
-    setTechnicianId('')
+    setTechId('')
     setDateFrom('')
     setDateTo('')
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    /* extra bottom padding ensures content clears the fixed mobile bottom nav */
+    <div className="p-4 md:p-6 max-w-7xl mx-auto pb-24 md:pb-8">
+
+      {/* ── Page header ───────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 mb-5 md:flex-row md:items-start md:justify-between md:gap-4">
         <div>
-          <h1 className="text-[22px] font-bold text-text-base">Job Sheets</h1>
+          <h1 className="text-[20px] md:text-[22px] font-bold text-text-base">Job Sheets</h1>
           <p className="text-[13px] text-text-muted mt-0.5">
             Review all submitted job reports from your technicians
           </p>
         </div>
-        <span className="text-[13px] text-text-muted">
-          {isLoading ? '—' : `${filtered.length} of ${sheets.length} sheet${sheets.length !== 1 ? 's' : ''}`}
-        </span>
+
+        {/* Next Sheet ID badge + count — stacks on mobile, inline on desktop */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2.5 bg-brand-50 border border-brand-200 rounded-xl px-3.5 py-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-700 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+              #
+            </div>
+            <div>
+              <p className="text-[9.5px] font-semibold text-brand-700 uppercase tracking-wide leading-none mb-0.5">
+                Next Sheet ID
+              </p>
+              <p className="text-[17px] font-bold text-brand-800 leading-none">
+                {nextSheetId != null ? `#${nextSheetId}` : '—'}
+              </p>
+            </div>
+          </div>
+
+          <span className="text-[12px] text-text-muted whitespace-nowrap">
+            {isLoading ? '—' : `${filtered.length} / ${sheets.length}`}
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <div className="relative flex-1 min-w-[220px] max-w-[320px]">
+      {/* ── Filters ───────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2.5 mb-5 md:flex-row md:flex-wrap md:items-center md:gap-3">
+        {/* Search */}
+        <div className="relative w-full md:flex-1 md:min-w-[220px] md:max-w-[320px]">
           <Icons.search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
@@ -73,10 +99,11 @@ export default function AdminJobSheets() {
           />
         </div>
 
+        {/* Technician filter */}
         <select
           value={technicianId}
-          onChange={(e) => setTechnicianId(e.target.value)}
-          className={`${inputCls} pr-8`}
+          onChange={(e) => setTechId(e.target.value)}
+          className={`${inputCls} w-full md:w-auto pr-8`}
         >
           <option value="">All technicians</option>
           {technicians.map((t) => (
@@ -84,20 +111,21 @@ export default function AdminJobSheets() {
           ))}
         </select>
 
-        <div className="flex items-center gap-1.5">
+        {/* Date range */}
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className={inputCls}
+            className={`${inputCls} flex-1 md:flex-none`}
             title="From date"
           />
-          <span className="text-text-muted text-sm">–</span>
+          <span className="text-text-muted text-sm flex-shrink-0">–</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className={inputCls}
+            className={`${inputCls} flex-1 md:flex-none`}
             title="To date"
           />
         </div>
@@ -105,23 +133,25 @@ export default function AdminJobSheets() {
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="h-[38px] px-3 rounded-lg border border-slate-200 text-[12.5px] font-semibold text-text-muted hover:bg-surface-2 transition-colors inline-flex items-center gap-1.5"
+            className="h-[38px] px-3 rounded-lg border border-slate-200 text-[12.5px] font-semibold text-text-muted hover:bg-surface-2 transition-colors inline-flex items-center gap-1.5 w-full md:w-auto justify-center"
           >
             <Icons.close size={13} />
-            Clear
+            Clear filters
           </button>
         )}
       </div>
 
+      {/* ── Error ─────────────────────────────────────────────────────── */}
       {isError && (
         <div className="bg-[#FFF1F2] border border-[#FFD6DB] rounded-xl px-4 py-3 mb-4">
           <p className="text-[13px] text-danger">Failed to load job sheets. Please refresh the page.</p>
         </div>
       )}
 
+      {/* ── Empty state ───────────────────────────────────────────────── */}
       {!isLoading && filtered.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl">
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-16 md:py-20 text-center px-6">
             <div className="w-14 h-14 rounded-2xl bg-surface-2 flex items-center justify-center mb-4">
               <Icons.sheets size={26} color="var(--color-text-muted)" />
             </div>
