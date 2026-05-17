@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import { queryClient } from '../../lib/queryClient'
 import { useAuthStore } from '../../store/authStore'
 import type { Profile } from '../../types'
 
@@ -121,9 +122,20 @@ export function useLogout() {
   const { clearSession } = useAuthStore()
   const navigate = useNavigate()
 
-  return async () => {
-    await supabase.auth.signOut()
+  return () => {
+    // Clear all local state immediately — do NOT wait for the network call.
+    // If the connection is dropped, awaiting signOut() blocks forever and the
+    // user stays "logged in" locally. Clearing first guarantees the UI signs
+    // out regardless of network health.
     clearSession()
-    navigate('/login')
+    localStorage.removeItem('jobsync_active_org')
+    queryClient.clear()  // wipe all cached queries so the next user starts fresh
+
+    // Fire-and-forget: tell the server to invalidate the token.
+    // We don't await this — failure just means the JWT stays valid on the server
+    // until it naturally expires, which is acceptable.
+    void supabase.auth.signOut()
+
+    navigate('/login', { replace: true })
   }
 }

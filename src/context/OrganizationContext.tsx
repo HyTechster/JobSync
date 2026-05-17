@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
@@ -52,6 +52,16 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [activeOrgId, setActiveOrgIdState] = useState<string | null>(
     () => localStorage.getItem(STORAGE_KEY)
   )
+
+  // When the logged-in user changes (switch account), reset to the stored key.
+  // This prevents Account A's in-memory activeOrgId leaking into Account B's session.
+  useEffect(() => {
+    if (!session) {
+      setActiveOrgIdState(null)
+    } else {
+      setActiveOrgIdState(localStorage.getItem(STORAGE_KEY))
+    }
+  }, [session?.user.id])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeMembership = useMemo(() => {
     if (memberships.length === 0) return null
