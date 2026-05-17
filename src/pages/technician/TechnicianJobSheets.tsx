@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useMyJobSheets } from '../../features/job-sheets/hooks'
+import { useMyJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { offlineDb, type DraftJobSheet } from '../../offline/db'
 import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
@@ -81,6 +81,7 @@ function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
 export default function TechnicianJobSheets() {
   const { activeOrgId } = useOrganization()
   const { data: sheets = [], isLoading, isError } = useMyJobSheets(activeOrgId)
+  const { data: nextSheetId } = useNextSheetId(activeOrgId)
   const [drafts, setDrafts]     = useState<DraftJobSheet[]>([])
   const [showModal, setShowModal] = useState(false)
 
@@ -104,12 +105,27 @@ export default function TechnicianJobSheets() {
   return (
     <div className="px-4 pt-6 pb-2 max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-[22px] font-bold text-text-base">Job Sheets</h1>
+      <div className="flex items-start justify-between mb-5 gap-3">
+        <div>
+          <h1 className="text-[22px] font-bold text-text-base">Job Sheets</h1>
+          <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 mt-1.5">
+            <div className="w-5 h-5 rounded bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+              #
+            </div>
+            <div>
+              <p className="text-[8.5px] font-semibold text-emerald-700 uppercase tracking-wide leading-none mb-0.5">
+                Next Sheet ID
+              </p>
+              <p className="text-[14px] font-bold text-emerald-800 leading-none">
+                {nextSheetId != null ? `#${nextSheetId}` : '—'}
+              </p>
+            </div>
+          </div>
+        </div>
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="h-9 px-4 rounded-xl bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition-colors inline-flex items-center gap-1.5"
+          className="h-9 px-4 rounded-xl bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition-colors inline-flex items-center gap-1.5 flex-shrink-0 mt-0.5"
         >
           <Icons.plus size={14} color="white" />
           New Sheet
