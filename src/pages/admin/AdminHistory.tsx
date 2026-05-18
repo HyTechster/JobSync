@@ -3,14 +3,28 @@ import { AdminTopbar } from '../../components/layout/AdminTopbar'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
+import { useJobSheet } from '../../features/job-sheets/hooks'
+import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 
+function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
+  const { data: sheet, isLoading } = useJobSheet(sheetId)
+  if (isLoading) return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(15,23,42,0.55)]">
+      <span className="w-8 h-8 border-[3px] border-brand-200 border-t-brand-700 rounded-full animate-spin" />
+    </div>
+  )
+  return <JobSheetDetailModal sheet={sheet ?? null} onClose={onClose} />
+}
+
 // ─── Mobile card ─────────────────────────────────────────────────────────────
 
-function MobileCard({ job }: { job: RecentJobRow }) {
+function MobileCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet: (id: string) => void }) {
   const { fmtDate } = useDateFormatter()
   const techs = job.job_assignments ?? []
+  const sheetId = job.job_sheets?.[0]?.id
+  const sheetNumber = job.job_sheets?.[0]?.sheet_number
   return (
     <div className="bg-white rounded-xl border border-slate-200 px-4 py-3.5">
       <div className="flex items-start gap-2 mb-1">
@@ -48,15 +62,27 @@ function MobileCard({ job }: { job: RecentJobRow }) {
         </div>
       )}
 
-      <div className="flex items-center gap-3 mt-2 flex-wrap">
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-          <Icons.check size={10} />
-          Completed {fmtDate(job.updated_at)}
-        </span>
-        <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
-          <Icons.calendar size={11} />
-          {fmtDate(job.scheduled_date)}
-        </span>
+      <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <Icons.check size={10} />
+            Completed {fmtDate(job.updated_at)}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
+            <Icons.calendar size={11} />
+            {fmtDate(job.scheduled_date)}
+          </span>
+        </div>
+        {sheetId && (
+          <button
+            type="button"
+            onClick={() => onViewSheet(sheetId)}
+            className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0"
+          >
+            <Icons.sheets size={12} />
+            {sheetNumber != null ? `Sheet #${sheetNumber}` : 'View Sheet'}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -91,13 +117,14 @@ function SkeletonRow() {
   )
 }
 
-const HEADERS = ['Job', 'Customer', 'Technicians', 'Scheduled', 'Completed On']
+const HEADERS = ['Job', 'Customer', 'Technicians', 'Scheduled', 'Completed On', 'Sheet']
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminHistory() {
   const { fmtDate } = useDateFormatter()
   const [search, setSearch] = useState('')
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
   const { activeOrgId } = useOrganization()
   const { data: allJobs = [], isLoading, isError } = useJobs(activeOrgId, { status: 'completed' })
 
@@ -167,7 +194,7 @@ export default function AdminHistory() {
                 </p>
               </div>
             )
-            : filtered.map((j) => <MobileCard key={j.id} job={j} />)
+            : filtered.map((j) => <MobileCard key={j.id} job={j} onViewSheet={setSelectedSheetId} />)
           }
         </div>
 
@@ -193,7 +220,7 @@ export default function AdminHistory() {
                   : filtered.length === 0
                   ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-16 text-center">
+                      <td colSpan={6} className="px-4 py-16 text-center">
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
                             <Icons.check size={24} color="#059669" />
@@ -256,6 +283,22 @@ export default function AdminHistory() {
                             {fmtDate(job.updated_at)}
                           </span>
                         </td>
+                        <td className="px-4 py-3">
+                          {job.job_sheets?.[0]?.id ? (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSheetId(job.job_sheets![0].id)}
+                              className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              <Icons.sheets size={12} />
+                              {job.job_sheets[0].sheet_number != null
+                                ? `#${job.job_sheets[0].sheet_number}`
+                                : 'View'}
+                            </button>
+                          ) : (
+                            <span className="text-[12px] text-text-subtle italic">—</span>
+                          )}
+                        </td>
                       </tr>
                     )
                   })}
@@ -264,6 +307,10 @@ export default function AdminHistory() {
           </div>
         </div>
       </div>
+
+      {selectedSheetId && (
+        <SheetViewer sheetId={selectedSheetId} onClose={() => setSelectedSheetId(null)} />
+      )}
     </>
   )
 }

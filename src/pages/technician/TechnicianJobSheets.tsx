@@ -1,11 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMyJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
+import { useMyJobSheets, useNextSheetId, useJobSheet } from '../../features/job-sheets/hooks'
+import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { useOrganization } from '../../context/OrganizationContext'
 import { offlineDb, type DraftJobSheet } from '../../offline/db'
 import { formatDuration } from '../../utils/formatters'
 import { Icons } from '../../components/ui/Icons'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
+
+function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
+  const { data: sheet, isLoading } = useJobSheet(sheetId)
+  if (isLoading) return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(15,23,42,0.55)]">
+      <span className="w-8 h-8 border-[3px] border-brand-200 border-t-brand-700 rounded-full animate-spin" />
+    </div>
+  )
+  return <JobSheetDetailModal sheet={sheet ?? null} onClose={onClose} />
+}
 
 function DraftCard({ draft, onDelete }: { draft: DraftJobSheet; onDelete: () => void }) {
   return (
@@ -42,7 +53,7 @@ function DraftCard({ draft, onDelete }: { draft: DraftJobSheet; onDelete: () => 
   )
 }
 
-function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
+function SheetCard({ sheet, onView }: { sheet: JobSheetWithDetail; onView: (id: string) => void }) {
   const title = sheet.job_title ?? sheet.job_orders?.title ?? 'Untitled Sheet'
   const sub   = sheet.job_orders?.customer_name ?? 'Standalone report'
 
@@ -58,6 +69,13 @@ function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
           <p className="text-[13.5px] font-semibold text-text-base truncate">{title}</p>
           <p className="text-[12px] text-text-muted mt-0.5">{sub}</p>
         </div>
+        <button
+          type="button"
+          onClick={() => onView(sheet.id)}
+          className="flex-shrink-0 h-8 px-3 rounded-lg border border-brand-200 bg-brand-50 text-[12px] font-semibold text-brand-700 hover:bg-brand-100 transition-colors"
+        >
+          View
+        </button>
       </div>
       <div className="flex items-center gap-3 mt-2.5 flex-wrap">
         <span className="inline-flex items-center gap-1 text-[12px] text-text-muted">
@@ -90,6 +108,7 @@ export default function TechnicianJobSheets() {
   const { data: sheets = [], isLoading, isError } = useMyJobSheets(activeOrgId)
   const { data: nextSheetId } = useNextSheetId(activeOrgId)
   const [drafts, setDrafts] = useState<DraftJobSheet[]>([])
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
 
   const loadDrafts = useCallback(async () => {
     if (!activeOrgId) return
@@ -199,11 +218,14 @@ export default function TechnicianJobSheets() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {sheets.map((s) => <SheetCard key={s.id} sheet={s} />)}
+            {sheets.map((s) => <SheetCard key={s.id} sheet={s} onView={setSelectedSheetId} />)}
           </div>
         )}
       </section>
 
+      {selectedSheetId && (
+        <SheetViewer sheetId={selectedSheetId} onClose={() => setSelectedSheetId(null)} />
+      )}
     </div>
   )
 }

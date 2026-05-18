@@ -66,6 +66,23 @@ export function useMyJobSheets(orgId: string | null) {
   })
 }
 
+/** Fetch a single job sheet by ID with all relations */
+export function useJobSheet(id: string | null) {
+  return useQuery<JobSheetWithDetail | null>({
+    queryKey: ['job-sheet', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_sheets')
+        .select(SHEET_SELECT)
+        .eq('id', id!)
+        .maybeSingle()
+      if (error) throw error
+      return data as JobSheetWithDetail | null
+    },
+  })
+}
+
 /** Peek at the next sheet number that will be issued (polls every 5 s for live display) */
 export function useNextSheetId(orgId: string | null) {
   return useQuery<number>({
