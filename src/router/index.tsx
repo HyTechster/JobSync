@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { AdminRoutes } from './AdminRoutes'
 import { TechnicianRoutes } from './TechnicianRoutes'
 import { RootErrorBoundary } from '../components/shared/RootErrorBoundary'
@@ -54,6 +54,7 @@ export const router = createBrowserRouter([
   {
     // Pathless layout route — catches errors from every child route, including
     // "Failed to fetch dynamically imported module" after a new Vercel deploy.
+    element: <Outlet />,
     errorElement: <RootErrorBoundary />,
     children: [
   {
