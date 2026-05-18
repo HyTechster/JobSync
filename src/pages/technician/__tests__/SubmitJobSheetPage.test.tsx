@@ -47,6 +47,10 @@ vi.mock('../../../offline/db', () => ({
   },
 }))
 
+vi.mock('../../../components/ui/SignaturePad', () => ({
+  SignaturePad: () => null,
+}))
+
 vi.stubGlobal('URL', {
   createObjectURL: vi.fn(() => 'blob:mock-url'),
   revokeObjectURL: vi.fn(),

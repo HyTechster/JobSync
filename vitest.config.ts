@@ -9,11 +9,12 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'e2e'],
-    // Provide placeholder Supabase values so supabase.ts initialises without
-    // throwing during tests. Individual tests mock the actual Supabase calls.
+    // Provide placeholder Supabase env vars so supabase.ts doesn't throw at
+    // import time. The actual client is mocked in test-setup.ts — no network
+    // calls are ever made during tests.
     env: {
-      VITE_SUPABASE_URL: 'https://placeholder.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'placeholder-anon-key-for-tests',
+      VITE_SUPABASE_URL:      'https://test.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
   },
 })
