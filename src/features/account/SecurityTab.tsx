@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../auth/hooks'
+import { useAuth, useLogoutAll } from '../auth/hooks'
 import { useChangePassword, useLoginHistory } from './hooks'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 
@@ -60,6 +60,9 @@ export function SecurityTab() {
   const changePassword = useChangePassword()
   const { data: loginHistory = [], isLoading: historyLoading } = useLoginHistory()
   const [signOutOthersSuccess, setSignOutOthersSuccess] = useState(false)
+  const [confirmSignOutAll, setConfirmSignOutAll] = useState(false)
+  const [signingOutAll, setSigningOutAll] = useState(false)
+  const logoutAll = useLogoutAll()
   const currentDevice = getDeviceInfo()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PwForm>({
@@ -188,7 +191,7 @@ export function SecurityTab() {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-border">
+        <div className="px-6 py-4 border-t border-border flex flex-col gap-3">
           {signOutOthersSuccess ? (
             <p className="text-sm text-success bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
               Signed out of all other sessions
@@ -197,9 +200,42 @@ export function SecurityTab() {
             <button
               type="button"
               onClick={() => void handleSignOutOthers()}
-              className="text-sm font-semibold text-danger hover:text-red-700 transition-colors"
+              className="self-start text-sm font-semibold text-danger hover:text-red-700 transition-colors"
             >
               Sign out of all other sessions
+            </button>
+          )}
+
+          {confirmSignOutAll ? (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              <p className="flex-1 text-sm text-red-700">This will sign you out on every device, including this one. Continue?</p>
+              <button
+                type="button"
+                disabled={signingOutAll}
+                onClick={async () => {
+                  setSigningOutAll(true)
+                  await logoutAll()
+                }}
+                className="h-8 px-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                {signingOutAll && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                Sign out all
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmSignOutAll(false)}
+                className="h-8 px-3 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmSignOutAll(true)}
+              className="self-start text-sm font-semibold text-danger hover:text-red-700 transition-colors"
+            >
+              Sign out of all sessions
             </button>
           )}
         </div>
