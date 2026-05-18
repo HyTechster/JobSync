@@ -29,7 +29,7 @@ export function useCreateUser() {
         const { error: memberError } = await supabase.from('organization_members').insert({
           organization_id: activeOrgId,
           user_id: userId as string,
-          role: data.role === 'admin' ? 'admin' : 'member',
+          role: data.role,
         })
         if (memberError) throw memberError
       }

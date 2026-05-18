@@ -221,9 +221,9 @@ export function useRespondToInvitation() {
   return useMutation({
     mutationFn: async ({ id, action }: { id: string; action: 'accept' | 'reject' }) => {
       if (action === 'accept') {
-        const { error } = await supabase.rpc('accept_organization_invitation', {
+        const { error } = await supabase.rpc('accept_organization_invitation' as never, {
           p_invitation_id: id,
-        })
+        } as never)
         if (error) throw error
       } else {
         const { error } = await supabase
