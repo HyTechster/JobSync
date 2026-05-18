@@ -69,16 +69,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       _forceSignoutChannel = supabase
         .channel(`forced-signout:${userId}`)
         .on('broadcast', { event: 'sign_out' }, () => {
-          // Synchronously wipe every Supabase key from localStorage so that the
-          // full-page reload that follows finds no cached session and stays on /login.
-          // (Using void signOut({ scope:'local' }) is async and loses the race.)
-          Object.keys(localStorage)
-            .filter((k) => k.startsWith('sb-'))
-            .forEach((k) => localStorage.removeItem(k))
-          get().clearSession()
-          localStorage.removeItem('jobsync_active_org')
-          queryClient.clear()
-          window.location.replace('/login')
+          // Must be async so we can await signOut({ scope:'local' }).
+          // That call stops the autoRefreshToken timer BEFORE clearing storage —
+          // preventing the timer from writing a fresh token back after we wipe it.
+          void (async () => {
+            await supabase.auth.signOut({ scope: 'local' })
+            localStorage.removeItem('jobsync_active_org')
+            queryClient.clear()
+            window.location.replace('/login')
+          })()
         })
         .subscribe((status) => {
           _channelReady = status === 'SUBSCRIBED'
