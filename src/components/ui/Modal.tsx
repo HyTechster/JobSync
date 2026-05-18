@@ -45,15 +45,16 @@ export function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose()
       }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
+      className="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
-        className={`relative w-full ${maxWidth} max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-64px)] bg-white rounded-[14px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
+        className={`relative w-full ${maxWidth} max-h-[92dvh] md:max-h-[calc(100vh-64px)] bg-white md:rounded-[14px] rounded-t-[20px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
       >
-        <div className="flex items-start justify-between px-7 py-5 border-b border-slate-200 flex-shrink-0">
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between px-5 md:px-7 py-5 border-b border-slate-200 flex-shrink-0">
           <div>
             <h2 id="modal-title" className="text-[17px] font-bold tracking-tight text-text-base">
               {title}
@@ -71,15 +72,24 @@ export function Modal({
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-7 py-6 flex flex-col gap-6">
-          {children}
-        </div>
-
-        {footer && (
-          <div className="flex items-center justify-between gap-3 px-7 py-4 border-t border-slate-200 bg-white flex-shrink-0">
-            {footer}
+        {/* ── Scrollable body + sticky-in-scroll footer ──────────────── */}
+        {/*
+          The footer lives INSIDE the overflow-y-auto container with
+          `sticky bottom-0`. This means it always stays pinned to the
+          bottom of the visible scroll area — no bottom-nav obstruction,
+          no need to scroll past content to find buttons.
+        */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="px-5 md:px-7 py-6 flex flex-col gap-6">
+            {children}
           </div>
-        )}
+
+          {footer && (
+            <div className="sticky bottom-0 flex items-center justify-between gap-3 px-5 md:px-7 py-4 border-t border-slate-200 bg-white">
+              {footer}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
