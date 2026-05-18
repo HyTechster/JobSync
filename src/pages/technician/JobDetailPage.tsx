@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useJob } from '../../features/jobs/hooks'
-import { UpdateStatusButton } from '../../features/jobs/UpdateStatusButton'
+import { useUpdateJobStatus } from '../../features/jobs/mutations'
 import { StatusBadge } from '../../components/ui/StatusBadge'
+import type { DisplayStatus } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 
@@ -23,6 +25,8 @@ export default function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>()
   const navigate = useNavigate()
   const { data: job, isLoading, isError } = useJob(jobId ?? '')
+  const { mutate: updateStatus, isPending } = useUpdateJobStatus()
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
 
   if (isLoading) {
     return (
@@ -46,9 +50,21 @@ export default function JobDetailPage() {
     )
   }
 
+  const hasSheet = (job.job_sheets ?? []).length > 0
+  const displayStatus: DisplayStatus =
+    job.status === 'completed' && !hasSheet ? 'completed_no_sheet' : job.status
+
   const scheduleValue = job.scheduled_time
-    ? `${job.scheduled_date} at ${job.scheduled_time.slice(0, 5)}`
-    : job.scheduled_date
+    ? `${job.scheduled_date ?? 'TBD'} at ${job.scheduled_time.slice(0, 5)}`
+    : (job.scheduled_date ?? 'To be scheduled')
+
+  function handleStartJob() {
+    updateStatus({ id: job!.id, status: 'in_progress' })
+  }
+
+  function handleComplete() {
+    updateStatus({ id: job!.id, status: 'completed' }, { onSuccess: () => setShowCompleteConfirm(false) })
+  }
 
   return (
     <div className="max-w-lg mx-auto">
@@ -60,10 +76,8 @@ export default function JobDetailPage() {
         >
           <Icons.arrowL size={20} />
         </button>
-        <p className="flex-1 min-w-0 text-[15px] font-semibold text-text-base truncate">
-          {job.title}
-        </p>
-        <StatusBadge status={job.status} />
+        <p className="flex-1 min-w-0 text-[15px] font-semibold text-text-base truncate">{job.title}</p>
+        <StatusBadge status={displayStatus} />
       </header>
 
       <div className="px-4 py-5 space-y-4">
@@ -74,30 +88,102 @@ export default function JobDetailPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 px-4">
-          <InfoRow icon={<Icons.user size={15} color="var(--color-brand-700)" />} label="Customer" value={job.customer_name + (job.customer_phone ? ` · ${job.customer_phone}` : '')} />
-          <InfoRow icon={<Icons.pin size={15} color="var(--color-brand-700)" />}  label="Location" value={job.location} />
+          <InfoRow icon={<Icons.user size={15} color="var(--color-brand-700)" />} label="Customer"
+            value={job.customer_name + (job.customer_phone ? ` · ${job.customer_phone}` : '')} />
+          <InfoRow icon={<Icons.pin size={15} color="var(--color-brand-700)" />} label="Location" value={job.location} />
           <InfoRow icon={<Icons.calendar size={15} color="var(--color-brand-700)" />} label="Schedule" value={scheduleValue} />
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-4">
-          <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">
-            Description
-          </p>
-          <p className="text-[13.5px] text-text-base leading-relaxed whitespace-pre-wrap">
-            {job.description}
-          </p>
+          <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">Description</p>
+          <p className="text-[13.5px] text-text-base leading-relaxed whitespace-pre-wrap">{job.description}</p>
         </div>
 
-        <UpdateStatusButton jobId={job.id} currentStatus={job.status} />
+        {/* ── Action buttons ──────────────────────────────────── */}
+
+        {job.status === 'pending' && (
+          <button
+            type="button"
+            onClick={handleStartJob}
+            disabled={isPending}
+            className="w-full h-[48px] rounded-xl bg-blue-600 text-white text-[14px] font-semibold disabled:opacity-50 transition-colors hover:bg-blue-700"
+          >
+            {isPending ? 'Updating…' : 'Start Job'}
+          </button>
+        )}
 
         {job.status === 'in_progress' && (
-          <Link
-            to={`/technician/jobs/${job.id}/submit`}
-            className="flex items-center justify-center gap-2 w-full h-[48px] rounded-xl border-2 border-brand-700 text-brand-700 text-[14px] font-semibold transition-colors hover:bg-brand-50 active:bg-brand-100"
-          >
-            <Icons.sheets size={17} />
-            Submit Job Sheet
-          </Link>
+          <>
+            {showCompleteConfirm ? (
+              <div className="bg-[#F0FDF4] border border-emerald-200 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Icons.check size={16} color="#059669" />
+                  <p className="text-[14px] font-semibold text-text-base">Mark as completed?</p>
+                </div>
+                <p className="text-[12.5px] text-text-muted mb-4 leading-relaxed">
+                  This marks the job complete. You can still submit a job sheet afterwards.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCompleteConfirm(false)}
+                    className="flex-1 h-[44px] rounded-xl border border-slate-300 text-[13.5px] font-semibold text-text-base bg-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleComplete}
+                    disabled={isPending}
+                    className="flex-1 h-[44px] rounded-xl bg-emerald-600 text-white text-[13.5px] font-semibold disabled:opacity-50"
+                  >
+                    {isPending ? 'Completing…' : 'Yes, complete'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCompleteConfirm(true)}
+                  className="flex-1 h-[48px] rounded-xl border-2 border-emerald-600 text-emerald-700 text-[13.5px] font-semibold transition-colors hover:bg-emerald-50"
+                >
+                  Mark as Completed
+                </button>
+                <Link
+                  to={`/technician/jobs/${job.id}/submit`}
+                  className="flex-1 h-[48px] rounded-xl bg-brand-700 text-white text-[13.5px] font-semibold transition-colors hover:bg-brand-800 flex items-center justify-center gap-1.5"
+                >
+                  <Icons.sheets size={15} />
+                  Submit Sheet
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+
+        {job.status === 'completed' && !hasSheet && (
+          <div className="space-y-2.5">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <p className="text-[12.5px] text-amber-800 font-medium">
+                Job complete — a job sheet is still required as evidence.
+              </p>
+            </div>
+            <Link
+              to={`/technician/jobs/${job.id}/submit`}
+              className="flex items-center justify-center gap-2 w-full h-[48px] rounded-xl bg-brand-700 text-white text-[14px] font-semibold transition-colors hover:bg-brand-800"
+            >
+              <Icons.sheets size={17} />
+              Submit Job Sheet
+            </Link>
+          </div>
+        )}
+
+        {job.status === 'completed' && hasSheet && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-2">
+            <Icons.check size={16} color="#059669" />
+            <p className="text-[13px] text-emerald-800 font-medium">Job and job sheet complete.</p>
+          </div>
         )}
       </div>
     </div>

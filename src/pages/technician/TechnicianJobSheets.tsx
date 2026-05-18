@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useMyJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { offlineDb, type DraftJobSheet } from '../../offline/db'
-import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
 import { formatDuration } from '../../utils/formatters'
 import { Icons } from '../../components/ui/Icons'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
@@ -79,11 +79,11 @@ function SheetCard({ sheet }: { sheet: JobSheetWithDetail }) {
 }
 
 export default function TechnicianJobSheets() {
+  const navigate = useNavigate()
   const { activeOrgId } = useOrganization()
   const { data: sheets = [], isLoading, isError } = useMyJobSheets(activeOrgId)
   const { data: nextSheetId } = useNextSheetId(activeOrgId)
-  const [drafts, setDrafts]     = useState<DraftJobSheet[]>([])
-  const [showModal, setShowModal] = useState(false)
+  const [drafts, setDrafts] = useState<DraftJobSheet[]>([])
 
   async function loadDrafts() {
     if (!activeOrgId) return
@@ -124,7 +124,7 @@ export default function TechnicianJobSheets() {
         </div>
         <button
           type="button"
-          onClick={() => setShowModal(true)}
+          onClick={() => navigate('/technician/job-sheets/new')}
           className="h-9 px-4 rounded-xl bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition-colors inline-flex items-center gap-1.5 flex-shrink-0 mt-0.5"
         >
           <Icons.plus size={14} color="white" />
@@ -185,7 +185,7 @@ export default function TechnicianJobSheets() {
             </p>
             <button
               type="button"
-              onClick={() => setShowModal(true)}
+              onClick={() => navigate('/technician/job-sheets/new')}
               className="h-9 px-4 rounded-xl bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition-colors"
             >
               New Sheet
@@ -198,12 +198,6 @@ export default function TechnicianJobSheets() {
         )}
       </section>
 
-      {showModal && (
-        <AddJobSheetModal
-          onClose={() => setShowModal(false)}
-          onSubmitted={() => void loadDrafts()}
-        />
-      )}
     </div>
   )
 }

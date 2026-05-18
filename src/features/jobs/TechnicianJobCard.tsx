@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '../../components/ui/StatusBadge'
+import type { DisplayStatus } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import type { RecentJobRow } from './hooks'
@@ -9,6 +10,10 @@ interface TechnicianJobCardProps {
 }
 
 export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
+  const hasSheet = (job.job_sheets ?? []).length > 0
+  const displayStatus: DisplayStatus =
+    job.status === 'completed' && !hasSheet ? 'completed_no_sheet' : job.status
+
   return (
     <Link
       to={`/technician/jobs/${job.id}`}
@@ -19,7 +24,7 @@ export function TechnicianJobCard({ job }: TechnicianJobCardProps) {
           <p className="text-[14px] font-semibold text-text-base truncate">{job.title}</p>
           <p className="text-[12.5px] text-text-muted mt-0.5 truncate">{job.customer_name}</p>
         </div>
-        <StatusBadge status={job.status} />
+        <StatusBadge status={displayStatus} />
       </div>
       <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1 text-[12px] text-text-muted min-w-0">

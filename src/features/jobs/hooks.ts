@@ -51,7 +51,10 @@ type TechAssignment = {
   profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
 }
 
-export type RecentJobRow = JobOrder & { job_assignments: TechAssignment[] }
+export type RecentJobRow = JobOrder & {
+  job_assignments: TechAssignment[]
+  job_sheets?: { id: string }[]
+}
 
 export function useRecentJobs() {
   return useQuery<RecentJobRow[]>({
@@ -114,6 +117,9 @@ export function useTechnicians() {
   })
 }
 
+const JOB_DETAIL_SELECT =
+  '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id)'
+
 export function useJob(id: string) {
   return useQuery<RecentJobRow | null>({
     queryKey: ['job', id],
@@ -121,9 +127,7 @@ export function useJob(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
-        .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
-        )
+        .select(JOB_DETAIL_SELECT)
         .eq('id', id)
         .maybeSingle()
       if (error) throw error
@@ -138,9 +142,7 @@ export function useMyJobs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
-        .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
-        )
+        .select(JOB_DETAIL_SELECT)
         .order('updated_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as RecentJobRow[]

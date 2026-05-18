@@ -1,95 +1,111 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useJob } from '../../features/jobs/hooks'
-import { useSubmitJobSheet } from '../../features/job-sheets/mutations'
-import { useOnlineStatus } from '../../hooks/useOnlineStatus'
-import { useAuthStore } from '../../store/authStore'
-import { offlineDb } from '../../offline/db'
+import { useSubmitFullSheet } from '../../features/job-sheets/mutations'
+import { fullSheetSchema, type FullSheetFormData } from '../../features/job-sheets/fullSheetSchema'
+import { SheetSections } from '../../features/job-sheets/SheetSections'
+import { useOrganization } from '../../context/OrganizationContext'
 import { Icons } from '../../components/ui/Icons'
 
-const formSchema = z.object({
-  work_performed: z.string().min(1, 'Work performed is required'),
-  hours:   z.number().int().min(0).max(23),
-  minutes: z.number().int().min(0).max(59),
-  notes: z.string().optional(),
-}).refine((d) => d.hours * 60 + d.minutes >= 1, {
-  message: 'Enter at least 1 minute',
-  path: ['minutes'],
-})
-
-type FormData = z.infer<typeof formSchema>
-
-const inputCls = 'w-full h-[44px] px-3 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
-const labelCls = 'block text-[12px] font-semibold text-text-muted uppercase tracking-wide mb-1.5'
-
 export default function SubmitJobSheetPage() {
-  const { jobId } = useParams<{ jobId: string }>()
-  const navigate = useNavigate()
-  const { data: job } = useJob(jobId ?? '')
-  const { mutate, isPending, error } = useSubmitJobSheet()
-  const isOnline = useOnlineStatus()
+  const { jobId } = useParams<{ jobId?: string }>()
+  const navigate  = useNavigate()
+  const { activeOrgId } = useOrganization()
+  const { data: job }   = useJob(jobId ?? '')
+  const { mutate, isPending, error } = useSubmitFullSheet()
 
-  const [photos, setPhotos] = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
-  const [offlineError, setOfflineError] = useState<string | null>(null)
-
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { hours: 0, minutes: 0 },
+  const methods = useForm<FullSheetFormData>({
+    resolver: zodResolver(fullSheetSchema),
+    defaultValues: {
+      customer_name: '',
+      job_title: '',
+      work_performed: '',
+    },
   })
 
-  async function saveOffline(data: FormData, timeSpentMinutes: number) {
-    try {
-      const technicianId = useAuthStore.getState().profile?.id
-      if (!technicianId) throw new Error('Not authenticated')
-      const localId = crypto.randomUUID()
-      await offlineDb.jobSheets.add({
-        localId, jobOrderId: jobId!, technicianId,
-        workPerformed: data.work_performed, timeSpentMinutes,
-        notes: data.notes, createdAt: new Date().toISOString(),
-        syncStatus: 'pending',
-      })
-      for (const photo of photos) {
-        await offlineDb.attachments.add({
-          sheetLocalId: localId, fileName: photo.name,
-          mimeType: photo.type, size: photo.size, data: photo,
-        })
-      }
-      navigate('/technician/history')
-    } catch (err) {
-      setOfflineError(err instanceof Error ? err.message : 'Failed to save offline')
-    }
-  }
+  // Pre-fill from job order when data arrives
+  useEffect(() => {
+    if (!job) return
+    const j = job as Record<string, unknown>
+    methods.reset({
+      customer_name:   (job.customer_name ?? '') as string,
+      customer_phone:  (job.customer_phone ?? '') as string,
+      customer_email:  ((j['customer_email'] ?? '') as string),
+      job_title:       (job.title ?? '') as string,
+      job_location:    (job.location ?? '') as string,
+      job_description: (job.description ?? '') as string,
+      job_type:        ((j['job_type'] ?? '') as string),
+      job_date:        (job.scheduled_date ?? '') as string,
+      work_performed:  '',
+    }, { keepErrors: false })
+  }, [job, methods])
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files) return
-    const remaining = 5 - photos.length
-    const newFiles = Array.from(e.target.files).slice(0, remaining)
-    setPhotos((p) => [...p, ...newFiles])
-    setPreviews((p) => [...p, ...newFiles.map((f) => URL.createObjectURL(f))])
-    e.target.value = ''
-  }
+  // Assigned technician display names
+  const assignedNames = (job?.job_assignments ?? []).map((a) => {
+    const p = a.profiles
+    return p ? (p.display_name || p.full_name) : ''
+  }).filter(Boolean)
 
-  function removePhoto(idx: number) {
-    URL.revokeObjectURL(previews[idx])
-    setPhotos((p) => p.filter((_, i) => i !== idx))
-    setPreviews((p) => p.filter((_, i) => i !== idx))
-  }
+  // Additional free-text technician names
+  const [additionalTechs, setAdditionalTechs] = useState<string[]>([])
 
-  function onSubmit(data: FormData) {
-    const time_spent_minutes = data.hours * 60 + data.minutes
-    if (!isOnline) {
-      void saveOffline(data, time_spent_minutes)
-      return
-    }
+  // Job photos
+  const [jobPhotos,        setJobPhotos]        = useState<File[]>([])
+  const [jobPhotoPreviews, setJobPhotoPreviews] = useState<string[]>([])
+
+  // Payment evidence
+  const [paymentPhotos,        setPaymentPhotos]        = useState<File[]>([])
+  const [paymentPhotoPreviews, setPaymentPhotoPreviews] = useState<string[]>([])
+
+  // Signatures
+  const [customerSig,    setCustomerSig]    = useState<string | null>(null)
+  const [technicianSig,  setTechnicianSig]  = useState<string | null>(null)
+
+  const addJobPhotos = useCallback((files: File[]) => {
+    setJobPhotos((p) => [...p, ...files])
+    setJobPhotoPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))])
+  }, [])
+
+  const removeJobPhoto = useCallback((i: number) => {
+    URL.revokeObjectURL(jobPhotoPreviews[i])
+    setJobPhotos((p) => p.filter((_, idx) => idx !== i))
+    setJobPhotoPreviews((p) => p.filter((_, idx) => idx !== i))
+  }, [jobPhotoPreviews])
+
+  const addPaymentPhotos = useCallback((files: File[]) => {
+    setPaymentPhotos((p) => [...p, ...files])
+    setPaymentPhotoPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))])
+  }, [])
+
+  const removePaymentPhoto = useCallback((i: number) => {
+    URL.revokeObjectURL(paymentPhotoPreviews[i])
+    setPaymentPhotos((p) => p.filter((_, idx) => idx !== i))
+    setPaymentPhotoPreviews((p) => p.filter((_, idx) => idx !== i))
+  }, [paymentPhotoPreviews])
+
+  function onSubmit(data: FullSheetFormData) {
     mutate(
-      { jobOrderId: jobId!, form: { work_performed: data.work_performed, time_spent_minutes, notes: data.notes }, photos },
-      { onSuccess: () => navigate('/technician/history') }
+      {
+        orgId:                    activeOrgId,
+        jobOrderId:               jobId ?? null,
+        form:                     data,
+        additionalTechnicianNames: additionalTechs,
+        jobPhotos,
+        paymentPhotos,
+        customerSignatureDataUrl:  customerSig,
+        technicianSignatureDataUrl: technicianSig,
+      },
+      {
+        onSuccess: () => navigate(jobId ? `/technician/jobs/${jobId}` : '/technician/job-sheets'),
+      }
     )
   }
+
+  const isPreFilled = !!jobId
+  const pageTitle   = isPreFilled ? 'Submit Job Sheet' : 'New Job Sheet'
+  const subtitle    = isPreFilled ? (job?.title ?? '…') : 'Standalone report'
 
   return (
     <div className="max-w-lg mx-auto">
@@ -102,92 +118,56 @@ export default function SubmitJobSheetPage() {
           <Icons.arrowL size={20} />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] text-text-muted font-medium truncate">{job?.title ?? '…'}</p>
-          <p className="text-[14px] font-bold text-text-base leading-tight">Submit Job Sheet</p>
+          <p className="text-[11px] text-text-muted font-medium truncate">{subtitle}</p>
+          <p className="text-[14px] font-bold text-text-base leading-tight">{pageTitle}</p>
         </div>
       </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="px-4 py-5 space-y-5">
-        <div>
-          <label className={labelCls}>Work Performed <span className="text-danger normal-case font-normal">*</span></label>
-          <textarea
-            {...register('work_performed')}
-            rows={5}
-            placeholder="Describe all work carried out…"
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none resize-y leading-relaxed focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all"
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <SheetSections
+            assignedTechnicianNames={assignedNames}
+            additionalTechs={additionalTechs}
+            onAddTech={(name) => setAdditionalTechs((p) => [...p, name])}
+            onRemoveTech={(i) => setAdditionalTechs((p) => p.filter((_, idx) => idx !== i))}
+            customerSig={customerSig}
+            onCustomerSig={setCustomerSig}
+            technicianSig={technicianSig}
+            onTechnicianSig={setTechnicianSig}
+            jobPhotoPreviews={jobPhotoPreviews}
+            jobPhotoCount={jobPhotos.length}
+            onAddJobPhotos={addJobPhotos}
+            onRemoveJobPhoto={removeJobPhoto}
+            paymentPhotoPreviews={paymentPhotoPreviews}
+            paymentPhotoCount={paymentPhotos.length}
+            onAddPaymentPhotos={addPaymentPhotos}
+            onRemovePaymentPhoto={removePaymentPhoto}
           />
-          {errors.work_performed && <p className="text-[11.5px] text-danger mt-1">{errors.work_performed.message}</p>}
-        </div>
 
-        <div>
-          <label className={labelCls}>Time Spent <span className="text-danger normal-case font-normal">*</span></label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <input {...register('hours', { valueAsNumber: true })} type="number" min={0} max={23} placeholder="0" className={inputCls} aria-label="Hours" />
-              <p className="text-[11px] text-text-muted mt-1 text-center">hrs</p>
-            </div>
-            <span className="text-[20px] text-text-muted pb-5">:</span>
-            <div className="flex-1">
-              <input {...register('minutes', { valueAsNumber: true })} type="number" min={0} max={59} placeholder="0" className={inputCls} aria-label="Minutes" />
-              <p className="text-[11px] text-text-muted mt-1 text-center">min</p>
-            </div>
+          <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-white border-t border-slate-200 px-4 py-3 md:static md:bottom-auto md:border-0 md:px-4 md:pb-8 md:pt-0">
+            {error && (
+              <p className="text-[12px] text-danger mb-2">{(error as Error).message}</p>
+            )}
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full h-[50px] rounded-xl bg-brand-700 text-white text-[14px] font-semibold disabled:opacity-50 transition-colors hover:bg-brand-800 flex items-center justify-center gap-2"
+            >
+              {isPending ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  <Icons.send size={16} />
+                  Submit Job Sheet
+                </>
+              )}
+            </button>
           </div>
-          {errors.minutes && <p className="text-[11.5px] text-danger mt-1">{errors.minutes.message}</p>}
-        </div>
-
-        <div>
-          <label className={labelCls}>Notes <span className="text-text-muted font-normal normal-case">(optional)</span></label>
-          <textarea
-            {...register('notes')}
-            rows={3}
-            placeholder="Additional observations or follow-up actions…"
-            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none resize-y leading-relaxed focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all"
-          />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className={labelCls + ' mb-0'}>Photos <span className="text-text-muted font-normal normal-case">(max 5)</span></label>
-            <span className="text-[11px] text-text-muted">{photos.length}/5</span>
-          </div>
-          {previews.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              {previews.map((src, i) => (
-                <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-                  <img src={src} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center" aria-label="Remove photo">
-                    <Icons.close size={11} color="white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          {photos.length < 5 && (
-            <label className="flex items-center justify-center gap-2 h-[44px] rounded-xl border-2 border-dashed border-slate-300 text-[13px] text-text-muted cursor-pointer hover:border-brand-700 hover:text-brand-700 transition-colors">
-              <Icons.camera size={17} />
-              Add photos
-              <input type="file" accept="image/*" capture="environment" multiple onChange={handlePhotoChange} className="sr-only" />
-            </label>
-          )}
-        </div>
-
-        {(error || offlineError) && (
-          <p className="text-[12.5px] text-danger">{error ? (error as Error).message : offlineError}</p>
-        )}
-        {!isOnline && (
-          <p className="text-[12px] text-[#D97706] bg-[#FEF3C7] rounded-lg px-3 py-2">
-            You're offline. This submission will be saved and synced automatically when you reconnect.
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full h-[50px] rounded-xl bg-brand-700 text-white text-[14px] font-semibold disabled:opacity-50 transition-colors hover:bg-brand-800 active:bg-brand-900"
-        >
-          {isPending ? 'Submitting…' : 'Submit Job Sheet'}
-        </button>
-      </form>
+        </form>
+      </FormProvider>
     </div>
   )
 }
