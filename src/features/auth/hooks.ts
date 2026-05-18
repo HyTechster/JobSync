@@ -138,21 +138,28 @@ export function useLogout() {
   const navigate = useNavigate()
 
   return () => {
+    // Capture before clearing state
     const userId = useAuthStore.getState().session?.user.id
-    // Remove this device from login_history so Active sessions updates for others.
-    if (userId) {
-      void supabase
-        .from('login_history' as never)
-        .delete()
-        .eq('user_id' as never, userId)
-        .eq('device_info' as never, getDeviceInfo())
-    }
+    const deviceInfo = getDeviceInfo()
 
+    // Clear local state and navigate immediately — don't block on network
     clearSession()
     localStorage.removeItem('jobsync_active_org')
     queryClient.clear()
-    void supabase.auth.signOut()
     navigate('/login', { replace: true })
+
+    // Delete this device's history row FIRST (still has valid JWT), then sign
+    // out. Sequential inside a void IIFE so delete wins the race against signOut.
+    void (async () => {
+      if (userId) {
+        await supabase
+          .from('login_history' as never)
+          .delete()
+          .eq('user_id' as never, userId)
+          .eq('device_info' as never, deviceInfo)
+      }
+      await supabase.auth.signOut()
+    })()
   }
 }
 
@@ -162,9 +169,10 @@ export function useLogoutAll() {
 
   return async () => {
     const userId = useAuthStore.getState().session?.user.id
-    // Remove ALL login_history rows for this user so Active sessions is clean.
+
+    // Delete ALL history rows before signOut so the JWT is still valid
     if (userId) {
-      void supabase
+      await supabase
         .from('login_history' as never)
         .delete()
         .eq('user_id' as never, userId)
