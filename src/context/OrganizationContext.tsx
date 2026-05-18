@@ -93,6 +93,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOrganization() {
   const ctx = useContext(OrganizationContext)
   if (!ctx) throw new Error('useOrganization must be used within OrganizationProvider')
