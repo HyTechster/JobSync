@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth, useLogoutAll } from '../auth/hooks'
 import { useChangePassword, useLoginHistory } from './hooks'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
+import { useAuthStore } from '../../store/authStore'
 
 const pwSchema = z.object({
   currentPassword: z.string().min(1, 'Enter your current password'),
@@ -56,6 +58,8 @@ function DeviceIcon({ deviceInfo }: { deviceInfo: string }) {
 
 export function SecurityTab() {
   const { session } = useAuth()
+  const userId = useAuthStore((s) => s.session?.user.id)
+  const queryClient = useQueryClient()
   const { fmtDateTime } = useDateFormatter()
   const changePassword = useChangePassword()
   const { data: loginHistory = [], isLoading: historyLoading } = useLoginHistory()
@@ -78,6 +82,16 @@ export function SecurityTab() {
 
   async function handleSignOutOthers() {
     await supabase.auth.signOut({ scope: 'others' })
+    // Remove login_history rows for every device except this one so the
+    // Active sessions list updates immediately without a page refresh.
+    if (userId) {
+      await supabase
+        .from('login_history' as never)
+        .delete()
+        .eq('user_id' as never, userId)
+        .neq('device_info' as never, currentDevice)
+    }
+    await queryClient.invalidateQueries({ queryKey: ['login-history'] })
     setSignOutOthersSuccess(true)
     setTimeout(() => setSignOutOthersSuccess(false), 3000)
   }
