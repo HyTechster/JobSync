@@ -60,10 +60,17 @@ function MobileCard({ sheet, onView }: { sheet: JobSheetWithDetail; onView: () =
       <div className="flex items-start gap-3">
         <Avatar name={sheet.profiles?.full_name ?? '?'} size={36} src={sheet.profiles?.avatar_url} />
         <div className="flex-1 min-w-0">
-          {sheet.sheet_number != null && (
-            <span className="text-[10.5px] font-bold text-brand-700">#{sheet.sheet_number} · </span>
-          )}
-          <span className="text-[10.5px] text-text-muted">{sheet.profiles?.full_name ?? 'Unknown'}</span>
+          <div className="flex items-baseline gap-1 flex-wrap">
+            {sheet.sheet_number != null && (
+              <span className="text-[10.5px] font-bold text-brand-700">#{sheet.sheet_number} · </span>
+            )}
+            <span className="text-[10.5px] text-text-muted">
+              {sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'}
+            </span>
+            {sheet.profiles?.display_name && (
+              <span className="text-[10px] text-text-subtle">({sheet.profiles.full_name})</span>
+            )}
+          </div>
           <p className="text-[13.5px] font-semibold text-text-base truncate mt-0.5">{title}</p>
           {subtitle ? (
             <p className="text-[12px] text-text-muted">{subtitle}</p>
@@ -196,9 +203,14 @@ export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProp
                               size={28}
                               src={sheet.profiles?.avatar_url}
                             />
-                            <span className="text-[13px] text-text-base">
-                              {sheet.profiles?.full_name ?? 'Unknown'}
-                            </span>
+                            <div>
+                              <div className="text-[13px] text-text-base">
+                                {sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'}
+                              </div>
+                              {sheet.profiles?.display_name && (
+                                <div className="text-[11px] text-text-muted">{sheet.profiles.full_name}</div>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-[13px] text-text-muted whitespace-nowrap">

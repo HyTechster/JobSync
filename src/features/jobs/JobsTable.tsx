@@ -85,7 +85,7 @@ export function JobsTable({ jobs, isLoading, onEdit, onDelete }: JobsTableProps)
                             <div
                               key={a.technician_id}
                               style={{ marginLeft: idx ? -6 : 0 }}
-                              title={a.profiles?.full_name ?? ''}
+                              title={a.profiles ? (a.profiles.display_name ?? a.profiles.full_name) : ''}
                             >
                               <Avatar
                                 name={a.profiles?.full_name ?? '?'}

@@ -48,7 +48,7 @@ export function useDashboardStats() {
 
 type TechAssignment = {
   technician_id: string
-  profiles: { full_name: string; avatar_url: string | null } | null
+  profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
 }
 
 export type RecentJobRow = JobOrder & { job_assignments: TechAssignment[] }
@@ -60,7 +60,7 @@ export function useRecentJobs() {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
         .order('created_at', { ascending: false })
         .limit(5)
@@ -78,7 +78,7 @@ export function useJobs(filters?: JobFilters) {
       let query = supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
         .order('created_at', { ascending: false })
 
@@ -122,7 +122,7 @@ export function useJob(id: string) {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
         .eq('id', id)
         .maybeSingle()
@@ -139,7 +139,7 @@ export function useMyJobs() {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
         .order('updated_at', { ascending: false })
       if (error) throw error
@@ -155,7 +155,7 @@ export function useMyCompletedJobs() {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
         .eq('status', 'completed')
         .order('updated_at', { ascending: false })

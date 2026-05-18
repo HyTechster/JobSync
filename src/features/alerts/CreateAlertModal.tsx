@@ -162,9 +162,12 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
                         className="w-3.5 h-3.5 accent-brand-700"
                       />
                       <Avatar name={tech.full_name} size={24} src={tech.avatar_url} />
-                      <span className="text-[13px] text-text-base flex-1">
-                        {tech.full_name}
-                      </span>
+                      <div className="flex-1">
+                        <div className="text-[13px] text-text-base">{tech.display_name ?? tech.full_name}</div>
+                        {tech.display_name && (
+                          <div className="text-[11px] text-text-muted">{tech.full_name}</div>
+                        )}
+                      </div>
                     </label>
                   )
                 })

@@ -22,12 +22,12 @@ export type JobSheetWithDetail = {
   notes: string | null
   submitted_at: string
   job_orders: { id: string; title: string; status: string; customer_name: string } | null
-  profiles: { full_name: string; avatar_url: string | null } | null
+  profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
   attachments: AttachmentRow[]
 }
 
 const SHEET_SELECT =
-  '*, job_orders:job_order_id(id, title, status, customer_name), profiles:technician_id(full_name, avatar_url), attachments(id, storage_path, file_name, file_size, mime_type)'
+  '*, job_orders:job_order_id(id, title, status, customer_name), profiles:technician_id(full_name, display_name, avatar_url), attachments(id, storage_path, file_name, file_size, mime_type)'
 
 /** Admin view — all sheets sorted by sheet_number desc, nulls last for legacy rows */
 export function useJobSheets() {

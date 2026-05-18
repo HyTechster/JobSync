@@ -43,8 +43,11 @@ export function TechnicianPicker({ technicians, selectedIds, onChange }: Technic
             <Avatar name={tech.full_name} size={32} src={tech.avatar_url} />
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-semibold text-text-base truncate">
-                {tech.full_name}
+                {tech.display_name ?? tech.full_name}
               </p>
+              {tech.display_name && (
+                <p className="text-[11px] text-text-muted truncate">{tech.full_name}</p>
+              )}
               <p className="text-[11.5px] text-text-muted mt-0.5 truncate">{tech.email}</p>
             </div>
             {active && <Icons.check size={16} color="#1E3A5F" />}

@@ -114,7 +114,7 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, onEdi
                           <Avatar name={user.full_name} size={32} src={user.avatar_url} />
                           <div>
                             <div className="font-semibold text-text-base leading-tight flex items-center gap-1.5 flex-wrap">
-                              {user.full_name}
+                              {user.display_name ?? user.full_name}
                               {user.is_owner && (
                                 <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 leading-none">
                                   Owner
@@ -126,6 +126,9 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, onEdi
                                 </span>
                               )}
                             </div>
+                            {user.display_name && (
+                              <div className="text-[11.5px] text-text-muted leading-tight">{user.full_name}</div>
+                            )}
                             <div className="text-[11.5px] text-text-muted mt-0.5">{user.email}</div>
                           </div>
                         </div>

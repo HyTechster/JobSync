@@ -92,7 +92,7 @@ export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
               <>
                 <span className="text-[12px] text-text-subtle">·</span>
                 <span className="text-[12px] text-text-muted">
-                  by {alert.profiles.full_name}
+                  by {alert.profiles.display_name ?? alert.profiles.full_name}
                 </span>
               </>
             )}

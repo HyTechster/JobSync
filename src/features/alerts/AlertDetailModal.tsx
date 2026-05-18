@@ -58,9 +58,14 @@ export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
                 size={28}
                 src={r.profiles?.avatar_url}
               />
-              <span className="flex-1 text-[13px] font-medium text-text-base">
-                {r.profiles?.full_name ?? 'Unknown'}
-              </span>
+              <div className="flex-1">
+                <div className="text-[13px] font-medium text-text-base">
+                  {r.profiles ? (r.profiles.display_name ?? r.profiles.full_name) : 'Unknown'}
+                </div>
+                {r.profiles?.display_name && (
+                  <div className="text-[11px] text-text-muted">{r.profiles.full_name}</div>
+                )}
+              </div>
               {r.read_at ? (
                 <span className="inline-flex items-center gap-1 text-[11.5px] text-success font-medium">
                   <Icons.check size={12} color="#059669" />

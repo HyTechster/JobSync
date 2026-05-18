@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 type AlertRecipient = {
   recipient_id: string
   read_at: string | null
-  profiles: { full_name: string; avatar_url: string | null } | null
+  profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
 }
 
 export type AlertWithDetail = {
@@ -13,7 +13,7 @@ export type AlertWithDetail = {
   message: string
   created_by: string
   created_at: string
-  profiles: { full_name: string; avatar_url: string | null } | null
+  profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
   alert_recipients: AlertRecipient[]
 }
 
@@ -26,7 +26,7 @@ export type MyAlertRow = {
     title: string
     message: string
     created_at: string
-    profiles: { full_name: string } | null
+    profiles: { full_name: string; display_name: string | null } | null
   } | null
 }
 
@@ -37,7 +37,7 @@ export function useMyAlerts() {
       const { data, error } = await supabase
         .from('alert_recipients')
         .select(
-          '*, alerts:alert_id(title, message, created_at, profiles:created_by(full_name))'
+          '*, alerts:alert_id(title, message, created_at, profiles:created_by(full_name, display_name))'
         )
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -68,7 +68,7 @@ export function useAlerts() {
       const { data, error } = await supabase
         .from('alerts')
         .select(
-          '*, profiles:created_by(full_name, avatar_url), alert_recipients(recipient_id, read_at, profiles:recipient_id(full_name, avatar_url))'
+          '*, profiles:created_by(full_name, display_name, avatar_url), alert_recipients(recipient_id, read_at, profiles:recipient_id(full_name, display_name, avatar_url))'
         )
         .order('created_at', { ascending: false })
 

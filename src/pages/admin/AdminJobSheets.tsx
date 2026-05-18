@@ -31,7 +31,7 @@ export default function AdminJobSheets() {
       if (q) {
         const title    = (s.job_title ?? s.job_orders?.title ?? '').toLowerCase()
         const customer = (s.job_orders?.customer_name ?? '').toLowerCase()
-        const tech     = (s.profiles?.full_name ?? '').toLowerCase()
+        const tech     = (s.profiles ? (s.profiles.display_name ?? s.profiles.full_name) : '').toLowerCase()
         if (!title.includes(q) && !customer.includes(q) && !tech.includes(q)) return false
       }
       return true
@@ -107,7 +107,7 @@ export default function AdminJobSheets() {
         >
           <option value="">All technicians</option>
           {technicians.map((t) => (
-            <option key={t.id} value={t.id}>{t.full_name}</option>
+            <option key={t.id} value={t.id}>{t.display_name ?? t.full_name}</option>
           ))}
         </select>
 

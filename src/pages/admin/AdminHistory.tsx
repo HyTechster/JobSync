@@ -32,17 +32,22 @@ function MobileCard({ job }: { job: RecentJobRow }) {
             {techs.slice(0, 3).map((a) => (
               <div
                 key={a.technician_id}
-                title={a.profiles?.full_name ?? ''}
+                title={a.profiles ? (a.profiles.display_name ?? a.profiles.full_name) : ''}
                 className="w-5 h-5 rounded-full bg-brand-700 text-white text-[8px] font-bold flex items-center justify-center ring-2 ring-white"
               >
                 {(a.profiles?.full_name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
               </div>
             ))}
           </div>
-          <span className="text-[11.5px] text-text-muted truncate">
-            {techs[0].profiles?.full_name ?? 'Unknown'}
-            {techs.length > 1 ? ` +${techs.length - 1}` : ''}
-          </span>
+          <div className="truncate">
+            <span className="text-[11.5px] text-text-muted">
+              {techs[0].profiles ? (techs[0].profiles.display_name ?? techs[0].profiles.full_name) : 'Unknown'}
+              {techs.length > 1 ? ` +${techs.length - 1}` : ''}
+            </span>
+            {techs[0].profiles?.display_name && (
+              <span className="text-[10px] text-text-subtle ml-1">({techs[0].profiles.full_name})</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -224,17 +229,22 @@ export default function AdminHistory() {
                                 {techs.slice(0, 3).map((a) => (
                                   <div
                                     key={a.technician_id}
-                                    title={a.profiles?.full_name ?? ''}
+                                    title={a.profiles ? (a.profiles.display_name ?? a.profiles.full_name) : ''}
                                     className="w-6 h-6 rounded-full bg-brand-700 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white"
                                   >
                                     {(a.profiles?.full_name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
                                   </div>
                                 ))}
                               </div>
-                              <span className="text-[13px] text-text-muted">
-                                {techs[0].profiles?.full_name ?? 'Unknown'}
-                                {techs.length > 1 ? ` +${techs.length - 1}` : ''}
-                              </span>
+                              <div>
+                                <span className="text-[13px] text-text-muted">
+                                  {techs[0].profiles ? (techs[0].profiles.display_name ?? techs[0].profiles.full_name) : 'Unknown'}
+                                  {techs.length > 1 ? ` +${techs.length - 1}` : ''}
+                                </span>
+                                {techs[0].profiles?.display_name && (
+                                  <span className="text-[11px] text-text-subtle ml-1">({techs[0].profiles.full_name})</span>
+                                )}
+                              </div>
                             </div>
                           )}
                         </td>

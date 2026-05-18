@@ -45,7 +45,7 @@ export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps
       isOpen
       onClose={onClose}
       title={sheet.job_orders?.title ?? 'Job Sheet'}
-      subtitle={`Submitted by ${sheet.profiles?.full_name ?? 'Unknown'} · ${formatDate(sheet.submitted_at)}`}
+      subtitle={`Submitted by ${sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'} · ${formatDate(sheet.submitted_at)}`}
       maxWidth="max-w-2xl"
     >
       <div className="flex items-center gap-3">
@@ -56,8 +56,11 @@ export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps
         />
         <div>
           <p className="text-[13.5px] font-semibold text-text-base">
-            {sheet.profiles?.full_name ?? 'Unknown'}
+            {sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'}
           </p>
+          {sheet.profiles?.display_name && (
+            <p className="text-[11px] text-text-muted">{sheet.profiles.full_name}</p>
+          )}
           <p className="text-[12px] text-text-muted">{sheet.job_orders?.customer_name}</p>
         </div>
         {sheet.job_orders?.status && (
