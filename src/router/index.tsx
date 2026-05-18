@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AdminRoutes } from './AdminRoutes'
 import { TechnicianRoutes } from './TechnicianRoutes'
+import { RootErrorBoundary } from '../components/shared/RootErrorBoundary'
 
 // Admin pages — eagerly imported so navigation never suspends inside startTransition
 import AdminDashboard        from '../pages/admin/AdminDashboard'
@@ -50,6 +51,11 @@ function wrap(Page: React.ComponentType) {
 }
 
 export const router = createBrowserRouter([
+  {
+    // Pathless layout route — catches errors from every child route, including
+    // "Failed to fetch dynamically imported module" after a new Vercel deploy.
+    errorElement: <RootErrorBoundary />,
+    children: [
   {
     path: '/',
     element: <Navigate to="/login" replace />,
@@ -109,5 +115,7 @@ export const router = createBrowserRouter([
       { path: 'alerts',             element: <TechnicianAlertsPage /> },
       { path: 'profile',            element: <TechnicianProfilePage /> },
     ],
+  },
+  ], // end children of pathless error-boundary wrapper
   },
 ])

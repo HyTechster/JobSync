@@ -209,14 +209,6 @@ export function SecurityTab() {
                 onClick={async () => {
                   setSigningOutAll(true)
                   await broadcastForcedSignout(currentDevice)
-                  // Clear all login_history rows while still authenticated so
-                  // Active sessions is empty when anyone next logs in.
-                  if (userId) {
-                    await supabase
-                      .from('login_history' as never)
-                      .delete()
-                      .eq('user_id' as never, userId)
-                  }
                   await logoutAll()
                 }}
                 className="h-8 px-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0"
