@@ -131,6 +131,7 @@ export interface LoginHistoryRow {
   id: string
   device_info: string
   is_new_device: boolean
+  is_active: boolean
   signed_in_at: string
 }
 
@@ -142,10 +143,28 @@ export function useLoginHistory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('login_history' as never)
-        .select('id, device_info, is_new_device, signed_in_at')
+        .select('id, device_info, is_new_device, is_active, signed_in_at')
         .eq('user_id' as never, session!.user.id)
         .order('signed_in_at' as never, { ascending: false })
         .limit(50)
+      if (error) throw error
+      return (data ?? []) as LoginHistoryRow[]
+    },
+  })
+}
+
+export function useActiveSessions() {
+  const session = useAuthStore((s) => s.session)
+  return useQuery<LoginHistoryRow[]>({
+    queryKey: ['active-sessions', session?.user.id],
+    enabled: !!session?.user.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('login_history' as never)
+        .select('id, device_info, is_new_device, is_active, signed_in_at')
+        .eq('user_id' as never, session!.user.id)
+        .eq('is_active' as never, true)
+        .order('signed_in_at' as never, { ascending: false })
       if (error) throw error
       return (data ?? []) as LoginHistoryRow[]
     },
