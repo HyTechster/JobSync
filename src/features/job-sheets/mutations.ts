@@ -193,7 +193,7 @@ export function useSubmitFullSheet() {
               .update({
                 customer_signature_url:    custSigUrl,
                 technician_signature_url:  techSigUrl,
-              })
+              } as never)
               .eq('id', sheet.id)
               .then(({ error }) => { if (error) throw error }),
             ]

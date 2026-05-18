@@ -58,10 +58,7 @@ export default function SubmitJobSheetPage() {
     })
   }, [draftId, methods])
 
-  // Assigned technician names (from job order)
-  const assignedTechIds = (job?.job_assignments ?? []).map((a) => a.technician_id)
-
-  // Additional org technicians (exclude self + already assigned lead techs)
+  // Additional org technicians (exclude self)
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([])
   const toggleTech = useCallback((id: string) => {
     setSelectedTechIds((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id])
