@@ -138,19 +138,20 @@ export function useLogout() {
   const navigate = useNavigate()
 
   return () => {
-    // Clear all local state immediately — do NOT wait for the network call.
-    // If the connection is dropped, awaiting signOut() blocks forever and the
-    // user stays "logged in" locally. Clearing first guarantees the UI signs
-    // out regardless of network health.
+    const userId = useAuthStore.getState().session?.user.id
+    // Remove this device from login_history so Active sessions updates for others.
+    if (userId) {
+      void supabase
+        .from('login_history' as never)
+        .delete()
+        .eq('user_id' as never, userId)
+        .eq('device_info' as never, getDeviceInfo())
+    }
+
     clearSession()
     localStorage.removeItem('jobsync_active_org')
-    queryClient.clear()  // wipe all cached queries so the next user starts fresh
-
-    // Fire-and-forget: tell the server to invalidate the token.
-    // We don't await this — failure just means the JWT stays valid on the server
-    // until it naturally expires, which is acceptable.
+    queryClient.clear()
     void supabase.auth.signOut()
-
     navigate('/login', { replace: true })
   }
 }
@@ -160,14 +161,19 @@ export function useLogoutAll() {
   const navigate = useNavigate()
 
   return async () => {
+    const userId = useAuthStore.getState().session?.user.id
+    // Remove ALL login_history rows for this user so Active sessions is clean.
+    if (userId) {
+      void supabase
+        .from('login_history' as never)
+        .delete()
+        .eq('user_id' as never, userId)
+    }
+
     clearSession()
     localStorage.removeItem('jobsync_active_org')
     queryClient.clear()
-
-    // scope: 'global' revokes every refresh token for this user on the server,
-    // signing out all devices simultaneously.
     void supabase.auth.signOut({ scope: 'global' })
-
     navigate('/login', { replace: true })
   }
 }
