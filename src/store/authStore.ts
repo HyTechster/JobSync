@@ -13,8 +13,13 @@ interface AuthState {
   setProfile: (profile: Profile | null) => void
   setNewDeviceAlert: (value: boolean) => void
   clearSession: () => void
+  broadcastForcedSignout: (deviceInfo: string) => Promise<void>
   initAuth: () => () => void
 }
+
+// Module-level ref so broadcastForcedSignout can reuse the subscribed channel
+// without creating a duplicate that stalls on subscribe.
+let _forceSignoutChannel: ReturnType<typeof supabase.channel> | null = null
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
@@ -39,12 +44,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearSession: () => set({ session: null, profile: null, isLoading: false, newDeviceAlert: false }),
 
-  initAuth: () => {
-    let forceSignoutChannel: ReturnType<typeof supabase.channel> | null = null
+  broadcastForcedSignout: async (deviceInfo: string) => {
+    // Reuses the already-subscribed channel owned by initAuth so we never
+    // create a duplicate channel with the same name, which would stall.
+    const ch = _forceSignoutChannel
+    if (!ch) return
+    await ch.send({ type: 'broadcast', event: 'sign_out', payload: { device_info: deviceInfo } })
+  },
 
+  initAuth: () => {
     function subscribeForceSignout(userId: string) {
-      if (forceSignoutChannel) void supabase.removeChannel(forceSignoutChannel)
-      forceSignoutChannel = supabase
+      if (_forceSignoutChannel) void supabase.removeChannel(_forceSignoutChannel)
+      _forceSignoutChannel = supabase
         .channel(`forced-signout:${userId}`)
         .on('broadcast', { event: 'sign_out' }, () => {
           // scope:'local' clears the Supabase session from localStorage without
@@ -85,9 +96,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (get().session?.user.id === session.user.id) set({ profile })
           })
         } else {
-          if (forceSignoutChannel) {
-            void supabase.removeChannel(forceSignoutChannel)
-            forceSignoutChannel = null
+          if (_forceSignoutChannel) {
+            void supabase.removeChannel(_forceSignoutChannel)
+            _forceSignoutChannel = null
           }
           set({ profile: null })
         }
@@ -96,7 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     return () => {
       subscription.unsubscribe()
-      if (forceSignoutChannel) void supabase.removeChannel(forceSignoutChannel)
+      if (_forceSignoutChannel) void supabase.removeChannel(_forceSignoutChannel)
     }
   },
 }))

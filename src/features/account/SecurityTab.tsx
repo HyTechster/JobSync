@@ -42,6 +42,7 @@ function DeviceIcon({ deviceInfo }: { deviceInfo: string }) {
 export function SecurityTab() {
   const { session } = useAuth()
   const userId = useAuthStore((s) => s.session?.user.id)
+  const broadcastForcedSignout = useAuthStore((s) => s.broadcastForcedSignout)
   const queryClient = useQueryClient()
   const { fmtDateTime } = useDateFormatter()
   const changePassword = useChangePassword()
@@ -64,19 +65,8 @@ export function SecurityTab() {
   }
 
   async function handleSignOutOthers() {
-    // Broadcast to all other devices first (while our token is still valid).
-    // Wait for SUBSCRIBED before sending so the message is guaranteed to deliver.
-    if (userId) {
-      await new Promise<void>((resolve) => {
-        const ch = supabase.channel(`forced-signout:${userId}`)
-        ch.subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            void ch.send({ type: 'broadcast', event: 'sign_out', payload: { device_info: currentDevice } })
-              .finally(() => { void supabase.removeChannel(ch); resolve() })
-          }
-        })
-      })
-    }
+    // Reuse the already-subscribed channel from authStore — no duplicate channel needed.
+    await broadcastForcedSignout(currentDevice)
 
     await supabase.auth.signOut({ scope: 'others' })
 
