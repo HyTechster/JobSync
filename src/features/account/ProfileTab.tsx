@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState } from 'react'
+import { useForm, useController, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { Profile } from '../../types'
@@ -12,9 +13,119 @@ const schema = z.object({
   display_name: z.string().optional(),
   gender:       z.enum(['male', 'female', 'other', 'prefer_not_to_say', '']).optional(),
   country:      z.string().optional(),
-  phone:        z.string().optional(),
+  phone:        z.string()
+    .optional()
+    .refine(
+      (v) => !v || /^\+\d{7,15}$/.test(v.replace(/[\s\-().]/g, '')),
+      'Enter a valid phone number (e.g. +60 12 345 6789)'
+    ),
 })
 type FormData = z.infer<typeof schema>
+
+// ── Country dial codes ────────────────────────────────────────────────────────
+
+const DIAL_CODES = [
+  { code: '+60',  flag: '🇲🇾', name: 'Malaysia'      },
+  { code: '+65',  flag: '🇸🇬', name: 'Singapore'     },
+  { code: '+62',  flag: '🇮🇩', name: 'Indonesia'     },
+  { code: '+66',  flag: '🇹🇭', name: 'Thailand'      },
+  { code: '+63',  flag: '🇵🇭', name: 'Philippines'   },
+  { code: '+84',  flag: '🇻🇳', name: 'Vietnam'       },
+  { code: '+673', flag: '🇧🇳', name: 'Brunei'        },
+  { code: '+95',  flag: '🇲🇲', name: 'Myanmar'       },
+  { code: '+855', flag: '🇰🇭', name: 'Cambodia'      },
+  { code: '+856', flag: '🇱🇦', name: 'Laos'          },
+  { code: '+44',  flag: '🇬🇧', name: 'United Kingdom'},
+  { code: '+1',   flag: '🇺🇸', name: 'United States' },
+  { code: '+61',  flag: '🇦🇺', name: 'Australia'     },
+  { code: '+91',  flag: '🇮🇳', name: 'India'         },
+  { code: '+86',  flag: '🇨🇳', name: 'China'         },
+  { code: '+81',  flag: '🇯🇵', name: 'Japan'         },
+  { code: '+82',  flag: '🇰🇷', name: 'South Korea'   },
+  { code: '+971', flag: '🇦🇪', name: 'UAE'           },
+  { code: '+966', flag: '🇸🇦', name: 'Saudi Arabia'  },
+  { code: '+49',  flag: '🇩🇪', name: 'Germany'       },
+  { code: '+33',  flag: '🇫🇷', name: 'France'        },
+] as const
+
+function parsePhone(full: string): { dialCode: string; local: string } {
+  if (!full) return { dialCode: '+60', local: '' }
+  const match = DIAL_CODES
+    .slice()
+    .sort((a, b) => b.code.length - a.code.length) // match longest code first
+    .find((d) => full.startsWith(d.code))
+  if (match) return { dialCode: match.code, local: full.slice(match.code.length).trimStart() }
+  return { dialCode: '+60', local: full.replace(/^\+/, '') }
+}
+
+function PhoneInput({ control }: { control: Control<FormData> }) {
+  const { field, fieldState } = useController({ name: 'phone', control })
+
+  const parsed = parsePhone(field.value ?? '')
+  const [dialCode, setDialCode] = useState(parsed.dialCode)
+  const [local, setLocal]       = useState(parsed.local)
+
+  function handleDialChange(code: string) {
+    setDialCode(code)
+    const combined = local ? `${code}${local}` : ''
+    field.onChange(combined)
+  }
+
+  function handleLocalChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/[^\d\s\-().]/g, '')
+    setLocal(digits)
+    const combined = digits ? `${dialCode}${digits}` : ''
+    field.onChange(combined)
+  }
+
+  const hasError = !!fieldState.error
+
+  return (
+    <div>
+      <div className={`flex h-10 border rounded-lg overflow-hidden bg-white transition-all focus-within:border-brand-700 focus-within:ring-[3px] focus-within:ring-brand-700/10 ${hasError ? 'border-danger' : 'border-border'}`}>
+        {/* Dial code selector */}
+        <div className="relative flex-shrink-0">
+          <select
+            value={dialCode}
+            onChange={(e) => handleDialChange(e.target.value)}
+            onBlur={field.onBlur}
+            aria-label="Country dial code"
+            className="h-full appearance-none bg-surface-2 border-r border-border pl-2.5 pr-6 text-sm font-medium text-text-base outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+          >
+            {DIAL_CODES.map((d) => (
+              <option key={d.code} value={d.code}>
+                {d.flag} {d.code}
+              </option>
+            ))}
+          </select>
+          <svg
+            width="10" height="10" viewBox="0 0 24 24" fill="none"
+            stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            aria-hidden="true"
+            className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+
+        {/* Local number */}
+        <input
+          id="phone"
+          type="tel"
+          value={local}
+          onChange={handleLocalChange}
+          onBlur={field.onBlur}
+          placeholder="12 345 6789"
+          autoComplete="tel-national"
+          className="flex-1 min-w-0 px-3 text-sm text-text-base bg-white outline-none placeholder:text-text-subtle"
+        />
+      </div>
+      {hasError && (
+        <p className="text-xs text-danger mt-1">{fieldState.error?.message}</p>
+      )}
+    </div>
+  )
+}
 
 const GENDER_OPTIONS = [
   { value: '',                  label: 'Prefer not to say' },
@@ -40,7 +151,7 @@ export function ProfileTab() {
   const { profile } = useAuth()
   const updateProfile = useUpdateProfile()
 
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       full_name:    profile?.full_name ?? '',
@@ -91,9 +202,12 @@ export function ProfileTab() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Phone number" id="phone">
-              <input id="phone" type="tel" placeholder="+60 12 345 6789" {...register('phone')} className={inputCls} />
-            </Field>
+            <div>
+              <label htmlFor="phone" className="block text-xs font-semibold text-text-base mb-1.5">
+                Phone number
+              </label>
+              <PhoneInput control={control} />
+            </div>
           </div>
 
           <div className="h-px bg-border my-1" />

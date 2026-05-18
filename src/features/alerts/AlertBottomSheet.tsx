@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Icons } from '../../components/ui/Icons'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import type { MyAlertRow } from './hooks'
 
 interface AlertBottomSheetProps {
@@ -7,14 +8,8 @@ interface AlertBottomSheetProps {
   onClose: () => void
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
 export function AlertBottomSheet({ alert, onClose }: AlertBottomSheetProps) {
+  const { fmtDateTime } = useDateFormatter()
   useEffect(() => {
     if (!alert) return
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
@@ -49,7 +44,7 @@ export function AlertBottomSheet({ alert, onClose }: AlertBottomSheetProps) {
             <div className="flex-1 min-w-0">
               <h2 className="text-[17px] font-bold text-text-base leading-snug">{data?.title}</h2>
               <p className="text-[12px] text-text-muted mt-0.5">
-                From {data?.profiles?.full_name ?? 'Admin'} · {data ? formatDate(data.created_at) : ''}
+                From {data?.profiles?.full_name ?? 'Admin'} · {data ? fmtDateTime(data.created_at) : ''}
               </p>
             </div>
             <button

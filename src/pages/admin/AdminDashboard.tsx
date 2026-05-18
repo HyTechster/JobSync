@@ -8,6 +8,7 @@ import { SkeletonBlock } from '../../components/shared/SkeletonBlock'
 import { useAuthStore } from '../../store/authStore'
 import { useDashboardStats, useRecentJobs, useRealtimeDashboard } from '../../features/jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -18,6 +19,7 @@ function getGreeting() {
 
 function RecentJobsTable() {
   const { activeOrgId } = useOrganization()
+  const { fmtDate } = useDateFormatter()
   const { data: jobs, isLoading, isError } = useRecentJobs(activeOrgId)
 
   if (isError) {
@@ -58,10 +60,7 @@ function RecentJobsTable() {
     <div className="divide-y divide-border">
       {jobs.map((job) => {
         const techs = job.job_assignments ?? []
-        const dateStr = new Date(job.scheduled_date).toLocaleDateString('en-MY', {
-          day: 'numeric',
-          month: 'short',
-        })
+        const dateStr = fmtDate(job.scheduled_date)
 
         return (
           <div key={job.id} className="hover:bg-surface-2 transition-colors">

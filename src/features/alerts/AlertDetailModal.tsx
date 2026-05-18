@@ -1,6 +1,7 @@
 import { Modal } from '../../components/ui/Modal'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import type { AlertWithDetail } from './hooks'
 
 interface AlertDetailModalProps {
@@ -8,17 +9,8 @@ interface AlertDetailModalProps {
   onClose: () => void
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-MY', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
+  const { fmtDateTime } = useDateFormatter()
   if (!alert) return null
 
   const recipients = alert.alert_recipients ?? []
@@ -30,7 +22,7 @@ export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
       isOpen
       onClose={onClose}
       title={alert.title}
-      subtitle={`Sent by ${alert.profiles?.full_name ?? 'Unknown'} · ${formatDate(alert.created_at)}`}
+      subtitle={`Sent by ${alert.profiles?.full_name ?? 'Unknown'} · ${fmtDateTime(alert.created_at)}`}
       maxWidth="max-w-xl"
     >
       <div className="bg-surface-2 rounded-xl px-4 py-3.5">
@@ -69,7 +61,7 @@ export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
               {r.read_at ? (
                 <span className="inline-flex items-center gap-1 text-[11.5px] text-success font-medium">
                   <Icons.check size={12} color="#059669" />
-                  {formatDate(r.read_at)}
+                  {fmtDateTime(r.read_at)}
                 </span>
               ) : (
                 <span className="text-[11.5px] text-text-muted">Unread</span>

@@ -1,30 +1,13 @@
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { formatDuration } from '../../utils/formatters'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import type { JobSheetWithDetail } from './hooks'
 
 interface JobSheetsTableProps {
   sheets: JobSheetWithDetail[]
   isLoading: boolean
   onView: (sheet: JobSheetWithDetail) => void
-}
-
-function formatSubmitted(iso: string): string {
-  return new Date(iso).toLocaleString('en-MY', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-MY', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 // ─── Mobile card skeleton ───────────────────────────────────────────────────
@@ -94,7 +77,7 @@ function MobileCard({ sheet, onView }: { sheet: JobSheetWithDetail; onView: () =
         </span>
         <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
           <Icons.calendar size={12} />
-          {formatDate(sheet.submitted_at)}
+          {fmtDate(sheet.submitted_at)}
         </span>
         {sheet.attachments.length > 0 && (
           <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
@@ -136,6 +119,7 @@ const HEADERS = ['Sheet #', 'Job / Title', 'Technician', 'Submitted', 'Duration'
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProps) {
+  const { fmtDate, fmtDateTime } = useDateFormatter()
   return (
     <>
       {/* Mobile card list (hidden on md+) */}
@@ -214,7 +198,7 @@ export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProp
                           </div>
                         </td>
                         <td className="px-4 py-3 text-[13px] text-text-muted whitespace-nowrap">
-                          {formatSubmitted(sheet.submitted_at)}
+                          {fmtDateTime(sheet.submitted_at)}
                         </td>
                         <td className="px-4 py-3 text-[13px] text-text-muted whitespace-nowrap">
                           {formatDuration(sheet.time_spent_minutes)}

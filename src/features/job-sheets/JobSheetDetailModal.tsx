@@ -3,6 +3,7 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { supabase } from '../../lib/supabase'
 import { formatDuration } from '../../utils/formatters'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import type { JobSheetWithDetail } from './hooks'
 
 interface JobSheetDetailModalProps {
@@ -24,18 +25,12 @@ const STATUS_CLS: Record<string, string> = {
   cancelled:   'bg-red-50 text-red-600',
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
 function getPublicUrl(storagePath: string): string {
   return supabase.storage.from('job-attachments').getPublicUrl(storagePath).data.publicUrl
 }
 
 export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps) {
+  const { fmtDateTime } = useDateFormatter()
   if (!sheet) return null
 
   const status = sheet.job_orders?.status ?? 'pending'
@@ -45,7 +40,7 @@ export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps
       isOpen
       onClose={onClose}
       title={sheet.job_orders?.title ?? 'Job Sheet'}
-      subtitle={`Submitted by ${sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'} · ${formatDate(sheet.submitted_at)}`}
+      subtitle={`Submitted by ${sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'} · ${fmtDateTime(sheet.submitted_at)}`}
       maxWidth="max-w-2xl"
     >
       <div className="flex items-center gap-3">
@@ -99,7 +94,7 @@ export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps
           </p>
           <div className="flex items-center gap-2 bg-surface-2 rounded-xl px-4 py-3">
             <Icons.calendar size={15} color="var(--color-brand-700)" />
-            <span className="text-[13px] text-text-base">{formatDate(sheet.submitted_at)}</span>
+            <span className="text-[13px] text-text-base">{fmtDateTime(sheet.submitted_at)}</span>
           </div>
         </div>
       </div>

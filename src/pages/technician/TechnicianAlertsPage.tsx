@@ -4,14 +4,10 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { useMarkAlertRead } from '../../features/alerts/mutations'
 import { AlertBottomSheet } from '../../features/alerts/AlertBottomSheet'
 import { Icons } from '../../components/ui/Icons'
-
-function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
-}
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 
 function AlertItem({ alert, onOpen }: { alert: MyAlertRow; onOpen: () => void }) {
+  const { fmtDate } = useDateFormatter()
   const isUnread = !alert.read_at
   return (
     <button
@@ -29,7 +25,7 @@ function AlertItem({ alert, onOpen }: { alert: MyAlertRow; onOpen: () => void })
           {isUnread && <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" aria-label="Unread" />}
         </div>
         <p className="text-[12.5px] text-text-muted mt-0.5 truncate">{alert.alerts?.message}</p>
-        <p className="text-[11.5px] text-text-muted mt-0.5">{shortDate(alert.created_at)}</p>
+        <p className="text-[11.5px] text-text-muted mt-0.5">{fmtDate(alert.created_at)}</p>
       </div>
       <Icons.chevronR size={16} className="flex-shrink-0 text-text-muted mt-1" />
     </button>

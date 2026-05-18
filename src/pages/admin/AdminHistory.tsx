@@ -4,16 +4,12 @@ import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
-}
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 
 // ─── Mobile card ─────────────────────────────────────────────────────────────
 
 function MobileCard({ job }: { job: RecentJobRow }) {
+  const { fmtDate } = useDateFormatter()
   const techs = job.job_assignments ?? []
   return (
     <div className="bg-white rounded-xl border border-slate-200 px-4 py-3.5">
@@ -55,11 +51,11 @@ function MobileCard({ job }: { job: RecentJobRow }) {
       <div className="flex items-center gap-3 mt-2 flex-wrap">
         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
           <Icons.check size={10} />
-          Completed {formatDate(job.updated_at)}
+          Completed {fmtDate(job.updated_at)}
         </span>
         <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
           <Icons.calendar size={11} />
-          {formatDate(job.scheduled_date)}
+          {fmtDate(job.scheduled_date)}
         </span>
       </div>
     </div>
@@ -100,6 +96,7 @@ const HEADERS = ['Job', 'Customer', 'Technicians', 'Scheduled', 'Completed On']
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminHistory() {
+  const { fmtDate } = useDateFormatter()
   const [search, setSearch] = useState('')
   const { activeOrgId } = useOrganization()
   const { data: allJobs = [], isLoading, isError } = useJobs(activeOrgId, { status: 'completed' })
@@ -251,12 +248,12 @@ export default function AdminHistory() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-[13px] text-text-muted whitespace-nowrap">
-                          {formatDate(job.scheduled_date)}
+                          {fmtDate(job.scheduled_date)}
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap">
                             <Icons.check size={11} />
-                            {formatDate(job.updated_at)}
+                            {fmtDate(job.updated_at)}
                           </span>
                         </td>
                       </tr>

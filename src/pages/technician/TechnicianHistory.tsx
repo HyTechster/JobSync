@@ -5,6 +5,7 @@ import { syncPendingJobSheets } from '../../offline/sync'
 import { useMyCompletedJobs } from '../../features/jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import type { RecentJobRow } from '../../features/jobs/hooks'
@@ -51,12 +52,9 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
 }
 
 function CompletedJobCard({ job }: { job: RecentJobRow }) {
-  const completedOn = new Date(job.updated_at).toLocaleDateString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
-  const scheduledOn = new Date(job.scheduled_date).toLocaleDateString('en-MY', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
+  const { fmtDate } = useDateFormatter()
+  const completedOn = fmtDate(job.updated_at)
+  const scheduledOn = fmtDate(job.scheduled_date)
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">

@@ -1,5 +1,6 @@
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 import type { AlertWithDetail } from './hooks'
 
 interface AlertCardProps {
@@ -8,15 +9,8 @@ interface AlertCardProps {
   onDelete: () => void
 }
 
-function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-MY', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
+  const { fmtDate } = useDateFormatter()
   const recipients = alert.alert_recipients ?? []
   const readCount = recipients.filter((r) => r.read_at !== null).length
 
@@ -39,7 +33,7 @@ export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
               {alert.title}
             </span>
             <span className="text-[11.5px] text-text-muted whitespace-nowrap flex-shrink-0">
-              {shortDate(alert.created_at)}
+              {fmtDate(alert.created_at)}
             </span>
             <button
               onClick={(e) => {
