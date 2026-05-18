@@ -145,7 +145,7 @@ export function useLoginHistory() {
         .select('id, device_info, is_new_device, signed_in_at')
         .eq('user_id' as never, session!.user.id)
         .order('signed_in_at' as never, { ascending: false })
-        .limit(10)
+        .limit(50)
       if (error) throw error
       return (data ?? []) as LoginHistoryRow[]
     },
