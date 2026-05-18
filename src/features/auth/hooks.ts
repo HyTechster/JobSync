@@ -148,13 +148,13 @@ export function useLogout() {
     queryClient.clear()
     navigate('/login', { replace: true })
 
-    // Delete this device's history row FIRST (still has valid JWT), then sign
-    // out. Sequential inside a void IIFE so delete wins the race against signOut.
+    // Mark this device inactive FIRST (still has valid JWT), then sign out.
+    // Sequential inside a void IIFE so the update wins the race against signOut.
     void (async () => {
       if (userId) {
         await supabase
           .from('login_history' as never)
-          .delete()
+          .update({ is_active: false } as never)
           .eq('user_id' as never, userId)
           .eq('device_info' as never, deviceInfo)
       }
@@ -170,11 +170,11 @@ export function useLogoutAll() {
   return async () => {
     const userId = useAuthStore.getState().session?.user.id
 
-    // Delete ALL history rows before signOut so the JWT is still valid
+    // Mark ALL sessions inactive before signOut so the JWT is still valid
     if (userId) {
       await supabase
         .from('login_history' as never)
-        .delete()
+        .update({ is_active: false } as never)
         .eq('user_id' as never, userId)
     }
 

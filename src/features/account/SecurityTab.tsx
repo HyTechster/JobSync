@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth, useLogoutAll } from '../auth/hooks'
-import { useChangePassword, useLoginHistory } from './hooks'
+import { useChangePassword, useLoginHistory, useActiveSessions } from './hooks'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { useAuthStore } from '../../store/authStore'
 import { getDeviceInfo } from '../auth/deviceInfo'
@@ -47,6 +47,7 @@ export function SecurityTab() {
   const { fmtDateTime } = useDateFormatter()
   const changePassword = useChangePassword()
   const { data: loginHistory = [], isLoading: historyLoading } = useLoginHistory()
+  const { data: activeSessions = [], isLoading: sessionsLoading } = useActiveSessions()
   const [signOutOthersSuccess, setSignOutOthersSuccess] = useState(false)
   const [confirmSignOutAll, setConfirmSignOutAll] = useState(false)
   const [signingOutAll, setSigningOutAll] = useState(false)
@@ -66,29 +67,21 @@ export function SecurityTab() {
   }
 
   async function handleSignOutOthers() {
-    // Reuse the already-subscribed channel from authStore — no duplicate channel needed.
     await broadcastForcedSignout(currentDevice)
-
     await supabase.auth.signOut({ scope: 'others' })
 
-    // Remove login_history rows for every device except this one
     if (userId) {
       await supabase
         .from('login_history' as never)
-        .delete()
+        .update({ is_active: false } as never)
         .eq('user_id' as never, userId)
         .neq('device_info' as never, currentDevice)
     }
     await queryClient.invalidateQueries({ queryKey: ['login-history'] })
+    await queryClient.invalidateQueries({ queryKey: ['active-sessions'] })
     setSignOutOthersSuccess(true)
     setTimeout(() => setSignOutOthersSuccess(false), 3000)
   }
-
-  // One card per unique device (most-recent sign-in first, already ordered by query)
-  const activeSessions = loginHistory.reduce<typeof loginHistory>((acc, row) => {
-    if (!acc.find((r) => r.device_info === row.device_info)) acc.push(row)
-    return acc
-  }, [])
 
   return (
     <div className="flex flex-col gap-6">
@@ -146,7 +139,7 @@ export function SecurityTab() {
         </div>
 
         <div className="divide-y divide-border">
-          {historyLoading ? (
+          {sessionsLoading ? (
             Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="px-6 py-4 flex items-center gap-3 animate-pulse">
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex-shrink-0" />
