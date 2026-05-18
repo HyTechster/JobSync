@@ -192,18 +192,10 @@ export function SecurityTab() {
         </div>
 
         <div className="px-6 py-4 border-t border-border flex flex-col gap-3">
-          {signOutOthersSuccess ? (
+          {signOutOthersSuccess && (
             <p className="text-sm text-success bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
               Signed out of all other sessions
             </p>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void handleSignOutOthers()}
-              className="self-start text-sm font-semibold text-danger hover:text-red-700 transition-colors"
-            >
-              Sign out of all other sessions
-            </button>
           )}
 
           {confirmSignOutAll ? (
@@ -216,27 +208,36 @@ export function SecurityTab() {
                   setSigningOutAll(true)
                   await logoutAll()
                 }}
-                className="h-8 px-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                className="h-8 px-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0"
               >
                 {signingOutAll && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                Sign out all
+                Confirm
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmSignOutAll(false)}
-                className="h-8 px-3 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+                className="h-8 px-3 text-xs font-semibold text-text-muted hover:text-text-base border border-border rounded-lg transition-colors flex-shrink-0"
               >
                 Cancel
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmSignOutAll(true)}
-              className="self-start text-sm font-semibold text-danger hover:text-red-700 transition-colors"
-            >
-              Sign out of all sessions
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void handleSignOutOthers()}
+                className="h-9 px-4 text-sm font-semibold text-red-600 border border-red-300 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                Sign out other sessions
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmSignOutAll(true)}
+                className="h-9 px-4 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Sign out all sessions
+              </button>
+            </div>
           )}
         </div>
       </section>
