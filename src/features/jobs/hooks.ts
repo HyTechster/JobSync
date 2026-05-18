@@ -211,6 +211,35 @@ export function useRealtimeDashboard(): { isLive: boolean } {
   return { isLive }
 }
 
+export interface OrgTechnician {
+  id: string
+  full_name: string
+  display_name: string | null
+}
+
+export function useOrgTechnicians(orgId: string | null) {
+  return useQuery<OrgTechnician[]>({
+    queryKey: ['org-technicians', orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('organization_members' as never)
+        .select('profiles:user_id(id, full_name, display_name, is_active)' as never)
+        .eq('organization_id' as never, orgId!)
+        .eq('role' as never, 'technician')
+      if (error) throw error
+      type Row = { profiles: { id: string; full_name: string; display_name: string | null; is_active: boolean } | null }
+      return ((data ?? []) as unknown as Row[])
+        .filter((m) => m.profiles?.is_active)
+        .map((m) => ({
+          id: m.profiles!.id,
+          full_name: m.profiles!.full_name,
+          display_name: m.profiles!.display_name,
+        }))
+    },
+  })
+}
+
 export function useRealtimeTechnicianJobs() {
   const qc = useQueryClient()
   const userId = useAuthStore((s) => s.profile?.id)

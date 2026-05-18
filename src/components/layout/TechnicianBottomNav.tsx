@@ -1,8 +1,6 @@
-import { useState } from 'react'
-import { NavLink, useNavigation } from 'react-router-dom'
+import { NavLink, useNavigation, useNavigate } from 'react-router-dom'
 import { Icons } from '../ui/Icons'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
-import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
 
 const LEFT_NAV = [
   { to: '/technician/jobs',       Icon: Icons.jobs,   label: 'Jobs'       },
@@ -66,8 +64,8 @@ function NavItem({
 export function TechnicianBottomNav() {
   const { data: unread = 0 } = useUnreadAlertCount()
   const navigation = useNavigation()
+  const navigate   = useNavigate()
   const pendingTo  = navigation.state === 'loading' ? (navigation.location?.pathname ?? null) : null
-  const [showModal, setShowModal] = useState(false)
 
   return (
     <>
@@ -85,7 +83,7 @@ export function TechnicianBottomNav() {
           <div className="flex-1 flex items-center justify-center">
             <button
               type="button"
-              onClick={() => setShowModal(true)}
+              onClick={() => navigate('/technician/job-sheets/new')}
               aria-label="Add new job sheet"
               className="w-12 h-12 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all -mt-3"
             >
@@ -108,12 +106,6 @@ export function TechnicianBottomNav() {
         </div>
       </nav>
 
-      {showModal && (
-        <AddJobSheetModal
-          onClose={() => setShowModal(false)}
-          onSubmitted={() => setShowModal(false)}
-        />
-      )}
     </>
   )
 }

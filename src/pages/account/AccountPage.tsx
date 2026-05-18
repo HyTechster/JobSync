@@ -15,7 +15,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'settings',      label: 'Settings'       },
 ]
 
-function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+function Avatar({ name, role, size = 'md' }: { name: string; role?: string; size?: 'sm' | 'md' }) {
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -25,8 +25,9 @@ function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
   const cls = size === 'sm'
     ? 'w-8 h-8 text-xs'
     : 'w-10 h-10 text-sm'
+  const bg = role === 'technician' ? 'bg-emerald-600' : 'bg-brand-700'
   return (
-    <div className={`${cls} rounded-full bg-brand-700 text-white font-bold flex items-center justify-center flex-shrink-0`}>
+    <div className={`${cls} ${bg} rounded-full text-white font-bold flex items-center justify-center flex-shrink-0`}>
       {initials}
     </div>
   )
@@ -55,7 +56,7 @@ export default function AccountPage() {
     <div className="min-h-screen bg-surface-2">
       {/* Top bar */}
       <header className="sticky top-0 z-10 bg-white border-b border-border">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -69,7 +70,7 @@ export default function AccountPage() {
 
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect x="2" y="2" width="28" height="28" rx="8" fill="#1E3A5F" />
+              <rect x="2" y="2" width="28" height="28" rx="8" fill={profile?.role === 'technician' ? '#059669' : '#1E3A5F'} />
               <path d="M10 11.5h12M10 16h8M10 20.5h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
               <circle cx="22" cy="20.5" r="1.6" fill="#fff" />
             </svg>
@@ -81,31 +82,33 @@ export default function AccountPage() {
               <p className="text-xs font-semibold text-text-base leading-none">{displayName}</p>
               <p className="text-[11px] text-text-muted mt-0.5">{profile?.email}</p>
             </div>
-            <Avatar name={displayName} size="sm" />
+            <Avatar name={displayName} role={profile?.role} size="sm" />
           </div>
         </div>
 
         {/* Tab bar */}
-        <div className="max-w-3xl mx-auto px-6 flex gap-1 border-t border-border">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors -mb-px ${
-                activeTab === tab.id
-                  ? 'border-brand-700 text-brand-700'
-                  : 'border-transparent text-text-muted hover:text-text-base'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="max-w-3xl mx-auto border-t border-border overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 px-4 sm:px-6 min-w-max">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 sm:px-4 py-3 text-sm font-semibold border-b-2 transition-colors -mb-px whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-brand-700 text-brand-700'
+                    : 'border-transparent text-text-muted hover:text-text-base'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {activeTab === 'profile'       && <ProfileTab />}
         {activeTab === 'security'      && <SecurityTab />}
         {activeTab === 'organizations' && <OrganizationTab />}

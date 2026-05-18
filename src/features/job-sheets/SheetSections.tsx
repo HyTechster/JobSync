@@ -1,21 +1,33 @@
 import { useId } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { SignaturePad } from '../../components/ui/SignaturePad'
 import { Icons } from '../../components/ui/Icons'
 import type { FullSheetFormData } from './fullSheetSchema'
+import type { OrgTechnician } from '../jobs/hooks'
 
 // ── Style helpers ────────────────────────────────────────────────────────────
 
-const lbl = 'block text-[12px] font-semibold text-text-muted mb-1.5'
-const inp = 'w-full h-[44px] px-3 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
+const lbl  = 'block text-[12px] font-semibold text-text-muted mb-1.5'
+const inp  = 'w-full h-[44px] px-3 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
+const inpE = 'w-full h-[44px] px-3 border border-danger rounded-xl text-[14px] text-text-base bg-white outline-none focus:border-danger focus:ring-[3px] focus:ring-danger/10 transition-all'
 const area = 'w-full px-3 py-2.5 border border-slate-200 rounded-xl text-[14px] text-text-base bg-white outline-none resize-y leading-relaxed focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
-const err = 'text-[11.5px] text-danger mt-1'
+const errT = 'text-[11.5px] text-danger mt-1'
+
+const JOB_TYPES = [
+  { value: 'service',               label: 'Service' },
+  { value: 'inspection',            label: 'Inspection' },
+  { value: 'installation',          label: 'Installation' },
+  { value: 'maintenance',           label: 'Maintenance' },
+  { value: 'emergency',             label: 'Emergency' },
+  { value: 'scheduled_maintenance', label: 'Scheduled Maintenance' },
+  { value: 'other',                 label: 'Other' },
+] as const
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
       <h2 className="flex items-center gap-2 text-[12px] font-bold text-text-base uppercase tracking-widest mb-3">
-        <span className="w-[3px] h-4 rounded-full bg-brand-700" />
+        <span className="w-[3px] h-4 rounded-full bg-brand-700 flex-shrink-0" />
         {title}
       </h2>
       <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4">
@@ -30,50 +42,46 @@ function Field({ label, required, error, children }: {
 }) {
   return (
     <div>
-      <label className={lbl}>{label} {required && <span className="text-danger">*</span>}</label>
+      <label className={lbl}>
+        {label} {required && <span className="text-danger">*</span>}
+      </label>
       {children}
-      {error && <p className={err}>{error}</p>}
+      {error && <p className={errT}>{error}</p>}
     </div>
   )
 }
 
-// ── Photo sub-component ──────────────────────────────────────────────────────
+// ── Photo picker ──────────────────────────────────────────────────────────────
 
-interface PhotoPickerProps {
-  label: string
-  max: number
-  previews: string[]
-  count: number
-  onAdd: (files: File[]) => void
-  onRemove: (i: number) => void
-  accept?: string
-}
-
-function PhotoPicker({ label, max, previews, count, onAdd, onRemove, accept = 'image/*' }: PhotoPickerProps) {
+function PhotoPicker({
+  label, required, max, previews, count, onAdd, onRemove, accept = 'image/*', error,
+}: {
+  label: string; required?: boolean; max: number
+  previews: string[]; count: number
+  onAdd: (files: File[]) => void; onRemove: (i: number) => void
+  accept?: string; error?: string
+}) {
   const inputId = useId()
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className={lbl + ' mb-0'}>{label}</span>
+        <span className={lbl + ' mb-0'}>{label} {required && <span className="text-danger">*</span>}</span>
         <span className="text-[11px] text-text-muted">{count}/{max}</span>
       </div>
       {previews.length > 0 && (
         <div className="grid grid-cols-3 gap-2 mb-2">
           {previews.map((src, i) => (
             <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-              {src.startsWith('data:application/pdf') || accept.includes('pdf') ? (
+              {src.startsWith('blob:') || src.startsWith('data:image') ? (
+                <img src={src} alt={`${label} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              ) : (
                 <div className="w-full h-full bg-slate-100 flex items-center justify-center">
                   <Icons.sheets size={24} color="#94A3B8" />
                 </div>
-              ) : (
-                <img src={src} alt={`${label} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
               )}
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
+              <button type="button" onClick={() => onRemove(i)}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
-                aria-label="Remove"
-              >
+                aria-label="Remove">
                 <Icons.close size={11} color="white" />
               </button>
             </div>
@@ -81,39 +89,41 @@ function PhotoPicker({ label, max, previews, count, onAdd, onRemove, accept = 'i
         </div>
       )}
       {count < max && (
-        <label
-          htmlFor={inputId}
-          className="flex items-center justify-center gap-2 h-[44px] rounded-xl border-2 border-dashed border-slate-300 text-[13px] text-text-muted cursor-pointer hover:border-brand-700 hover:text-brand-700 transition-colors"
-        >
+        <label htmlFor={inputId}
+          className={`flex items-center justify-center gap-2 h-[44px] rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+            error ? 'border-danger text-danger' : 'border-slate-300 text-text-muted hover:border-brand-700 hover:text-brand-700'
+          }`}>
           <Icons.camera size={16} />
           Add {label.toLowerCase()}
-          <input
-            id={inputId}
-            type="file"
-            accept={accept}
-            multiple
-            capture="environment"
+          <input id={inputId} type="file" accept={accept} multiple
             onChange={(e) => {
               if (!e.target.files) return
               const remaining = max - count
               onAdd(Array.from(e.target.files).slice(0, remaining))
               e.target.value = ''
             }}
-            className="sr-only"
-          />
+            className="sr-only" />
         </label>
       )}
+      {error && <p className={errT}>{error}</p>}
     </div>
   )
 }
 
-// ── Main export ──────────────────────────────────────────────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+export interface ExtraErrors {
+  jobPhotos?: string
+  paymentPhotos?: string
+  customerSig?: string
+  technicianSig?: string
+}
 
 export interface SheetSectionsProps {
-  assignedTechnicianNames: string[]
-  additionalTechs: string[]
-  onAddTech: (name: string) => void
-  onRemoveTech: (i: number) => void
+  orgTechnicians: OrgTechnician[]
+  currentUserId: string
+  selectedTechIds: string[]
+  onToggleTech: (id: string) => void
   customerSig: string | null
   onCustomerSig: (s: string | null) => void
   technicianSig: string | null
@@ -126,13 +136,16 @@ export interface SheetSectionsProps {
   paymentPhotoCount: number
   onAddPaymentPhotos: (files: File[]) => void
   onRemovePaymentPhoto: (i: number) => void
+  extraErrors: ExtraErrors
 }
 
+// ── Main export ───────────────────────────────────────────────────────────────
+
 export function SheetSections({
-  assignedTechnicianNames,
-  additionalTechs,
-  onAddTech,
-  onRemoveTech,
+  orgTechnicians,
+  currentUserId,
+  selectedTechIds,
+  onToggleTech,
   customerSig,
   onCustomerSig,
   technicianSig,
@@ -145,16 +158,21 @@ export function SheetSections({
   paymentPhotoCount,
   onAddPaymentPhotos,
   onRemovePaymentPhoto,
+  extraErrors,
 }: SheetSectionsProps) {
   const { register, formState: { errors } } = useFormContext<FullSheetFormData>()
-  const addTechId = useId()
+  const jobType = useWatch<FullSheetFormData, 'job_type'>({ name: 'job_type' })
+
+  const availableTechs = orgTechnicians.filter((t) => t.id !== currentUserId)
 
   return (
-    <div className="px-4 py-5 space-y-6 pb-28">
+    <div className="px-4 py-5 space-y-6 pb-36">
+
       {/* Customer */}
       <SectionCard title="Customer">
         <Field label="Customer Name" required error={errors.customer_name?.message}>
-          <input {...register('customer_name')} type="text" placeholder="Full name or company" className={inp} />
+          <input {...register('customer_name')} type="text" placeholder="Full name or company"
+            className={errors.customer_name ? inpE : inp} />
         </Field>
         <Field label="Phone" error={errors.customer_phone?.message}>
           <input {...register('customer_phone')} type="tel" placeholder="+60 12-345 6789" className={inp} />
@@ -167,30 +185,41 @@ export function SheetSections({
       {/* Job Details */}
       <SectionCard title="Job Details">
         <Field label="Job Title" required error={errors.job_title?.message}>
-          <input {...register('job_title')} type="text" placeholder="e.g. CCTV maintenance at Site A" className={inp} />
+          <input {...register('job_title')} type="text" placeholder="e.g. CCTV maintenance at Site A"
+            className={errors.job_title ? inpE : inp} />
         </Field>
-        <Field label="Location" error={errors.job_location?.message}>
-          <input {...register('job_location')} type="text" placeholder="Site address" className={inp} />
+        <Field label="Location" required error={errors.job_location?.message}>
+          <input {...register('job_location')} type="text" placeholder="Site address"
+            className={errors.job_location ? inpE : inp} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Job Type">
             <select {...register('job_type')} className={inp}>
               <option value="">— select —</option>
-              {['Service', 'Inspection', 'Installation', 'Maintenance', 'Emergency', 'Scheduled Maintenance', 'Other'].map((t) => (
-                <option key={t} value={t.toLowerCase().replace(' ', '_')}>{t}</option>
+              {JOB_TYPES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </Field>
-          <Field label="Date">
-            <input {...register('job_date')} type="date" className={inp} />
+          <Field label="Date" required error={errors.job_date?.message}>
+            <input {...register('job_date')} type="date"
+              className={errors.job_date ? inpE : inp} />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Time In">
-            <input {...register('time_in')} type="time" className={inp} />
+        {jobType === 'other' && (
+          <Field label="Specify Type" required error={errors.job_type_other?.message}>
+            <input {...register('job_type_other')} type="text" placeholder="Describe the job type"
+              className={errors.job_type_other ? inpE : inp} />
           </Field>
-          <Field label="Time Out">
-            <input {...register('time_out')} type="time" className={inp} />
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Time In" required error={errors.time_in?.message}>
+            <input {...register('time_in')} type="time"
+              className={errors.time_in ? inpE : inp} />
+          </Field>
+          <Field label="Time Out" required error={errors.time_out?.message}>
+            <input {...register('time_out')} type="time"
+              className={errors.time_out ? inpE : inp} />
           </Field>
         </div>
         <Field label="Description">
@@ -201,99 +230,94 @@ export function SheetSections({
       {/* Work Performed */}
       <SectionCard title="Work Performed">
         <Field label="Work Performed" required error={errors.work_performed?.message}>
-          <textarea {...register('work_performed')} rows={4} placeholder="Describe all work carried out…" className={area} />
+          <textarea {...register('work_performed')} rows={4} placeholder="Describe all work carried out…"
+            className={`${area} ${errors.work_performed ? 'border-danger' : ''}`} />
         </Field>
         <Field label="Service Description">
-          <textarea {...register('service_description')} rows={3} placeholder="Description for the client / invoice…" className={area} />
+          <textarea {...register('service_description')} rows={3}
+            placeholder="Description for the client / invoice…" className={area} />
         </Field>
       </SectionCard>
 
       {/* Technicians */}
       <SectionCard title="Technicians">
-        {assignedTechnicianNames.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {assignedTechnicianNames.map((name) => (
-              <span key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 text-[12px] font-semibold">
-                <Icons.user size={11} color="currentColor" />
-                {name}
-              </span>
-            ))}
-          </div>
-        )}
-        {additionalTechs.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {additionalTechs.map((name, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold">
-                {name}
-                <button type="button" onClick={() => onRemoveTech(i)} aria-label="Remove">
-                  <Icons.close size={10} color="currentColor" />
+        {availableTechs.length === 0 ? (
+          <p className="text-[12.5px] text-text-muted">No other technicians in this organization.</p>
+        ) : (
+          <div className="space-y-1">
+            <p className="text-[11.5px] text-text-muted mb-2">Select additional technicians involved:</p>
+            {availableTechs.map((tech) => {
+              const name   = tech.display_name || tech.full_name
+              const isSelected = selectedTechIds.includes(tech.id)
+              return (
+                <button
+                  key={tech.id}
+                  type="button"
+                  onClick={() => onToggleTech(tech.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors text-left ${
+                    isSelected
+                      ? 'border-brand-700 bg-brand-50 text-brand-700'
+                      : 'border-slate-200 bg-white text-text-base hover:bg-surface-2'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                    isSelected ? 'border-brand-700 bg-brand-700' : 'border-slate-300'
+                  }`}>
+                    {isSelected && <Icons.check size={11} color="white" />}
+                  </div>
+                  <span className="text-[13.5px] font-medium">{name}</span>
                 </button>
-              </span>
-            ))}
+              )
+            })}
           </div>
         )}
-        <div className="flex gap-2">
-          <input
-            id={addTechId}
-            type="text"
-            placeholder="Add technician name…"
-            className={inp + ' flex-1'}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                const val = (e.currentTarget as HTMLInputElement).value.trim()
-                if (val) { onAddTech(val); e.currentTarget.value = '' }
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const el = document.getElementById(addTechId) as HTMLInputElement | null
-              if (!el) return
-              const val = el.value.trim()
-              if (val) { onAddTech(val); el.value = '' }
-            }}
-            className="h-[44px] px-4 rounded-xl bg-slate-100 text-text-base text-[13px] font-semibold hover:bg-slate-200 transition-colors flex-shrink-0"
-          >
-            Add
-          </button>
-        </div>
       </SectionCard>
 
       {/* Payment */}
       <SectionCard title="Payment">
-        <Field label="Total Amount Billed (MYR)">
-          <input {...register('total_amount')} type="number" min="0" step="0.01" placeholder="0.00" className={inp} />
+        <Field label="Total Amount Billed (MYR)" required error={errors.total_amount?.message}>
+          <input {...register('total_amount')} type="number" min="0" step="0.01" placeholder="0.00"
+            className={errors.total_amount ? inpE : inp} />
         </Field>
         <PhotoPicker
-          label="Payment Evidence (max 3)"
+          label="Payment Evidence"
+          required
           max={3}
           previews={paymentPhotoPreviews}
           count={paymentPhotoCount}
           onAdd={onAddPaymentPhotos}
           onRemove={onRemovePaymentPhoto}
           accept="image/*,.pdf"
+          error={extraErrors.paymentPhotos}
         />
       </SectionCard>
 
       {/* Job Photos */}
       <SectionCard title="Job Site Photos">
         <PhotoPicker
-          label="Photos (max 5)"
+          label="Site Photos"
+          required
           max={5}
           previews={jobPhotoPreviews}
           count={jobPhotoCount}
           onAdd={onAddJobPhotos}
           onRemove={onRemoveJobPhoto}
+          error={extraErrors.jobPhotos}
         />
       </SectionCard>
 
       {/* Signatures */}
       <SectionCard title="Signatures">
-        <SignaturePad label="Customer Signature" onChange={onCustomerSig} />
-        <SignaturePad label="Technician Signature" onChange={onTechnicianSig} />
+        <div className={extraErrors.customerSig ? 'ring-1 ring-danger rounded-xl p-1' : ''}>
+          <SignaturePad label="Customer Signature" required onChange={onCustomerSig} />
+          {extraErrors.customerSig && <p className={errT}>{extraErrors.customerSig}</p>}
+        </div>
+        <div className={extraErrors.technicianSig ? 'ring-1 ring-danger rounded-xl p-1 mt-4' : 'mt-4'}>
+          <SignaturePad label="Technician Signature" required onChange={onTechnicianSig} />
+          {extraErrors.technicianSig && <p className={errT}>{extraErrors.technicianSig}</p>}
+        </div>
       </SectionCard>
+
     </div>
   )
 }

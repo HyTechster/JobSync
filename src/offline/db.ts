@@ -27,9 +27,11 @@ export interface DraftJobSheet {
   organizationId: string
   technicianId: string
   jobTitle: string
+  customerName?: string
   workPerformed?: string
   timeSpentMinutes?: number
   notes?: string
+  formDataJson?: string
   createdAt: string
   updatedAt: string
 }

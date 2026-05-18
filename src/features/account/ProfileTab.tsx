@@ -64,13 +64,13 @@ export function ProfileTab() {
   return (
     <div className="flex flex-col gap-6">
       <section className="bg-white border border-border rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-border">
+        <div className="px-4 sm:px-6 py-4 border-b border-border">
           <h2 className="text-sm font-semibold text-text-base">Personal information</h2>
           <p className="text-xs text-text-muted mt-0.5">Update your name and personal details</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-4 sm:px-6 py-5 flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Full name" id="full_name" error={errors.full_name?.message}>
               <input id="full_name" type="text" {...register('full_name')} className={inputCls} />
             </Field>
@@ -79,7 +79,7 @@ export function ProfileTab() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Gender" id="gender">
               <select id="gender" {...register('gender')} className={inputCls}>
                 {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -90,7 +90,7 @@ export function ProfileTab() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Phone number" id="phone">
               <input id="phone" type="tel" placeholder="+60 12 345 6789" {...register('phone')} className={inputCls} />
             </Field>
@@ -98,7 +98,7 @@ export function ProfileTab() {
 
           <div className="h-px bg-border my-1" />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Language" id="lang">
               <input id="lang" type="text" value="English" disabled className={disabledCls} readOnly />
             </Field>

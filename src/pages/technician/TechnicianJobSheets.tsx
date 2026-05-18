@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMyJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { offlineDb, type DraftJobSheet } from '../../offline/db'
@@ -12,25 +12,31 @@ function DraftCard({ draft, onDelete }: { draft: DraftJobSheet; onDelete: () => 
     <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
       <div className="flex items-start gap-2.5">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-              DRAFT
-            </span>
-          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+            DRAFT
+          </span>
           <p className="text-[13.5px] font-semibold text-text-base truncate mt-1">{draft.jobTitle}</p>
-          {draft.workPerformed && (
-            <p className="text-[12px] text-text-muted mt-0.5 line-clamp-1">{draft.workPerformed}</p>
+          {draft.customerName && (
+            <p className="text-[12px] text-text-muted mt-0.5 truncate">{draft.customerName}</p>
           )}
           <p className="text-[11.5px] text-text-muted mt-1">{draft.createdAt.slice(0, 10)}</p>
         </div>
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label="Delete draft"
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-danger hover:bg-red-50 transition-colors flex-shrink-0"
-        >
-          <Icons.trash size={14} />
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <Link
+            to={`/technician/job-sheets/new?draftId=${draft.id}`}
+            className="text-[12px] font-semibold text-brand-700 hover:underline"
+          >
+            Continue →
+          </Link>
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label="Delete draft"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-danger hover:bg-red-50 transition-colors"
+          >
+            <Icons.trash size={14} />
+          </button>
+        </div>
       </div>
     </div>
   )
