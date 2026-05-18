@@ -41,13 +41,13 @@ export function useMyAlerts(orgId: string | null) {
       const { data, error } = await supabase
         .from('alert_recipients')
         .select(
-          '*, alerts:alert_id!inner(title, message, created_at, organization_id, profiles:created_by(full_name, display_name))'
+          '*, alerts:alert_id!inner(title, message, created_at, profiles:created_by(full_name, display_name))'
         )
         .eq('recipient_id', userId!)
         .eq('alerts.organization_id', orgId!)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return (data ?? []) as MyAlertRow[]
+      return (data ?? []) as unknown as MyAlertRow[]
     },
   })
 }

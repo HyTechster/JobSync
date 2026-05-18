@@ -164,7 +164,7 @@ export function useSubmitFullSheet() {
             : null,
           time_spent_minutes: timeSpent,
           notes: null,
-        })
+        } as never)
         .select()
         .single()
       if (se) throw se
