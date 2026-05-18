@@ -11,26 +11,35 @@ interface CreateJobModalProps {
   onClose: () => void
 }
 
+const DEFAULT_VALUES: Partial<JobOrderFormData> = {
+  priority: 'medium',
+  technician_ids: [],
+  scheduled_date_flexible: false,
+  scheduled_time_flexible: false,
+  due_date_flexible: true,
+  billing_same_as_location: true,
+}
+
 export function CreateJobModal({ isOpen, onClose }: CreateJobModalProps) {
   const { data: technicians = [] } = useTechnicians()
   const { mutate: createJob, isPending, error } = useCreateJob()
 
   const methods = useForm<JobOrderFormData>({
     resolver: zodResolver(jobOrderSchema),
-    defaultValues: { priority: 'medium', technician_ids: [] },
+    defaultValues: DEFAULT_VALUES,
   })
 
   function handleSubmit(data: JobOrderFormData) {
     createJob(data, {
       onSuccess: () => {
-        methods.reset({ priority: 'medium', technician_ids: [] })
+        methods.reset(DEFAULT_VALUES)
         onClose()
       },
     })
   }
 
   function handleClose() {
-    methods.reset({ priority: 'medium', technician_ids: [] })
+    methods.reset(DEFAULT_VALUES)
     onClose()
   }
 

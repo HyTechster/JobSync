@@ -19,21 +19,41 @@ export function EditJobModal({ job, onClose }: EditJobModalProps) {
 
   const methods = useForm<JobOrderFormData>({
     resolver: zodResolver(jobOrderSchema),
-    defaultValues: { priority: 'medium', technician_ids: [] },
+    defaultValues: {
+      priority: 'medium',
+      technician_ids: [],
+      scheduled_date_flexible: false,
+      scheduled_time_flexible: false,
+      due_date_flexible: true,
+      billing_same_as_location: true,
+    },
   })
 
   useEffect(() => {
     if (!job) return
+    const j = job as Record<string, unknown>
     methods.reset({
-      title: job.title,
-      description: job.description,
-      customer_name: job.customer_name,
-      customer_phone: job.customer_phone ?? '',
-      location: job.location,
-      priority: job.priority,
-      scheduled_date: job.scheduled_date,
-      scheduled_time: job.scheduled_time ?? '',
-      technician_ids: job.job_assignments.map((a) => a.technician_id),
+      title:           job.title,
+      description:     job.description,
+      customer_name:   job.customer_name,
+      customer_phone:  (job.customer_phone ?? '') as string,
+      customer_email:  (j['customer_email'] as string | undefined) ?? '',
+      location_street: (j['location_street'] as string | undefined) ?? job.location,
+      location_city:   (j['location_city']    as string | undefined) ?? '',
+      location_state:  (j['location_state']   as string | undefined) ?? '',
+      location_postcode: (j['location_postcode'] as string | undefined) ?? '',
+      priority:        job.priority,
+      job_type:        (j['job_type'] as JobOrderFormData['job_type'] | undefined) ?? 'service',
+      job_type_other:  (j['job_type_other'] as string | undefined) ?? '',
+      scheduled_date_flexible: !job.scheduled_date,
+      scheduled_date:  job.scheduled_date ?? '',
+      scheduled_time_flexible: !job.scheduled_time,
+      scheduled_time:  (job.scheduled_time ?? '') as string,
+      due_date_flexible: !(j['due_date'] as string | undefined),
+      due_date:        (j['due_date'] as string | undefined) ?? '',
+      technician_ids:  job.job_assignments.map((a) => a.technician_id),
+      billing_same_as_location: !(j['billing_address'] as string | undefined),
+      billing_address: (j['billing_address'] as string | undefined) ?? '',
     })
   }, [job, methods])
 
