@@ -17,9 +17,10 @@ interface AuthState {
   initAuth: () => () => void
 }
 
-// Module-level ref so broadcastForcedSignout can reuse the subscribed channel
-// without creating a duplicate that stalls on subscribe.
+// Module-level refs so broadcastForcedSignout can reuse the already-subscribed
+// channel without creating a duplicate that stalls.
 let _forceSignoutChannel: ReturnType<typeof supabase.channel> | null = null
+let _channelReady = false
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
@@ -45,29 +46,43 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearSession: () => set({ session: null, profile: null, isLoading: false, newDeviceAlert: false }),
 
   broadcastForcedSignout: async (deviceInfo: string) => {
-    // Reuses the already-subscribed channel owned by initAuth so we never
-    // create a duplicate channel with the same name, which would stall.
     const ch = _forceSignoutChannel
     if (!ch) return
+
+    // Wait up to 4 s for the channel to reach SUBSCRIBED state before sending.
+    if (!_channelReady) {
+      await new Promise<void>((resolve) => {
+        const deadline = setTimeout(resolve, 4000)
+        const poll = setInterval(() => {
+          if (_channelReady) { clearInterval(poll); clearTimeout(deadline); resolve() }
+        }, 100)
+      })
+    }
+
     await ch.send({ type: 'broadcast', event: 'sign_out', payload: { device_info: deviceInfo } })
   },
 
   initAuth: () => {
     function subscribeForceSignout(userId: string) {
       if (_forceSignoutChannel) void supabase.removeChannel(_forceSignoutChannel)
+      _channelReady = false
       _forceSignoutChannel = supabase
         .channel(`forced-signout:${userId}`)
         .on('broadcast', { event: 'sign_out' }, () => {
-          // scope:'local' clears the Supabase session from localStorage without
-          // a network call. The server-side refresh token is already revoked by
-          // the sender's signOut({ scope:'others' }) call.
-          void supabase.auth.signOut({ scope: 'local' })
+          // Synchronously wipe every Supabase key from localStorage so that the
+          // full-page reload that follows finds no cached session and stays on /login.
+          // (Using void signOut({ scope:'local' }) is async and loses the race.)
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith('sb-'))
+            .forEach((k) => localStorage.removeItem(k))
           get().clearSession()
           localStorage.removeItem('jobsync_active_org')
           queryClient.clear()
           window.location.replace('/login')
         })
-        .subscribe()
+        .subscribe((status) => {
+          _channelReady = status === 'SUBSCRIBED'
+        })
     }
 
     // Resolve isLoading the instant we know the session — no network call needed.
@@ -99,6 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (_forceSignoutChannel) {
             void supabase.removeChannel(_forceSignoutChannel)
             _forceSignoutChannel = null
+            _channelReady = false
           }
           set({ profile: null })
         }
@@ -108,6 +124,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return () => {
       subscription.unsubscribe()
       if (_forceSignoutChannel) void supabase.removeChannel(_forceSignoutChannel)
+      _channelReady = false
     }
   },
 }))
