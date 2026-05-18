@@ -171,3 +171,20 @@ export function useLogout() {
     navigate('/login', { replace: true })
   }
 }
+
+export function useLogoutAll() {
+  const { clearSession } = useAuthStore()
+  const navigate = useNavigate()
+
+  return async () => {
+    clearSession()
+    localStorage.removeItem('jobsync_active_org')
+    queryClient.clear()
+
+    // scope: 'global' revokes every refresh token for this user on the server,
+    // signing out all devices simultaneously.
+    void supabase.auth.signOut({ scope: 'global' })
+
+    navigate('/login', { replace: true })
+  }
+}
