@@ -32,7 +32,7 @@ export default function AdminJobs() {
       setShowCreate(true)
       setSearchParams({}, { replace: true })
     }
-  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams])
 
   const { data: allJobs = [], isLoading, isError, error } = useJobs()
 

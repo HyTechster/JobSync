@@ -2,22 +2,25 @@ import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth, useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
+import { usePendingInvitations } from '../../features/users/hooks'
 
 export default function WelcomePage() {
   const { session, profile, isLoading: isAuthLoading } = useAuth()
   const { memberships, isLoading: isOrgLoading } = useOrganization()
+  const { data: invitations = [], isLoading: isInvLoading } = usePendingInvitations()
   const logout = useLogout()
   const navigate = useNavigate()
 
-  const isLoading = isAuthLoading || isOrgLoading
+  const isLoading = isAuthLoading || isOrgLoading || isInvLoading
 
   useEffect(() => {
     if (isLoading) return
     if (!session) { navigate('/login', { replace: true }); return }
-    if (memberships.length > 0) {
+    // If the user has orgs or pending invitations, select-organization handles both
+    if (memberships.length > 0 || invitations.length > 0) {
       navigate('/dashboard/select-organization', { replace: true })
     }
-  }, [isLoading, session, memberships, navigate])
+  }, [isLoading, session, memberships, invitations, navigate])
 
   if (isLoading) {
     return (

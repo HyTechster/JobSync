@@ -18,6 +18,7 @@ interface OrganizationContextValue {
   activeOrgId: string | null
   userRole: OrgRole | null
   isLoading: boolean
+  isFetching: boolean
   setActiveOrganization: (orgId: string) => void
   refreshMemberships: () => void
 }
@@ -33,6 +34,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const {
     data: memberships = [],
     isLoading: isMembershipsLoading,
+    isFetching: isMembershipsFetching,
     refetch,
   } = useQuery<OrgMembership[]>({
     queryKey: ['org-memberships', session?.user.id],
@@ -81,6 +83,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         activeOrgId: activeMembership?.organization_id ?? null,
         userRole: activeMembership?.role ?? null,
         isLoading: isAuthLoading || (!!session && isMembershipsLoading),
+        isFetching: !!session && isMembershipsFetching,
         setActiveOrganization,
         refreshMemberships: () => { void refetch() },
       }}

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAddMember, type AddMemberData } from './hooks'
+import { useInviteUser, type InviteUserData } from './hooks'
 import type { OrgRole } from '../../types'
 
 const schema = z.object({
@@ -14,8 +14,8 @@ type FormData = z.infer<typeof schema>
 
 const ROLE_OPTIONS: { value: OrgRole; label: string; description: string }[] = [
   { value: 'technician', label: 'Technician', description: 'Field — views and submits job sheets' },
-  { value: 'manager', label: 'Manager', description: 'Office — manages jobs and users' },
-  { value: 'admin', label: 'Admin', description: 'Full access — all permissions' },
+  { value: 'manager',    label: 'Manager',    description: 'Office — manages jobs and users'       },
+  { value: 'admin',      label: 'Admin',      description: 'Full access — all permissions'          },
 ]
 
 interface Props {
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function AddToCompanyModal({ isOpen, onClose }: Props) {
-  const addMember = useAddMember()
+  const inviteUser = useInviteUser()
 
   const {
     register,
@@ -36,23 +36,16 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
     defaultValues: { role: 'technician' },
   })
 
-  // Reset form and mutation state each time the modal opens.
-  // Do NOT put addMember in deps — useMutation returns a new object every render,
-  // which would cause an infinite loop (effect → reset → state change → rerender → effect…).
   useEffect(() => {
     if (isOpen) {
       reset()
-      addMember.reset()
+      inviteUser.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   const onSubmit = (data: FormData) => {
-    addMember.mutate(data as AddMemberData, {
-      onSuccess: () => {
-        onClose()
-      },
-    })
+    inviteUser.mutate(data as InviteUserData, { onSuccess: onClose })
   }
 
   if (!isOpen) return null
@@ -62,9 +55,8 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="add-member-title"
+      aria-labelledby="invite-user-title"
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
@@ -72,14 +64,13 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
       />
 
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div>
-            <h2 id="add-member-title" className="text-[15px] font-semibold text-text-base">
-              Add user to organization
+            <h2 id="invite-user-title" className="text-[15px] font-semibold text-text-base">
+              Invite user
             </h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Add an existing JobSync account by email
+              They'll see the invitation when they log in
             </p>
           </div>
           <button
@@ -93,15 +84,13 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 flex flex-col gap-4">
-          {/* Email */}
           <div>
-            <label htmlFor="member-email" className="block text-xs font-semibold text-text-base mb-1.5">
+            <label htmlFor="invite-email" className="block text-xs font-semibold text-text-base mb-1.5">
               Email address
             </label>
             <input
-              id="member-email"
+              id="invite-email"
               type="email"
               placeholder="technician@company.com"
               {...register('email')}
@@ -112,7 +101,6 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
             )}
           </div>
 
-          {/* Role */}
           <fieldset>
             <legend className="block text-xs font-semibold text-text-base mb-2">Role</legend>
             <div className="flex flex-col gap-2">
@@ -138,14 +126,12 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
             </div>
           </fieldset>
 
-          {/* Error banner */}
-          {addMember.isError && (
+          {inviteUser.isError && (
             <div className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
-              {addMember.error instanceof Error ? addMember.error.message : 'Something went wrong.'}
+              {inviteUser.error instanceof Error ? inviteUser.error.message : 'Something went wrong.'}
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-3 pt-1">
             <button
               type="button"
@@ -156,13 +142,13 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
             </button>
             <button
               type="submit"
-              disabled={addMember.isPending}
+              disabled={inviteUser.isPending}
               className="flex-1 h-10 bg-brand-700 hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center"
             >
-              {addMember.isPending ? (
+              {inviteUser.isPending ? (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                'Add to organization'
+                'Send invitation'
               )}
             </button>
           </div>

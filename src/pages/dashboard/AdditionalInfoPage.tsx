@@ -297,7 +297,7 @@ export default function AdditionalInfoPage() {
       if (err) throw err
 
       if (updated && profile) setProfile({ ...profile, preferences: updated.preferences })
-      navigate('/dashboard/welcome', { replace: true })
+      navigate('/dashboard/select-organization', { replace: true })
     } catch {
       setError('Failed to save preferences. Please try again.')
     } finally {
@@ -408,7 +408,7 @@ export default function AdditionalInfoPage() {
 
             <button
               type="button"
-              onClick={() => navigate('/dashboard/welcome', { replace: true })}
+              onClick={() => navigate('/dashboard/select-organization', { replace: true })}
               className="w-full text-center text-[13px] text-text-muted hover:text-text-base transition-colors"
             >
               Skip for now

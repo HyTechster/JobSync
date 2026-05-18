@@ -74,7 +74,7 @@ export function useLogin() {
 
     onSuccess: ({ session, profile, memberships }) => {
       setSession(session, profile)
-      navigate(memberships.length === 0 ? '/dashboard/welcome' : '/dashboard/select-organization')
+      navigate('/dashboard/select-organization')
     },
   })
 }

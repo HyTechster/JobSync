@@ -4,13 +4,15 @@ import { useAuth } from '../../features/auth/hooks'
 import { ProfileTab } from '../../features/account/ProfileTab'
 import { SecurityTab } from '../../features/account/SecurityTab'
 import { SettingsTab } from '../../features/account/SettingsTab'
+import { OrganizationTab } from '../../features/account/OrganizationTab'
 
-type Tab = 'profile' | 'security' | 'settings'
+type Tab = 'profile' | 'security' | 'organizations' | 'settings'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'profile',  label: 'Profile'  },
-  { id: 'security', label: 'Security' },
-  { id: 'settings', label: 'Settings' },
+  { id: 'profile',       label: 'Profile'        },
+  { id: 'security',      label: 'Security'       },
+  { id: 'organizations', label: 'Organizations'  },
+  { id: 'settings',      label: 'Settings'       },
 ]
 
 function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
@@ -104,9 +106,10 @@ export default function AccountPage() {
 
       {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-8">
-        {activeTab === 'profile'  && <ProfileTab />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === 'profile'       && <ProfileTab />}
+        {activeTab === 'security'      && <SecurityTab />}
+        {activeTab === 'organizations' && <OrganizationTab />}
+        {activeTab === 'settings'      && <SettingsTab />}
       </main>
     </div>
   )

@@ -7,17 +7,14 @@ import { useOrganization } from '../context/OrganizationContext'
 
 export default function LoginPage() {
   const { session, isLoading: isAuthLoading } = useAuth()
-  const { memberships, isLoading: isOrgLoading } = useOrganization()
+  const { isLoading: isOrgLoading } = useOrganization()
   const navigate = useNavigate()
   const isLoading = isAuthLoading || isOrgLoading
 
   useEffect(() => {
     if (isLoading || !session) return
-    navigate(
-      memberships.length === 0 ? '/dashboard/welcome' : '/dashboard/select-organization',
-      { replace: true }
-    )
-  }, [isLoading, session, memberships, navigate])
+    navigate('/dashboard/select-organization', { replace: true })
+  }, [isLoading, session, navigate])
 
   if (isLoading) {
     return (
