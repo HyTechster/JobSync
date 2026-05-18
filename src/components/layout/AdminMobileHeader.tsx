@@ -63,7 +63,7 @@ export function AdminMobileHeader() {
     .toUpperCase()
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-border flex items-center gap-3 px-4 h-14">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-border flex items-center gap-3 px-4 h-14">
       <Icons.logo size={26} />
 
       {/* Org switcher trigger */}

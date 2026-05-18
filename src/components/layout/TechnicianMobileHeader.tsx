@@ -5,12 +5,14 @@ import { Icons } from '../ui/Icons'
 import { useAuthStore } from '../../store/authStore'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useLogout } from '../../features/auth/hooks'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 
 export function TechnicianMobileHeader() {
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const logout = useLogout()
+  const isOnline = useOnlineStatus()
 
   const [showOrgMenu, setShowOrgMenu]   = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -63,7 +65,7 @@ export function TechnicianMobileHeader() {
     .toUpperCase()
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-border flex items-center gap-3 px-4 h-14">
+    <header className={`fixed left-0 right-0 z-40 bg-white border-b border-border flex items-center gap-3 px-4 h-14 transition-[top] duration-150 ${isOnline ? 'top-0' : 'top-[42px]'}`}>
       <Icons.logo size={26} />
 
       {/* Org switcher trigger */}

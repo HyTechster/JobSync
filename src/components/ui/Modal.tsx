@@ -45,13 +45,13 @@ export function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose()
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
-        className={`relative w-full ${maxWidth} max-h-[calc(100vh-64px)] bg-white rounded-[14px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
+        className={`relative w-full ${maxWidth} max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-64px)] bg-white rounded-[14px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
       >
         <div className="flex items-start justify-between px-7 py-5 border-b border-slate-200 flex-shrink-0">
           <div>

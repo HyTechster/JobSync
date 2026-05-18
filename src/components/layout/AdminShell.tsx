@@ -49,7 +49,8 @@ export function AdminShell() {
       </div>
 
       {/* Desktop: sidebar + content grid | Mobile: single column */}
-      <div className="md:grid md:grid-cols-[232px_1fr] md:min-h-screen">
+      {/* pt-14 offsets the fixed mobile header on mobile; desktop uses sidebar so no offset needed */}
+      <div className="pt-14 md:pt-0 md:grid md:grid-cols-[232px_1fr] md:min-h-screen">
         {/* Sidebar — desktop only */}
         <div className="hidden md:block">
           <AdminSidebar />

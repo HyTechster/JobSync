@@ -23,19 +23,20 @@ export function TechnicianShell() {
     <div className="min-h-screen bg-surface-2">
       <OfflineBanner />
 
-      {/* Mobile-only top header — shifts down when offline banner is visible */}
-      <div className={`md:hidden transition-[padding-top] duration-150 ${!isOnline ? 'pt-[42px]' : ''}`}>
+      {/* Mobile-only top header — fixed; shifts down when offline banner visible */}
+      <div className="md:hidden">
         <TechnicianMobileHeader />
       </div>
 
       {/* Desktop: sidebar + content grid | Mobile: single column */}
-      <div className="md:grid md:grid-cols-[232px_1fr] md:min-h-screen">
+      {/* pt-14 offsets the fixed mobile header (56px); add 42px more when offline banner shown */}
+      <div className="pt-14 md:pt-0 md:grid md:grid-cols-[232px_1fr] md:min-h-screen">
         {/* Sidebar — desktop only */}
         <div className="hidden md:block">
           <TechnicianSidebar />
         </div>
 
-        {/* Main content — offline banner pushes content down on mobile */}
+        {/* Main content */}
         <main
           className={`min-w-0 pb-[60px] md:pb-0 transition-[padding-top] duration-150 ${
             !isOnline ? 'pt-[42px]' : ''
