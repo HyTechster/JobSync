@@ -35,11 +35,22 @@ export function JobSheetDetailModal({ sheet, onClose }: JobSheetDetailModalProps
 
   const status = sheet.job_orders?.status ?? 'pending'
 
+  const titleNode = (
+    <span className="flex items-center gap-2 flex-wrap">
+      <span>{sheet.job_title ?? sheet.job_orders?.title ?? 'Job Sheet'}</span>
+      {sheet.sheet_number != null && (
+        <span className="text-[11px] font-bold text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
+          #{sheet.sheet_number}
+        </span>
+      )}
+    </span>
+  )
+
   return (
     <Modal
       isOpen
       onClose={onClose}
-      title={sheet.job_orders?.title ?? 'Job Sheet'}
+      title={titleNode}
       subtitle={`Submitted by ${sheet.profiles ? (sheet.profiles.display_name ?? sheet.profiles.full_name) : 'Unknown'} · ${fmtDateTime(sheet.submitted_at)}`}
       maxWidth="max-w-2xl"
     >

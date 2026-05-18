@@ -2,10 +2,22 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useJob } from '../../features/jobs/hooks'
 import { useUpdateJobStatus } from '../../features/jobs/mutations'
+import { useJobSheet } from '../../features/job-sheets/hooks'
+import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import type { DisplayStatus } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+
+function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
+  const { data: sheet, isLoading } = useJobSheet(sheetId)
+  if (isLoading) return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(15,23,42,0.55)]">
+      <span className="w-8 h-8 border-[3px] border-brand-200 border-t-brand-700 rounded-full animate-spin" />
+    </div>
+  )
+  return <JobSheetDetailModal sheet={sheet ?? null} onClose={onClose} />
+}
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
@@ -27,6 +39,7 @@ export default function JobDetailPage() {
   const { data: job, isLoading, isError } = useJob(jobId ?? '')
   const { mutate: updateStatus, isPending } = useUpdateJobStatus()
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -182,10 +195,23 @@ export default function JobDetailPage() {
         {job.status === 'completed' && hasSheet && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-2">
             <Icons.check size={16} color="#059669" />
-            <p className="text-[13px] text-emerald-800 font-medium">Job and job sheet complete.</p>
+            <p className="text-[13px] text-emerald-800 font-medium flex-1">Job and job sheet complete.</p>
+            {job.job_sheets?.[0]?.id && (
+              <button
+                type="button"
+                onClick={() => setSelectedSheetId(job.job_sheets![0].id)}
+                className="flex-shrink-0 h-7 px-3 rounded-lg bg-emerald-600 text-white text-[11.5px] font-semibold hover:bg-emerald-700 transition-colors"
+              >
+                View Sheet
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {selectedSheetId && (
+        <SheetViewer sheetId={selectedSheetId} onClose={() => setSelectedSheetId(null)} />
+      )}
     </div>
   )
 }

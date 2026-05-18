@@ -54,7 +54,7 @@ type TechAssignment = {
 
 export type RecentJobRow = JobOrder & {
   job_assignments: TechAssignment[]
-  job_sheets?: { id: string }[]
+  job_sheets?: { id: string; sheet_number: number | null }[]
 }
 
 export function useRecentJobs(orgId: string | null) {
@@ -85,7 +85,7 @@ export function useJobs(orgId: string | null, filters?: JobFilters) {
       let query = supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
         )
         .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })
@@ -123,7 +123,7 @@ export function useTechnicians() {
 }
 
 const JOB_DETAIL_SELECT =
-  '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id)'
+  '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
 
 export function useJob(id: string) {
   return useQuery<RecentJobRow | null>({
@@ -165,7 +165,7 @@ export function useMyCompletedJobs(orgId: string | null) {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
         )
         .eq('organization_id' as never, orgId!)
         .eq('status', 'completed')

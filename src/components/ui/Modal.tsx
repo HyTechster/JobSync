@@ -4,7 +4,7 @@ import { Icons } from './Icons'
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title: string
+  title: ReactNode
   subtitle?: string
   children: ReactNode
   footer?: ReactNode

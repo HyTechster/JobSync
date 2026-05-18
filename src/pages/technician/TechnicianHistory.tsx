@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { offlineDb, type OfflineJobSheet } from '../../offline/db'
 import { syncPendingJobSheets } from '../../offline/sync'
 import { useMyCompletedJobs } from '../../features/jobs/hooks'
+import { useJobSheet } from '../../features/job-sheets/hooks'
+import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
@@ -51,10 +53,12 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
   )
 }
 
-function CompletedJobCard({ job }: { job: RecentJobRow }) {
+function CompletedJobCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet: (sheetId: string) => void }) {
   const { fmtDate } = useDateFormatter()
   const completedOn = fmtDate(job.updated_at)
   const scheduledOn = fmtDate(job.scheduled_date)
+  const sheetId = job.job_sheets?.[0]?.id
+  const sheetNumber = job.job_sheets?.[0]?.sheet_number
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">
@@ -66,18 +70,40 @@ function CompletedJobCard({ job }: { job: RecentJobRow }) {
       {job.location && (
         <p className="text-[12px] text-text-muted truncate mt-0.5">{job.location}</p>
       )}
-      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
-        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-          <Icons.check size={10} />
-          Completed {completedOn}
-        </span>
-        <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
-          <Icons.calendar size={11} />
-          Scheduled {scheduledOn}
-        </span>
+      <div className="flex items-center justify-between mt-2.5 gap-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <Icons.check size={10} />
+            Completed {completedOn}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11.5px] text-text-muted">
+            <Icons.calendar size={11} />
+            Scheduled {scheduledOn}
+          </span>
+        </div>
+        {sheetId && (
+          <button
+            type="button"
+            onClick={() => onViewSheet(sheetId)}
+            className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0"
+          >
+            <Icons.sheets size={12} />
+            {sheetNumber != null ? `Sheet #${sheetNumber}` : 'View Sheet'}
+          </button>
+        )}
       </div>
     </div>
   )
+}
+
+function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
+  const { data: sheet, isLoading } = useJobSheet(sheetId)
+  if (isLoading) return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(15,23,42,0.55)]">
+      <span className="w-8 h-8 border-[3px] border-brand-200 border-t-brand-700 rounded-full animate-spin" />
+    </div>
+  )
+  return <JobSheetDetailModal sheet={sheet ?? null} onClose={onClose} />
 }
 
 export default function TechnicianHistory() {
@@ -86,6 +112,7 @@ export default function TechnicianHistory() {
   const { activeOrgId } = useOrganization()
   const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs(activeOrgId)
   const [pending, setPending] = useState<OfflineJobSheet[]>([])
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
 
   async function loadPending() {
     const records = await offlineDb.jobSheets
@@ -158,10 +185,16 @@ export default function TechnicianHistory() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {completedJobs.map((j) => <CompletedJobCard key={j.id} job={j} />)}
+            {completedJobs.map((j) => (
+              <CompletedJobCard key={j.id} job={j} onViewSheet={setSelectedSheetId} />
+            ))}
           </div>
         )}
       </section>
+
+      {selectedSheetId && (
+        <SheetViewer sheetId={selectedSheetId} onClose={() => setSelectedSheetId(null)} />
+      )}
     </div>
   )
 }

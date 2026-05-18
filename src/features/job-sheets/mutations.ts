@@ -52,11 +52,19 @@ export function useSubmitJobSheet() {
         await Promise.all(uploads)
       }
 
+      const { error: completeErr } = await supabase
+        .from('job_orders')
+        .update({ status: 'completed' })
+        .eq('id', jobOrderId)
+      if (completeErr) throw completeErr
+
       return sheet
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['job-sheets'] })
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs'] })
     },
   })
 }
@@ -201,12 +209,22 @@ export function useSubmitFullSheet() {
         ...photoUploads,
       ])
 
+      if (jobOrderId) {
+        const { error: completeErr } = await supabase
+          .from('job_orders')
+          .update({ status: 'completed' })
+          .eq('id', jobOrderId)
+        if (completeErr) throw completeErr
+      }
+
       return sheet
     },
     onSuccess: (_data, vars) => {
       if (vars.orgId) void qc.invalidateQueries({ queryKey: ['job-sheets', 'mine', vars.orgId] })
       void qc.invalidateQueries({ queryKey: ['job-sheets'] })
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs'] })
       if (vars.jobOrderId) void qc.invalidateQueries({ queryKey: ['job', vars.jobOrderId] })
       if (vars.orgId) void qc.invalidateQueries({ queryKey: ['next-sheet-id', vars.orgId] })
     },
