@@ -29,7 +29,7 @@ export const jobOrderSchema = z
     description:      z.string().min(1, 'Description is required'),
     job_type:         z.enum(
       ['service', 'inspection', 'installation', 'maintenance', 'emergency', 'scheduled_maintenance', 'other'],
-      { required_error: 'Job type is required' }
+      { error: 'Job type is required' }
     ),
     job_type_other: z.string().optional(),
 

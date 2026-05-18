@@ -72,7 +72,7 @@ export function useLogin() {
       return { session: authData.session, profile, memberships: memberships ?? [] }
     },
 
-    onSuccess: ({ session, profile, memberships }) => {
+    onSuccess: ({ session, profile }) => {
       setSession(session, profile)
       navigate('/dashboard/select-organization')
     },

@@ -162,11 +162,11 @@ export function useOrgInvitations() {
     queryFn: async () => {
       if (!activeOrgId) return []
       const { data, error } = await supabase
-        .from('organization_invitations')
+        .from('organization_invitations' as never)
         .select('id, email, role, invited_by, status, created_at')
-        .eq('organization_id', activeOrgId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+        .eq('organization_id' as never, activeOrgId)
+        .eq('status' as never, 'pending')
+        .order('created_at' as never, { ascending: false })
       if (error) throw error
       return (data ?? []) as OrgInvitation[]
     },
@@ -180,9 +180,9 @@ export function useCancelInvitation() {
   return useMutation({
     mutationFn: async (invitationId: string) => {
       const { error } = await supabase
-        .from('organization_invitations')
+        .from('organization_invitations' as never)
         .delete()
-        .eq('id', invitationId)
+        .eq('id' as never, invitationId)
       if (error) throw error
     },
     onSuccess: () => {
@@ -204,10 +204,10 @@ export function usePendingInvitations() {
       // No client-side email filter — RLS policy "Users see own invitations"
       // filters by matching the caller's profile email on the server.
       const { data, error } = await supabase
-        .from('organization_invitations')
+        .from('organization_invitations' as never)
         .select('*, organizations(id, name)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+        .eq('status' as never, 'pending')
+        .order('created_at' as never, { ascending: false })
       if (error) throw error
       return (data ?? []) as PendingInvitation[]
     },
@@ -227,9 +227,9 @@ export function useRespondToInvitation() {
         if (error) throw error
       } else {
         const { error } = await supabase
-          .from('organization_invitations')
-          .update({ status: 'rejected' })
-          .eq('id', id)
+          .from('organization_invitations' as never)
+          .update({ status: 'rejected' } as never)
+          .eq('id' as never, id)
         if (error) throw error
       }
     },
