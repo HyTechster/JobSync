@@ -2,8 +2,10 @@ import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useOrganization } from '../context/OrganizationContext'
 import { TechnicianShell } from '../components/layout/TechnicianShell'
+import { useForceSignoutListener } from '../hooks/useForceSignoutListener'
 
 export function TechnicianRoutes() {
+  useForceSignoutListener()
   const session = useAuthStore((s) => s.session)
   const isAuthLoading = useAuthStore((s) => s.isLoading)
   const { userRole, memberships, isLoading: isOrgLoading } = useOrganization()
