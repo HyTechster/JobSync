@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth, useLogout } from '../../features/auth/hooks'
 import { useOrganization, type OrgMembership } from '../../context/OrganizationContext'
 import { usePendingInvitations, useRespondToInvitation } from '../../features/users/hooks'
+import { parsePreferences } from '../../features/account/hooks'
+import { useAuthStore } from '../../store/authStore'
 import type { OrgRole } from '../../types'
 
 function ProfileButton({ name }: { name: string }) {
@@ -48,6 +50,9 @@ function orgColor(index: number) {
 
 export default function SelectOrganizationPage() {
   const { session, profile, isLoading: isAuthLoading } = useAuth()
+  const newDeviceAlert = useAuthStore((s) => s.newDeviceAlert)
+  const setNewDeviceAlert = useAuthStore((s) => s.setNewDeviceAlert)
+  const prefs = parsePreferences(profile?.preferences)
   const {
     memberships,
     setActiveOrganization,
@@ -89,7 +94,7 @@ export default function SelectOrganizationPage() {
   return (
     <main className="min-h-screen bg-surface-2 flex flex-col items-center justify-center p-6">
       {/* Logo + profile button */}
-      <div className="flex items-center gap-2.5 mb-10 w-full max-w-md">
+      <div className="flex items-center gap-2.5 mb-4 w-full max-w-md">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <rect x="2" y="2" width="28" height="28" rx="8" fill="#1E3A5F" />
           <path d="M10 11.5h12M10 16h8M10 20.5h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
@@ -98,6 +103,45 @@ export default function SelectOrganizationPage() {
         <span className="text-xl font-bold text-text-base tracking-tight flex-1">JobSync</span>
         <ProfileButton name={profile?.full_name ?? 'U'} />
       </div>
+
+      {/* New device security banner */}
+      {newDeviceAlert && prefs.notify_new_signin && (
+        <div
+          role="alert"
+          className="w-full max-w-md mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5"
+        >
+          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13.5px] font-semibold text-amber-800">New sign-in detected</p>
+            <p className="text-[12px] text-amber-700 mt-0.5 leading-relaxed">
+              Your account was just accessed from a new device or browser. If this wasn't you, change your password immediately.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/account')}
+              className="mt-2 text-[12px] font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900 transition-colors"
+            >
+              Review account security →
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNewDeviceAlert(false)}
+            aria-label="Dismiss"
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-amber-100 transition-colors text-amber-600"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm w-full max-w-md overflow-hidden">
 

@@ -126,3 +126,28 @@ export function useRemoveLinkedEmail() {
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['linked-emails'] }) },
   })
 }
+
+export interface LoginHistoryRow {
+  id: string
+  device_info: string
+  is_new_device: boolean
+  signed_in_at: string
+}
+
+export function useLoginHistory() {
+  const session = useAuthStore((s) => s.session)
+  return useQuery<LoginHistoryRow[]>({
+    queryKey: ['login-history', session?.user.id],
+    enabled: !!session?.user.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('login_history' as never)
+        .select('id, device_info, is_new_device, signed_in_at')
+        .eq('user_id' as never, session!.user.id)
+        .order('signed_in_at' as never, { ascending: false })
+        .limit(10)
+      if (error) throw error
+      return (data ?? []) as LoginHistoryRow[]
+    },
+  })
+}

@@ -7,8 +7,10 @@ interface AuthState {
   session: Session | null
   profile: Profile | null
   isLoading: boolean
+  newDeviceAlert: boolean
   setSession: (session: Session | null, profile: Profile | null) => void
   setProfile: (profile: Profile | null) => void
+  setNewDeviceAlert: (value: boolean) => void
   clearSession: () => void
   initAuth: () => () => void
 }
@@ -26,12 +28,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   profile: null,
   isLoading: true,
+  newDeviceAlert: false,
 
   setSession: (session, profile) => set({ session, profile }),
 
   setProfile: (profile) => set({ profile }),
 
-  clearSession: () => set({ session: null, profile: null, isLoading: false }),
+  setNewDeviceAlert: (value) => set({ newDeviceAlert: value }),
+
+  clearSession: () => set({ session: null, profile: null, isLoading: false, newDeviceAlert: false }),
 
   initAuth: () => {
     // Resolve isLoading the instant we know the session — no network call needed.

@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/hooks'
-import { useChangePassword } from './hooks'
+import { useChangePassword, useLoginHistory } from './hooks'
+import { useDateFormatter } from '../../hooks/useDateFormatter'
 
 const pwSchema = z.object({
   currentPassword: z.string().min(1, 'Enter your current password'),
@@ -19,37 +20,47 @@ type PwForm = z.infer<typeof pwSchema>
 function getDeviceInfo() {
   const ua = navigator.userAgent
   let browser = 'Unknown browser'
-  if (ua.includes('Edg'))                               browser = 'Edge'
-  else if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome'
-  else if (ua.includes('Firefox'))                      browser = 'Firefox'
-  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari'
+  if (ua.includes('Edg'))                                         browser = 'Edge'
+  else if (ua.includes('Chrome') && !ua.includes('Edg'))          browser = 'Chrome'
+  else if (ua.includes('Firefox'))                                browser = 'Firefox'
+  else if (ua.includes('Safari') && !ua.includes('Chrome'))       browser = 'Safari'
 
   let os = 'Unknown OS'
-  if (ua.includes('Windows'))                      os = 'Windows'
+  if (ua.includes('Windows'))                                     os = 'Windows'
   else if (ua.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) os = 'macOS'
-  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS'
-  else if (ua.includes('Android'))                 os = 'Android'
-  else if (ua.includes('Linux'))                   os = 'Linux'
+  else if (ua.includes('iPhone') || ua.includes('iPad'))          os = 'iOS'
+  else if (ua.includes('Android'))                                os = 'Android'
+  else if (ua.includes('Linux'))                                  os = 'Linux'
 
   return `${browser} on ${os}`
 }
 
-function formatSignInTime(session: ReturnType<typeof useAuth>['session']) {
-  if (!session?.access_token) return '—'
-  try {
-    const payload = JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-    return new Date(payload.iat * 1000).toLocaleString('en-MY', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    })
-  } catch { return '—' }
-}
-
 const inputCls = 'w-full h-10 px-3 text-sm border border-border rounded-lg bg-white text-text-base placeholder:text-text-subtle outline-none transition-all focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10'
+
+function DeviceIcon({ deviceInfo }: { deviceInfo: string }) {
+  const isMobile = /Android|iPhone|iPad/i.test(deviceInfo)
+  if (isMobile) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="5" y="2" width="14" height="20" rx="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+      </svg>
+    )
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+    </svg>
+  )
+}
 
 export function SecurityTab() {
   const { session } = useAuth()
+  const { fmtDateTime } = useDateFormatter()
   const changePassword = useChangePassword()
+  const { data: loginHistory = [], isLoading: historyLoading } = useLoginHistory()
   const [signOutOthersSuccess, setSignOutOthersSuccess] = useState(false)
+  const currentDevice = getDeviceInfo()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PwForm>({
     resolver: zodResolver(pwSchema),
@@ -126,16 +137,16 @@ export function SecurityTab() {
         <div className="px-6 py-4 flex flex-col gap-4">
           <div className="flex items-start gap-3 p-3.5 bg-surface-2 rounded-lg border border-border">
             <div className="w-9 h-9 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
-              </svg>
+              <DeviceIcon deviceInfo={currentDevice} />
             </div>
             <div className="flex-1">
               <div className="text-sm font-semibold text-text-base flex items-center gap-2">
-                {getDeviceInfo()}
+                {currentDevice}
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Current</span>
               </div>
-              <div className="text-xs text-text-muted mt-0.5">Signed in {formatSignInTime(session)}</div>
+              <div className="text-xs text-text-muted mt-0.5">
+                {session ? `Session active` : '—'}
+              </div>
             </div>
           </div>
 
@@ -155,20 +166,53 @@ export function SecurityTab() {
         </div>
       </section>
 
-      {/* Activity */}
+      {/* Sign-in history */}
       <section className="bg-white border border-border rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text-base">Activity</h2>
+          <h2 className="text-sm font-semibold text-text-base">Sign-in history</h2>
+          <p className="text-xs text-text-muted mt-0.5">Recent account access across your devices</p>
         </div>
-        <div className="px-6 py-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-text-muted">Last sign-in</span>
-            <span className="font-medium text-text-base">{formatSignInTime(session)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-text-muted">Sign-in method</span>
-            <span className="font-medium text-text-base">Email &amp; password</span>
-          </div>
+
+        <div className="divide-y divide-border">
+          {historyLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="px-6 py-3.5 flex items-center gap-3 animate-pulse">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 w-32 bg-slate-100 rounded" />
+                  <div className="h-3 w-24 bg-slate-100 rounded" />
+                </div>
+                <div className="h-3 w-28 bg-slate-100 rounded" />
+              </div>
+            ))
+          ) : loginHistory.length === 0 ? (
+            <div className="px-6 py-8 text-center">
+              <p className="text-sm text-text-muted">No sign-in history yet</p>
+            </div>
+          ) : (
+            loginHistory.map((record, i) => {
+              const isCurrent = i === 0
+              return (
+                <div key={record.id} className="px-6 py-3.5 flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isCurrent ? 'bg-brand-100' : 'bg-surface-2'}`}>
+                    <DeviceIcon deviceInfo={record.device_info} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[13px] font-medium text-text-base">{record.device_info}</span>
+                      {isCurrent && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Current</span>
+                      )}
+                      {record.is_new_device && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">New device</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-text-muted mt-0.5">{fmtDateTime(record.signed_in_at)}</div>
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </section>
     </div>

@@ -34,6 +34,7 @@ function MobileSkeletonCard() {
 // ─── Mobile card ──────────────────────────────────────────────────────────────
 
 function MobileCard({ sheet, onView }: { sheet: JobSheetWithDetail; onView: () => void }) {
+  const { fmtDate } = useDateFormatter()
   const title      = sheet.job_title ?? sheet.job_orders?.title ?? 'Untitled Sheet'
   const subtitle   = sheet.job_orders?.customer_name ?? null
   const isStandalone = !sheet.job_order_id
@@ -119,7 +120,7 @@ const HEADERS = ['Sheet #', 'Job / Title', 'Technician', 'Submitted', 'Duration'
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProps) {
-  const { fmtDate, fmtDateTime } = useDateFormatter()
+  const { fmtDateTime } = useDateFormatter()
   return (
     <>
       {/* Mobile card list (hidden on md+) */}

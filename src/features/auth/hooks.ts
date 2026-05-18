@@ -39,8 +39,26 @@ export function useAuth() {
   return { session, profile, isLoading }
 }
 
+function getDeviceInfo(): string {
+  const ua = navigator.userAgent
+  let browser = 'Unknown browser'
+  if (ua.includes('Edg'))                                         browser = 'Edge'
+  else if (ua.includes('Chrome') && !ua.includes('Edg'))          browser = 'Chrome'
+  else if (ua.includes('Firefox'))                                browser = 'Firefox'
+  else if (ua.includes('Safari') && !ua.includes('Chrome'))       browser = 'Safari'
+
+  let os = 'Unknown OS'
+  if (ua.includes('Windows'))                                     os = 'Windows'
+  else if (ua.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) os = 'macOS'
+  else if (ua.includes('iPhone') || ua.includes('iPad'))          os = 'iOS'
+  else if (ua.includes('Android'))                                os = 'Android'
+  else if (ua.includes('Linux'))                                  os = 'Linux'
+
+  return `${browser} on ${os}`
+}
+
 export function useLogin() {
-  const { setSession } = useAuthStore()
+  const { setSession, setNewDeviceAlert } = useAuthStore()
   const navigate = useNavigate()
 
   return useMutation({
@@ -69,11 +87,21 @@ export function useLogin() {
         .eq('user_id', authData.user.id)
         .order('joined_at', { ascending: true })
 
-      return { session: authData.session, profile, memberships: memberships ?? [] }
+      // Record sign-in and detect new device (best-effort — don't block login on failure)
+      let isNewDevice = false
+      try {
+        const { data: newDevice } = await (supabase.rpc as Function)('record_sign_in', {
+          p_device_info: getDeviceInfo(),
+        })
+        isNewDevice = newDevice === true
+      } catch { /* ignore — login still succeeds */ }
+
+      return { session: authData.session, profile, memberships: memberships ?? [], isNewDevice }
     },
 
-    onSuccess: ({ session, profile }) => {
+    onSuccess: ({ session, profile, isNewDevice }) => {
       setSession(session, profile)
+      if (isNewDevice) setNewDeviceAlert(true)
       navigate('/dashboard/select-organization')
     },
   })
