@@ -45,22 +45,26 @@ export function Modal({
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose()
       }}
-      className="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
+      // Mobile: push content between the fixed top header (56px) and bottom nav (60px),
+      //         with a small visual gap on each side.
+      // Desktop: standard centred with equal padding on all sides.
+      className="fixed inset-0 z-[60] flex items-center justify-center px-3 pt-[68px] pb-[88px] md:p-8 bg-[rgba(15,23,42,0.55)] backdrop-blur-[4px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
-        className={`relative w-full ${maxWidth} max-h-[92dvh] md:max-h-[calc(100vh-64px)] bg-white md:rounded-[14px] rounded-t-[20px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
+        // max-h-full fills the remaining space inside the padded overlay on mobile
+        className={`relative w-full ${maxWidth} max-h-full md:max-h-[calc(100vh-64px)] bg-white rounded-[14px] shadow-[0_24px_60px_rgba(0,0,0,.35)] flex flex-col overflow-hidden`}
       >
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between px-5 md:px-7 py-5 border-b border-slate-200 flex-shrink-0">
+        <div className="flex items-start justify-between px-5 md:px-7 py-4 md:py-5 border-b border-slate-200 flex-shrink-0">
           <div>
-            <h2 id="modal-title" className="text-[17px] font-bold tracking-tight text-text-base">
+            <h2 id="modal-title" className="text-[16px] md:text-[17px] font-bold tracking-tight text-text-base">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-[12.5px] text-text-muted mt-0.5">{subtitle}</p>
+              <p className="text-[12px] md:text-[12.5px] text-text-muted mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
@@ -72,20 +76,17 @@ export function Modal({
           </button>
         </div>
 
-        {/* ── Scrollable body + sticky-in-scroll footer ──────────────── */}
-        {/*
-          The footer lives INSIDE the overflow-y-auto container with
-          `sticky bottom-0`. This means it always stays pinned to the
-          bottom of the visible scroll area — no bottom-nav obstruction,
-          no need to scroll past content to find buttons.
-        */}
+        {/* ── Scrollable body ────────────────────────────────────────── */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="px-5 md:px-7 py-6 flex flex-col gap-6">
+          <div className="px-5 md:px-7 py-5 md:py-6 flex flex-col gap-5 md:gap-6">
             {children}
           </div>
 
+          {/* Footer lives inside the scroll container with sticky bottom-0
+              so it is always pinned to the bottom of the visible area —
+              no need to scroll to find the Cancel / Submit buttons.       */}
           {footer && (
-            <div className="sticky bottom-0 flex items-center justify-between gap-3 px-5 md:px-7 py-4 border-t border-slate-200 bg-white">
+            <div className="sticky bottom-0 flex items-center justify-between gap-3 px-5 md:px-7 py-3 md:py-4 border-t border-slate-200 bg-white">
               {footer}
             </div>
           )}
