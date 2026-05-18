@@ -94,7 +94,7 @@ export default function TechnicianHistory() {
     setPending(records)
   }
 
-  useEffect(() => { void loadPending() }, [isOnline])  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void loadPending() }, [isOnline])
 
   async function handleRetry(id: number) {
     await offlineDb.jobSheets.update(id, { syncStatus: 'pending' })

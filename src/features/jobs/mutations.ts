@@ -12,7 +12,7 @@ function invalidateDashboard(qc: ReturnType<typeof useQueryClient>) {
 
 function buildJobPayload(form: JobOrderFormData) {
   const {
-    technician_ids,
+    technician_ids: _technician_ids,
     scheduled_date_flexible,
     scheduled_time_flexible,
     due_date_flexible,

@@ -90,9 +90,10 @@ export function useLogin() {
       // Record sign-in and detect new device (best-effort — don't block login on failure)
       let isNewDevice = false
       try {
-        const { data: newDevice } = await (supabase.rpc as Function)('record_sign_in', {
-          p_device_info: getDeviceInfo(),
-        })
+        type RpcFn = (fn: string, args: Record<string, string>) => Promise<{ data: boolean | null }>
+        const { data: newDevice } = await (supabase.rpc as unknown as RpcFn)(
+          'record_sign_in', { p_device_info: getDeviceInfo() }
+        )
         isNewDevice = newDevice === true
       } catch { /* ignore — login still succeeds */ }
 
