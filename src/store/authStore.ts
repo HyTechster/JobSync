@@ -47,8 +47,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       forceSignoutChannel = supabase
         .channel(`forced-signout:${userId}`)
         .on('broadcast', { event: 'sign_out' }, () => {
-          // Wipe local state and redirect — the server-side refresh token is
-          // already revoked by the sender's signOut({ scope: 'others' }) call.
+          // scope:'local' clears the Supabase session from localStorage without
+          // a network call. The server-side refresh token is already revoked by
+          // the sender's signOut({ scope:'others' }) call.
+          void supabase.auth.signOut({ scope: 'local' })
           get().clearSession()
           localStorage.removeItem('jobsync_active_org')
           queryClient.clear()
