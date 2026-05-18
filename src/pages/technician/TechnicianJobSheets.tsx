@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMyJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
@@ -91,7 +91,7 @@ export default function TechnicianJobSheets() {
   const { data: nextSheetId } = useNextSheetId(activeOrgId)
   const [drafts, setDrafts] = useState<DraftJobSheet[]>([])
 
-  async function loadDrafts() {
+  const loadDrafts = useCallback(async () => {
     if (!activeOrgId) return
     const rows = await offlineDb.draftSheets
       .where('organizationId')
@@ -99,9 +99,9 @@ export default function TechnicianJobSheets() {
       .reverse()
       .sortBy('createdAt')
     setDrafts(rows.reverse())
-  }
+  }, [activeOrgId])
 
-  useEffect(() => { void loadDrafts() }, [activeOrgId])
+  useEffect(() => { void loadDrafts() }, [loadDrafts])
 
   async function deleteDraft(id: number) {
     await offlineDb.draftSheets.delete(id)

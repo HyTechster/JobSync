@@ -6,17 +6,28 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>()
   return {
     ...actual,
-    useParams: () => ({ jobId: 'job-test-123' }),
-    useNavigate: () => vi.fn(),
+    useParams:       () => ({ jobId: 'job-test-123' }),
+    useNavigate:     () => vi.fn(),
+    useSearchParams: () => [new URLSearchParams(), vi.fn()],
   }
 })
 
+vi.mock('../../../context/OrganizationContext', () => ({
+  useOrganization: () => ({ activeOrgId: 'org-test-123' }),
+}))
+
+vi.mock('../../../store/authStore', () => ({
+  useAuthStore: (selector: (s: { session: { user: { id: string } } }) => unknown) =>
+    selector({ session: { user: { id: 'user-test-123' } } }),
+}))
+
 vi.mock('../../../features/jobs/hooks', () => ({
-  useJob: () => ({ data: { id: 'job-test-123', title: 'Fix CCTV at Level 3' } }),
+  useJob:            () => ({ data: { id: 'job-test-123', title: 'Fix CCTV at Level 3' } }),
+  useOrgTechnicians: () => ({ data: [] }),
 }))
 
 vi.mock('../../../features/job-sheets/mutations', () => ({
-  useSubmitJobSheet: () => ({ mutate: vi.fn(), isPending: false, error: null }),
+  useSubmitFullSheet: () => ({ mutate: vi.fn(), isPending: false, error: null }),
 }))
 
 vi.mock('../../../hooks/useOnlineStatus', () => ({
@@ -25,7 +36,13 @@ vi.mock('../../../hooks/useOnlineStatus', () => ({
 
 vi.mock('../../../offline/db', () => ({
   offlineDb: {
-    jobSheets: { add: vi.fn() },
+    jobSheets:   { add: vi.fn() },
+    draftSheets: {
+      get:    vi.fn().mockResolvedValue(undefined),
+      add:    vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
     attachments: { add: vi.fn() },
   },
 }))

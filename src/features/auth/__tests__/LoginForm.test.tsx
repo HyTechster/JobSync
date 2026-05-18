@@ -39,7 +39,7 @@ describe('LoginForm', () => {
 
   it('renders sign-up link', () => {
     renderLoginForm()
-    expect(screen.getByRole('link', { name: /create your company/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /create an account/i })).toBeInTheDocument()
   })
 
   it('shows email validation error when submitting empty form', async () => {
