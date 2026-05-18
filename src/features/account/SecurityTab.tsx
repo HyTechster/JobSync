@@ -50,6 +50,7 @@ export function SecurityTab() {
   const [signOutOthersSuccess, setSignOutOthersSuccess] = useState(false)
   const [confirmSignOutAll, setConfirmSignOutAll] = useState(false)
   const [signingOutAll, setSigningOutAll] = useState(false)
+  const [showAllHistory, setShowAllHistory] = useState(false)
   const logoutAll = useLogoutAll()
   const currentDevice = getDeviceInfo()
 
@@ -207,6 +208,7 @@ export function SecurityTab() {
                 disabled={signingOutAll}
                 onClick={async () => {
                   setSigningOutAll(true)
+                  await broadcastForcedSignout(currentDevice)
                   await logoutAll()
                 }}
                 className="h-8 px-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0"
@@ -245,9 +247,20 @@ export function SecurityTab() {
 
       {/* Sign-in history */}
       <section className="bg-white border border-border rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text-base">Sign-in history</h2>
-          <p className="text-xs text-text-muted mt-0.5">Recent account access across your devices</p>
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-text-base">Sign-in history</h2>
+            <p className="text-xs text-text-muted mt-0.5">Recent account access across your devices</p>
+          </div>
+          {loginHistory.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAllHistory((v) => !v)}
+              className="text-xs font-semibold text-brand-700 hover:text-brand-800 transition-colors"
+            >
+              {showAllHistory ? 'Show less' : `Show all ${loginHistory.length}`}
+            </button>
+          )}
         </div>
 
         <div className="divide-y divide-border">
@@ -267,7 +280,7 @@ export function SecurityTab() {
               <p className="text-sm text-text-muted">No sign-in history yet</p>
             </div>
           ) : (
-            loginHistory.map((record) => {
+            (showAllHistory ? loginHistory : loginHistory.slice(0, 5)).map((record) => {
               const isCurrent = record.device_info === currentDevice
               return (
                 <div key={record.id} className="px-6 py-3.5 flex items-center gap-3">
@@ -275,22 +288,34 @@ export function SecurityTab() {
                     <DeviceIcon deviceInfo={record.device_info} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13px] font-medium text-text-base">{record.device_info}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[13px] font-medium text-text-base truncate">{record.device_info}</span>
                       {isCurrent && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Current</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">Current</span>
                       )}
                       {record.is_new_device && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">New device</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">New device</span>
                       )}
                     </div>
-                    <div className="text-xs text-text-muted mt-0.5">{fmtDateTime(record.signed_in_at)}</div>
                   </div>
+                  <span className="text-xs text-text-muted flex-shrink-0 tabular-nums">{fmtDateTime(record.signed_in_at)}</span>
                 </div>
               )
             })
           )}
         </div>
+
+        {!historyLoading && loginHistory.length > 5 && (
+          <div className="px-6 py-3 border-t border-border text-center">
+            <button
+              type="button"
+              onClick={() => setShowAllHistory((v) => !v)}
+              className="text-xs font-semibold text-text-muted hover:text-text-base transition-colors"
+            >
+              {showAllHistory ? '↑ Show less' : `↓ Show ${loginHistory.length - 5} more`}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )
