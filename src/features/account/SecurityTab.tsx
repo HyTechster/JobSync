@@ -229,8 +229,8 @@ export function SecurityTab() {
               <p className="text-sm text-text-muted">No sign-in history yet</p>
             </div>
           ) : (
-            loginHistory.map((record, i) => {
-              const isCurrent = i === 0
+            loginHistory.map((record) => {
+              const isCurrent = record.device_info === currentDevice
               return (
                 <div key={record.id} className="px-6 py-3.5 flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isCurrent ? 'bg-brand-100' : 'bg-surface-2'}`}>
