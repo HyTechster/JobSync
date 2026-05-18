@@ -29,14 +29,16 @@ export type JobSheetWithDetail = {
 const SHEET_SELECT =
   '*, job_orders:job_order_id(id, title, status, customer_name), profiles:technician_id(full_name, display_name, avatar_url), attachments(id, storage_path, file_name, file_size, mime_type)'
 
-/** Admin view — all sheets sorted by sheet_number desc, nulls last for legacy rows */
-export function useJobSheets() {
+/** Admin view — sheets for the active org, sorted by sheet_number desc */
+export function useJobSheets(orgId: string | null) {
   return useQuery<JobSheetWithDetail[]>({
-    queryKey: ['job-sheets'],
+    queryKey: ['job-sheets', orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_sheets')
         .select(SHEET_SELECT)
+        .eq('organization_id', orgId!)
         .order('sheet_number', { ascending: false, nullsFirst: false })
         .order('submitted_at', { ascending: false })
       if (error) throw error

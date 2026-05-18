@@ -3,9 +3,10 @@ import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { jobOrderSchema, type JobOrderFormData } from './jobSchema'
 import { useUpdateJob } from './mutations'
-import { useTechnicians } from './hooks'
+import { useOrgTechnicians } from './hooks'
 import { JobOrderFields } from './JobOrderFields'
 import { Modal } from '../../components/ui/Modal'
+import { useOrganization } from '../../context/OrganizationContext'
 import type { RecentJobRow } from './hooks'
 
 interface EditJobModalProps {
@@ -14,7 +15,8 @@ interface EditJobModalProps {
 }
 
 export function EditJobModal({ job, onClose }: EditJobModalProps) {
-  const { data: technicians = [] } = useTechnicians()
+  const { activeOrgId } = useOrganization()
+  const { data: technicians = [] } = useOrgTechnicians(activeOrgId)
   const { mutate: updateJob, isPending, error } = useUpdateJob()
 
   const methods = useForm<JobOrderFormData>({

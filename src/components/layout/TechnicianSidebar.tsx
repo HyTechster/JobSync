@@ -6,7 +6,6 @@ import { useAuthStore } from '../../store/authStore'
 import { useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
-import { AddJobSheetModal } from '../../features/job-sheets/AddJobSheetModal'
 
 const NAV_ITEMS = [
   { to: '/technician/jobs',       label: 'My Jobs',    Icon: Icons.jobs   },
@@ -21,9 +20,8 @@ export function TechnicianSidebar() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
-  const { data: unread = 0 } = useUnreadAlertCount()
+  const { data: unread = 0 } = useUnreadAlertCount(activeOrg?.id ?? null)
   const [showOrgMenu, setShowOrgMenu] = useState(false)
-  const [showAddModal, setShowAddModal] = useState(false)
   const orgMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,7 +54,6 @@ export function TechnicianSidebar() {
   }
 
   return (
-    <>
     <aside className="sticky top-0 h-screen flex flex-col bg-white border-r border-border overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-[18px]">
@@ -124,12 +121,23 @@ export function TechnicianSidebar() {
         )}
       </div>
 
+      {/* New job sheet button */}
+      <div className="px-3.5 mb-4">
+        <button
+          type="button"
+          onClick={() => handleNav('/technician/job-sheets/new')}
+          className="w-full flex items-center gap-2 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"
+        >
+          <Icons.plus size={15} color="#fff" />
+          New job sheet
+        </button>
+      </div>
+
       {/* Nav items */}
       <nav className="flex-1 px-2 flex flex-col gap-0.5">
         {NAV_ITEMS.map(({ to, label, Icon }) => {
           const isActive = pathname.startsWith(to)
           const showBadge = label === 'Alerts' && unread > 0
-          const isJobSheets = label === 'Job Sheets'
           return (
             <button
               key={to}
@@ -144,18 +152,6 @@ export function TechnicianSidebar() {
               {showBadge && (
                 <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-danger text-white text-[9px] font-bold flex items-center justify-center px-[4px] leading-none">
                   {unread > 9 ? '9+' : unread}
-                </span>
-              )}
-              {isJobSheets && !showBadge && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  title="Add job sheet"
-                  onClick={(e) => { e.stopPropagation(); setShowAddModal(true) }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setShowAddModal(true) } }}
-                  className="ml-auto w-[18px] h-[18px] rounded flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-colors"
-                >
-                  <Icons.plus size={13} color="currentColor" />
                 </span>
               )}
             </button>
@@ -185,13 +181,5 @@ export function TechnicianSidebar() {
         </div>
       </div>
     </aside>
-
-      {showAddModal && (
-        <AddJobSheetModal
-          onClose={() => setShowAddModal(false)}
-          onSubmitted={() => setShowAddModal(false)}
-        />
-      )}
-    </>
   )
 }

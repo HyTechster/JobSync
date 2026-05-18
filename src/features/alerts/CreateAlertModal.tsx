@@ -2,7 +2,8 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createAlertSchema, type CreateAlertFormData } from './alertSchema'
 import { useCreateAlert } from './mutations'
-import { useTechnicians } from '../jobs/hooks'
+import { useOrgTechnicians } from '../jobs/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { Modal } from '../../components/ui/Modal'
@@ -16,7 +17,8 @@ const inputCls =
   'w-full h-[38px] px-3 border border-slate-200 rounded-lg text-[13.5px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
 
 export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
-  const { data: technicians = [] } = useTechnicians()
+  const { activeOrgId } = useOrganization()
+  const { data: technicians = [] } = useOrgTechnicians(activeOrgId)
   const { mutate: createAlert, isPending, error } = useCreateAlert()
 
   const {
@@ -40,7 +42,8 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
   }
 
   function onSubmit(data: CreateAlertFormData) {
-    createAlert(data, {
+    if (!activeOrgId) return
+    createAlert({ form: data, orgId: activeOrgId }, {
       onSuccess: () => {
         reset({ recipient_ids: [] })
         onClose()

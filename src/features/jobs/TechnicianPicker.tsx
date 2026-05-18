@@ -1,9 +1,9 @@
-import type { Profile } from '../../types'
+import type { OrgTechnician } from './hooks'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 
 interface TechnicianPickerProps {
-  technicians: Profile[]
+  technicians: OrgTechnician[]
   selectedIds: string[]
   onChange: (ids: string[]) => void
 }

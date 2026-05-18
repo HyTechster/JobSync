@@ -3,6 +3,7 @@ import { AdminTopbar } from '../../components/layout/AdminTopbar'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-MY', {
@@ -100,7 +101,8 @@ const HEADERS = ['Job', 'Customer', 'Technicians', 'Scheduled', 'Completed On']
 
 export default function AdminHistory() {
   const [search, setSearch] = useState('')
-  const { data: allJobs = [], isLoading, isError } = useJobs({ status: 'completed' })
+  const { activeOrgId } = useOrganization()
+  const { data: allJobs = [], isLoading, isError } = useJobs(activeOrgId, { status: 'completed' })
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()

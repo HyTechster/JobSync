@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { offlineDb, type OfflineJobSheet } from '../../offline/db'
 import { syncPendingJobSheets } from '../../offline/sync'
 import { useMyCompletedJobs } from '../../features/jobs/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
@@ -84,7 +85,8 @@ function CompletedJobCard({ job }: { job: RecentJobRow }) {
 export default function TechnicianHistory() {
   const isOnline = useOnlineStatus()
   const qc = useQueryClient()
-  const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs()
+  const { activeOrgId } = useOrganization()
+  const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs(activeOrgId)
   const [pending, setPending] = useState<OfflineJobSheet[]>([])
 
   async function loadPending() {

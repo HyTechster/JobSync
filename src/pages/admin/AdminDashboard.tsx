@@ -7,6 +7,7 @@ import { Icons } from '../../components/ui/Icons'
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock'
 import { useAuthStore } from '../../store/authStore'
 import { useDashboardStats, useRecentJobs, useRealtimeDashboard } from '../../features/jobs/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -16,7 +17,8 @@ function getGreeting() {
 }
 
 function RecentJobsTable() {
-  const { data: jobs, isLoading, isError } = useRecentJobs()
+  const { activeOrgId } = useOrganization()
+  const { data: jobs, isLoading, isError } = useRecentJobs(activeOrgId)
 
   if (isError) {
     return (
@@ -122,7 +124,8 @@ function RecentJobsTable() {
 
 export default function AdminDashboard() {
   const profile = useAuthStore((s) => s.profile)
-  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats()
+  const { activeOrgId } = useOrganization()
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats(activeOrgId)
   const { isLive } = useRealtimeDashboard()
 
   const STAT_CARDS = [

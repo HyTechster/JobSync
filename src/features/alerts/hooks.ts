@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
+import { useAuthStore } from '../../store/authStore'
 
 type AlertRecipient = {
   recipient_id: string
@@ -30,15 +31,20 @@ export type MyAlertRow = {
   } | null
 }
 
-export function useMyAlerts() {
+/** Technician — own alerts for the active org */
+export function useMyAlerts(orgId: string | null) {
+  const userId = useAuthStore((s) => s.session?.user.id)
   return useQuery<MyAlertRow[]>({
-    queryKey: ['my-alerts'],
+    queryKey: ['my-alerts', orgId],
+    enabled: !!userId && !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('alert_recipients')
         .select(
-          '*, alerts:alert_id(title, message, created_at, profiles:created_by(full_name, display_name))'
+          '*, alerts:alert_id!inner(title, message, created_at, organization_id, profiles:created_by(full_name, display_name))'
         )
+        .eq('recipient_id', userId!)
+        .eq('alerts.organization_id', orgId!)
         .order('created_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as MyAlertRow[]
@@ -46,23 +52,32 @@ export function useMyAlerts() {
   })
 }
 
-export function useUnreadAlertCount() {
+/** Technician — unread alert count for the active org */
+export function useUnreadAlertCount(orgId: string | null) {
+  const userId = useAuthStore((s) => s.session?.user.id)
   return useQuery<number>({
-    queryKey: ['unread-alert-counts'],
+    queryKey: ['unread-alert-counts', orgId],
+    enabled: !!userId && !!orgId,
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('alert_recipients')
-        .select('id', { count: 'exact', head: true })
+        .select(
+          'id, alerts:alert_id!inner(organization_id)'
+        )
+        .eq('recipient_id', userId!)
         .is('read_at', null)
+        .eq('alerts.organization_id', orgId!)
       if (error) throw error
-      return count ?? 0
+      return (data ?? []).length
     },
   })
 }
 
-export function useAlerts() {
+/** Admin — all alerts for the active org */
+export function useAlerts(orgId: string | null) {
   return useQuery<AlertWithDetail[]>({
-    queryKey: ['alerts'],
+    queryKey: ['alerts', orgId],
+    enabled: !!orgId,
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -70,6 +85,7 @@ export function useAlerts() {
         .select(
           '*, profiles:created_by(full_name, display_name, avatar_url), alert_recipients(recipient_id, read_at, profiles:recipient_id(full_name, display_name, avatar_url))'
         )
+        .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })
 
       if (error) throw error

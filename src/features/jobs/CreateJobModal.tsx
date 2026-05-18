@@ -2,9 +2,10 @@ import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { jobOrderSchema, type JobOrderFormData } from './jobSchema'
 import { useCreateJob } from './mutations'
-import { useTechnicians } from './hooks'
+import { useOrgTechnicians } from './hooks'
 import { JobOrderFields } from './JobOrderFields'
 import { Modal } from '../../components/ui/Modal'
+import { useOrganization } from '../../context/OrganizationContext'
 
 interface CreateJobModalProps {
   isOpen: boolean
@@ -21,7 +22,8 @@ const DEFAULT_VALUES: Partial<JobOrderFormData> = {
 }
 
 export function CreateJobModal({ isOpen, onClose }: CreateJobModalProps) {
-  const { data: technicians = [] } = useTechnicians()
+  const { activeOrgId } = useOrganization()
+  const { data: technicians = [] } = useOrgTechnicians(activeOrgId)
   const { mutate: createJob, isPending, error } = useCreateJob()
 
   const methods = useForm<JobOrderFormData>({
@@ -30,7 +32,8 @@ export function CreateJobModal({ isOpen, onClose }: CreateJobModalProps) {
   })
 
   function handleSubmit(data: JobOrderFormData) {
-    createJob(data, {
+    if (!activeOrgId) return
+    createJob({ form: data, orgId: activeOrgId }, {
       onSuccess: () => {
         methods.reset(DEFAULT_VALUES)
         onClose()

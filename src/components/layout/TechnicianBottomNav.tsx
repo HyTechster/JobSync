@@ -1,6 +1,7 @@
 import { NavLink, useNavigation, useNavigate } from 'react-router-dom'
 import { Icons } from '../ui/Icons'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 
 const LEFT_NAV = [
   { to: '/technician/jobs',       Icon: Icons.jobs,   label: 'Jobs'       },
@@ -62,7 +63,8 @@ function NavItem({
 }
 
 export function TechnicianBottomNav() {
-  const { data: unread = 0 } = useUnreadAlertCount()
+  const { activeOrgId } = useOrganization()
+  const { data: unread = 0 } = useUnreadAlertCount(activeOrgId)
   const navigation = useNavigation()
   const navigate   = useNavigate()
   const pendingTo  = navigation.state === 'loading' ? (navigation.location?.pathname ?? null) : null

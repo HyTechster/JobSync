@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useMyJobs } from '../../features/jobs/hooks'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { Icons } from '../../components/ui/Icons'
 import type { RecentJobRow } from '../../features/jobs/hooks'
@@ -86,8 +87,9 @@ function SkeletonJobCard() {
 
 export default function TechnicianDashboard() {
   const profile = useAuthStore((s) => s.profile)
-  const { data: jobs = [], isLoading } = useMyJobs()
-  const { data: unread = 0 } = useUnreadAlertCount()
+  const { activeOrgId } = useOrganization()
+  const { data: jobs = [], isLoading } = useMyJobs(activeOrgId)
+  const { data: unread = 0 } = useUnreadAlertCount(activeOrgId)
 
   const firstName = profile?.full_name.split(' ')[0] ?? 'there'
 

@@ -19,17 +19,18 @@ interface DashboardStats {
   technicians: number
 }
 
-export function useDashboardStats() {
+export function useDashboardStats(orgId: string | null) {
   return useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const [jobsRes, techsRes] = await Promise.all([
-        supabase.from('job_orders').select('status'),
+        supabase.from('job_orders').select('status').eq('organization_id' as never, orgId!),
         supabase
-          .from('profiles')
+          .from('organization_members' as never)
           .select('id', { count: 'exact', head: true })
-          .eq('role', 'technician')
-          .eq('is_active', true),
+          .eq('organization_id' as never, orgId!)
+          .eq('role' as never, 'technician'),
       ])
 
       if (jobsRes.error) throw jobsRes.error
@@ -56,15 +57,17 @@ export type RecentJobRow = JobOrder & {
   job_sheets?: { id: string }[]
 }
 
-export function useRecentJobs() {
+export function useRecentJobs(orgId: string | null) {
   return useQuery<RecentJobRow[]>({
-    queryKey: ['recent-jobs'],
+    queryKey: ['recent-jobs', orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
           '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
+        .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -74,15 +77,17 @@ export function useRecentJobs() {
   })
 }
 
-export function useJobs(filters?: JobFilters) {
+export function useJobs(orgId: string | null, filters?: JobFilters) {
   return useQuery<RecentJobRow[]>({
-    queryKey: ['jobs', filters],
+    queryKey: ['jobs', orgId, filters],
+    enabled: !!orgId,
     queryFn: async () => {
       let query = supabase
         .from('job_orders')
         .select(
           '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
+        .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })
 
       if (filters?.status && filters.status !== 'all') {
@@ -136,13 +141,15 @@ export function useJob(id: string) {
   })
 }
 
-export function useMyJobs() {
+export function useMyJobs(orgId: string | null) {
   return useQuery<RecentJobRow[]>({
-    queryKey: ['my-jobs'],
+    queryKey: ['my-jobs', orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
         .select(JOB_DETAIL_SELECT)
+        .eq('organization_id' as never, orgId!)
         .order('updated_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as RecentJobRow[]
@@ -150,15 +157,17 @@ export function useMyJobs() {
   })
 }
 
-export function useMyCompletedJobs() {
+export function useMyCompletedJobs(orgId: string | null) {
   return useQuery<RecentJobRow[]>({
-    queryKey: ['my-completed-jobs'],
+    queryKey: ['my-completed-jobs', orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
           '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
         )
+        .eq('organization_id' as never, orgId!)
         .eq('status', 'completed')
         .order('updated_at', { ascending: false })
       if (error) throw error
@@ -178,6 +187,7 @@ export function useRealtimeDashboard(): { isLive: boolean } {
       void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
       void qc.invalidateQueries({ queryKey: ['jobs'] })
+      void qc.invalidateQueries({ queryKey: ['my-jobs'] })
     }
 
     function startPolling() {
@@ -215,6 +225,8 @@ export interface OrgTechnician {
   id: string
   full_name: string
   display_name: string | null
+  email: string
+  avatar_url: string | null
 }
 
 export function useOrgTechnicians(orgId: string | null) {
@@ -224,17 +236,24 @@ export function useOrgTechnicians(orgId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organization_members' as never)
-        .select('profiles:user_id(id, full_name, display_name, is_active)' as never)
+        .select('profiles:user_id(id, full_name, display_name, email, avatar_url, is_active)' as never)
         .eq('organization_id' as never, orgId!)
         .eq('role' as never, 'technician')
       if (error) throw error
-      type Row = { profiles: { id: string; full_name: string; display_name: string | null; is_active: boolean } | null }
+      type Row = {
+        profiles: {
+          id: string; full_name: string; display_name: string | null
+          email: string; avatar_url: string | null; is_active: boolean
+        } | null
+      }
       return ((data ?? []) as unknown as Row[])
         .filter((m) => m.profiles?.is_active)
         .map((m) => ({
-          id: m.profiles!.id,
-          full_name: m.profiles!.full_name,
+          id:           m.profiles!.id,
+          full_name:    m.profiles!.full_name,
           display_name: m.profiles!.display_name,
+          email:        m.profiles!.email,
+          avatar_url:   m.profiles!.avatar_url,
         }))
     },
   })

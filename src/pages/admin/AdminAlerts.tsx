@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAlerts } from '../../features/alerts/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import { useDeleteAlert } from '../../features/alerts/mutations'
 import { AlertCard } from '../../features/alerts/AlertCard'
 import { CreateAlertModal } from '../../features/alerts/CreateAlertModal'
@@ -31,7 +32,8 @@ function SkeletonCard() {
 }
 
 export default function AdminAlerts() {
-  const { data: alerts = [], isLoading, isError } = useAlerts()
+  const { activeOrgId } = useOrganization()
+  const { data: alerts = [], isLoading, isError } = useAlerts(activeOrgId)
   const { mutate: deleteAlert } = useDeleteAlert()
 
   const [showCreate, setShowCreate] = useState(false)

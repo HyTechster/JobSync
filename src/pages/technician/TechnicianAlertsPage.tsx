@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMyAlerts, type MyAlertRow } from '../../features/alerts/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import { useMarkAlertRead } from '../../features/alerts/mutations'
 import { AlertBottomSheet } from '../../features/alerts/AlertBottomSheet'
 import { Icons } from '../../components/ui/Icons'
@@ -49,7 +50,8 @@ function SkeletonItem() {
 }
 
 export default function TechnicianAlertsPage() {
-  const { data: alerts = [], isLoading, isError } = useMyAlerts()
+  const { activeOrgId } = useOrganization()
+  const { data: alerts = [], isLoading, isError } = useMyAlerts(activeOrgId)
   const { mutate: markRead } = useMarkAlertRead()
   const [selected, setSelected] = useState<MyAlertRow | null>(null)
 

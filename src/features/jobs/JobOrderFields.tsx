@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useFormContext, Controller } from 'react-hook-form'
 import type { JobOrderFormData } from './jobSchema'
 import { JOB_TYPES } from './jobSchema'
-import type { Profile } from '../../types'
+import type { OrgTechnician } from './hooks'
 import { TechnicianPicker } from './TechnicianPicker'
 import { MapPickerModal } from '../../components/ui/MapPickerModal'
 import { Icons } from '../../components/ui/Icons'
@@ -31,7 +31,7 @@ function FlexToggle({ label, name }: { label: string; name: 'scheduled_date_flex
 }
 
 interface JobOrderFieldsProps {
-  technicians: Profile[]
+  technicians: OrgTechnician[]
 }
 
 export function JobOrderFields({ technicians }: JobOrderFieldsProps) {

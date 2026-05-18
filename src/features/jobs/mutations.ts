@@ -52,7 +52,7 @@ function buildJobPayload(form: JobOrderFormData) {
 export function useCreateJob() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (form: JobOrderFormData) => {
+    mutationFn: async ({ form, orgId }: { form: JobOrderFormData; orgId: string }) => {
       const createdBy = useAuthStore.getState().profile?.id
       if (!createdBy) throw new Error('Not authenticated')
 
@@ -60,7 +60,7 @@ export function useCreateJob() {
 
       const { data: job, error } = await supabase
         .from('job_orders')
-        .insert({ ...payload, created_by: createdBy } as never)
+        .insert({ ...payload, created_by: createdBy, organization_id: orgId } as never)
         .select()
         .single()
       if (error) throw error

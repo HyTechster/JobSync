@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useJobSheets, useNextSheetId } from '../../features/job-sheets/hooks'
-import { useTechnicians } from '../../features/jobs/hooks'
+import { useOrgTechnicians } from '../../features/jobs/hooks'
 import { JobSheetsTable } from '../../features/job-sheets/JobSheetsTable'
 import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { useOrganization } from '../../context/OrganizationContext'
@@ -12,8 +12,8 @@ const inputCls =
 
 export default function AdminJobSheets() {
   const { activeOrgId } = useOrganization()
-  const { data: sheets = [], isLoading, isError } = useJobSheets()
-  const { data: technicians = [] } = useTechnicians()
+  const { data: sheets = [], isLoading, isError } = useJobSheets(activeOrgId)
+  const { data: technicians = [] } = useOrgTechnicians(activeOrgId)
   const { data: nextSheetId } = useNextSheetId(activeOrgId)
 
   const [search, setSearch]       = useState('')

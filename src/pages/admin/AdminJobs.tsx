@@ -7,6 +7,7 @@ import { CreateJobModal } from '../../features/jobs/CreateJobModal'
 import { EditJobModal } from '../../features/jobs/EditJobModal'
 import { DeleteJobDialog } from '../../features/jobs/DeleteJobDialog'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
+import { useOrganization } from '../../context/OrganizationContext'
 import type { JobStatus } from '../../types'
 
 type StatusFilter = JobStatus | 'all'
@@ -34,7 +35,8 @@ export default function AdminJobs() {
     }
   }, [searchParams, setSearchParams])
 
-  const { data: allJobs = [], isLoading, isError, error } = useJobs()
+  const { activeOrgId } = useOrganization()
+  const { data: allJobs = [], isLoading, isError, error } = useJobs(activeOrgId)
 
   const filteredJobs = useMemo(() => {
     let result = allJobs

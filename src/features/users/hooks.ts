@@ -195,17 +195,19 @@ export function useCancelInvitation() {
 
 export function usePendingInvitations() {
   const session = useAuthStore((s) => s.session)
+  const userEmail = session?.user.email
 
   return useQuery<PendingInvitation[]>({
-    // Key by user id — available immediately when session is restored
     queryKey: ['pending-invitations', session?.user.id],
-    enabled: !!session,
+    enabled: !!session && !!userEmail,
     queryFn: async () => {
-      // No client-side email filter — RLS policy "Users see own invitations"
-      // filters by matching the caller's profile email on the server.
+      // Explicitly filter by the caller's email so that admins who can also
+      // see outgoing invitations via the "Org admins view invitations" RLS
+      // policy don't see those in their own pending-invite list.
       const { data, error } = await supabase
         .from('organization_invitations' as never)
         .select('*, organizations(id, name)')
+        .eq('email' as never, userEmail!.toLowerCase())
         .eq('status' as never, 'pending')
         .order('created_at' as never, { ascending: false })
       if (error) throw error
