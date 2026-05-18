@@ -8,6 +8,7 @@ import { useAuth, useLogoutAll } from '../auth/hooks'
 import { useChangePassword, useLoginHistory } from './hooks'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { useAuthStore } from '../../store/authStore'
+import { getDeviceInfo } from '../auth/deviceInfo'
 
 const pwSchema = z.object({
   currentPassword: z.string().min(1, 'Enter your current password'),
@@ -18,24 +19,6 @@ const pwSchema = z.object({
   path: ['confirmPassword'],
 })
 type PwForm = z.infer<typeof pwSchema>
-
-function getDeviceInfo() {
-  const ua = navigator.userAgent
-  let browser = 'Unknown browser'
-  if (ua.includes('Edg'))                                         browser = 'Edge'
-  else if (ua.includes('Chrome') && !ua.includes('Edg'))          browser = 'Chrome'
-  else if (ua.includes('Firefox'))                                browser = 'Firefox'
-  else if (ua.includes('Safari') && !ua.includes('Chrome'))       browser = 'Safari'
-
-  let os = 'Unknown OS'
-  if (ua.includes('Windows'))                                     os = 'Windows'
-  else if (ua.includes('Mac') && !ua.includes('iPhone') && !ua.includes('iPad')) os = 'macOS'
-  else if (ua.includes('iPhone') || ua.includes('iPad'))          os = 'iOS'
-  else if (ua.includes('Android'))                                os = 'Android'
-  else if (ua.includes('Linux'))                                  os = 'Linux'
-
-  return `${browser} on ${os}`
-}
 
 const inputCls = 'w-full h-10 px-3 text-sm border border-border rounded-lg bg-white text-text-base placeholder:text-text-subtle outline-none transition-all focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10'
 
@@ -81,9 +64,17 @@ export function SecurityTab() {
   }
 
   async function handleSignOutOthers() {
+    // Broadcast to all other devices first (while our token is still valid)
+    if (userId) {
+      const ch = supabase.channel(`forced-signout:${userId}`)
+      ch.subscribe()
+      await ch.send({ type: 'broadcast', event: 'sign_out', payload: { device_info: currentDevice } })
+      void supabase.removeChannel(ch)
+    }
+
     await supabase.auth.signOut({ scope: 'others' })
-    // Remove login_history rows for every device except this one so the
-    // Active sessions list updates immediately without a page refresh.
+
+    // Remove login_history rows for every device except this one
     if (userId) {
       await supabase
         .from('login_history' as never)
