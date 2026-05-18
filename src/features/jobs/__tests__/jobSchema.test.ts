@@ -2,13 +2,20 @@ import { describe, it, expect } from 'vitest'
 import { jobOrderSchema } from '../jobSchema'
 
 const validJob = {
-  title: 'Fix CCTV camera',
-  description: 'Camera at main entrance is offline',
-  customer_name: 'ABC Corp Sdn Bhd',
-  location: 'Level 3, Menara ABC, KL',
-  priority: 'high' as const,
-  scheduled_date: '2026-06-01',
-  technician_ids: [],
+  customer_name:  'ABC Corp Sdn Bhd',
+  customer_phone: '0123456789',
+  title:          'Fix CCTV camera',
+  location_street: 'Level 3, Menara ABC',
+  location_city:   'Kuala Lumpur',
+  priority:        'high' as const,
+  description:     'Camera at main entrance is offline',
+  job_type:        'maintenance' as const,
+  scheduled_date_flexible: false,
+  scheduled_date:          '2026-06-01',
+  scheduled_time_flexible: false,
+  due_date_flexible:       false,
+  technician_ids:          [],
+  billing_same_as_location: true,
 }
 
 describe('jobOrderSchema', () => {
@@ -18,10 +25,19 @@ describe('jobOrderSchema', () => {
 
   it('accepts optional fields omitted', () => {
     const minimal = {
-      title: validJob.title, description: validJob.description,
-      customer_name: validJob.customer_name, location: validJob.location,
-      priority: validJob.priority, scheduled_date: validJob.scheduled_date,
-      technician_ids: validJob.technician_ids,
+      customer_name:  validJob.customer_name,
+      customer_phone: validJob.customer_phone,
+      title:          validJob.title,
+      location_street: validJob.location_street,
+      priority:        validJob.priority,
+      description:     validJob.description,
+      job_type:        validJob.job_type,
+      scheduled_date_flexible: false,
+      scheduled_date:          validJob.scheduled_date,
+      scheduled_time_flexible: false,
+      due_date_flexible:       false,
+      technician_ids:          [],
+      billing_same_as_location: true,
     }
     expect(jobOrderSchema.safeParse(minimal).success).toBe(true)
   })
@@ -51,14 +67,27 @@ describe('jobOrderSchema', () => {
     expect(r.success).toBe(false)
   })
 
-  it('rejects empty location', () => {
-    const r = jobOrderSchema.safeParse({ ...validJob, location: '' })
+  it('rejects empty location_street', () => {
+    const r = jobOrderSchema.safeParse({ ...validJob, location_street: '' })
     expect(r.success).toBe(false)
   })
 
-  it('rejects empty scheduled_date', () => {
-    const r = jobOrderSchema.safeParse({ ...validJob, scheduled_date: '' })
+  it('rejects missing scheduled_date when not flexible', () => {
+    const r = jobOrderSchema.safeParse({
+      ...validJob,
+      scheduled_date_flexible: false,
+      scheduled_date: undefined,
+    })
     expect(r.success).toBe(false)
+  })
+
+  it('accepts missing scheduled_date when flexible', () => {
+    const r = jobOrderSchema.safeParse({
+      ...validJob,
+      scheduled_date_flexible: true,
+      scheduled_date: undefined,
+    })
+    expect(r.success).toBe(true)
   })
 
   it('rejects invalid priority value', () => {
@@ -71,5 +100,23 @@ describe('jobOrderSchema', () => {
     for (const priority of priorities) {
       expect(jobOrderSchema.safeParse({ ...validJob, priority }).success).toBe(true)
     }
+  })
+
+  it('rejects billing_address missing when not same as location', () => {
+    const r = jobOrderSchema.safeParse({
+      ...validJob,
+      billing_same_as_location: false,
+      billing_address: '',
+    })
+    expect(r.success).toBe(false)
+  })
+
+  it('accepts billing_address provided when not same as location', () => {
+    const r = jobOrderSchema.safeParse({
+      ...validJob,
+      billing_same_as_location: false,
+      billing_address: 'No. 1, Jalan Example, KL',
+    })
+    expect(r.success).toBe(true)
   })
 })
