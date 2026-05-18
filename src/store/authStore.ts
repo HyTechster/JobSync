@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import type { Profile } from '../types'
 import { supabase } from '../lib/supabase'
+import { queryClient } from '../lib/queryClient'
 
 interface AuthState {
   session: Session | null
@@ -39,20 +40,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearSession: () => set({ session: null, profile: null, isLoading: false, newDeviceAlert: false }),
 
   initAuth: () => {
+    let forceSignoutChannel: ReturnType<typeof supabase.channel> | null = null
+
+    function subscribeForceSignout(userId: string) {
+      if (forceSignoutChannel) void supabase.removeChannel(forceSignoutChannel)
+      forceSignoutChannel = supabase
+        .channel(`forced-signout:${userId}`)
+        .on('broadcast', { event: 'sign_out' }, () => {
+          // Wipe local state and redirect — the server-side refresh token is
+          // already revoked by the sender's signOut({ scope: 'others' }) call.
+          get().clearSession()
+          localStorage.removeItem('jobsync_active_org')
+          queryClient.clear()
+          window.location.replace('/login')
+        })
+        .subscribe()
+    }
+
     // Resolve isLoading the instant we know the session — no network call needed.
     // getSession() reads from the in-memory/localStorage cache synchronously.
     // We do NOT wait for the profile fetch to unblock routing.
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      // Unblock the loading gate immediately
       set({ session, isLoading: false })
-
-      // Then load the profile in the background without blocking
       if (session) {
+        subscribeForceSignout(session.user.id)
         void fetchProfile(session.user.id).then((profile) => {
-          // Only update if the session hasn't changed while we were fetching
-          if (get().session?.user.id === session.user.id) {
-            set({ profile })
-          }
+          if (get().session?.user.id === session.user.id) set({ profile })
         })
       }
     })
@@ -65,18 +78,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ session, isLoading: false })
 
         if (session) {
+          subscribeForceSignout(session.user.id)
           void fetchProfile(session.user.id).then((profile) => {
-            if (get().session?.user.id === session.user.id) {
-              set({ profile })
-            }
+            if (get().session?.user.id === session.user.id) set({ profile })
           })
         } else {
+          if (forceSignoutChannel) {
+            void supabase.removeChannel(forceSignoutChannel)
+            forceSignoutChannel = null
+          }
           set({ profile: null })
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      if (forceSignoutChannel) void supabase.removeChannel(forceSignoutChannel)
+    }
   },
 }))
 
