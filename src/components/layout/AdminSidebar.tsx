@@ -5,6 +5,7 @@ import { Icons } from '../ui/Icons'
 import { useAuthStore } from '../../store/authStore'
 import { useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
+import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
@@ -22,6 +23,7 @@ export function AdminSidebar() {
   const { pathname } = useLocation()
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const [showOrgMenu, setShowOrgMenu] = useState(false)
+  const [showSignOut, setShowSignOut] = useState(false)
 
   const orgMenuRef = useRef<HTMLDivElement>(null)
 
@@ -201,7 +203,7 @@ export function AdminSidebar() {
           </Link>
           <button
             type="button"
-            onClick={() => void logout()}
+            onClick={() => setShowSignOut(true)}
             title="Sign out"
             className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text-base hover:bg-surface-2 transition-colors flex-shrink-0"
           >
@@ -209,6 +211,12 @@ export function AdminSidebar() {
           </button>
         </div>
       </div>
+
+      <SignOutConfirmDialog
+        isOpen={showSignOut}
+        onConfirm={() => { setShowSignOut(false); void logout() }}
+        onCancel={() => setShowSignOut(false)}
+      />
     </aside>
   )
 }

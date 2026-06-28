@@ -7,6 +7,7 @@ import { useUpdateProfile } from '../../features/profile/mutations'
 import { useLogout } from '../../features/auth/hooks'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { SignOutConfirmDialog } from '../../components/ui/SignOutConfirmDialog'
 import { OrganizationTab } from '../../features/account/OrganizationTab'
 
 const profileSchema = z.object({
@@ -33,6 +34,7 @@ export default function TechnicianProfilePage() {
   const logout = useLogout()
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<ProfileTab>('profile')
+  const [showSignOut, setShowSignOut] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -146,12 +148,18 @@ export default function TechnicianProfilePage() {
           )}
 
           <button
-            onClick={() => void logout()}
+            onClick={() => setShowSignOut(true)}
             className="mt-5 w-full h-[48px] rounded-2xl border border-slate-200 bg-white text-[14px] font-semibold text-danger hover:bg-[#FFF1F2] transition-colors inline-flex items-center justify-center gap-2"
           >
             <Icons.logout size={17} color="#E11D48" />
             Sign Out
           </button>
+
+          <SignOutConfirmDialog
+            isOpen={showSignOut}
+            onConfirm={() => { setShowSignOut(false); void logout() }}
+            onCancel={() => setShowSignOut(false)}
+          />
         </div>
       )}
 

@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JobSync icon">
+  <defs>
+    <linearGradient id="jobsyncBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E3A5F"></stop>
+      <stop offset="1" stop-color="#0F1F33"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="20" width="472" height="472" rx="100" fill="url(#jobsyncBg)"></rect>
+  <rect x="146" y="126" width="220" height="260" rx="12" fill="#ffffff" fill-opacity="0.95"></rect>
+  <rect x="216" y="108" width="80" height="40" rx="10" fill="#ffffff" fill-opacity="0.95"></rect>
+  <rect x="182" y="200" width="148" height="8" rx="4" fill="#1E3A5F" fill-opacity="0.55"></rect>
+  <rect x="182" y="252" width="104" height="8" rx="4" fill="#1E3A5F" fill-opacity="0.55"></rect>
+  <rect x="182" y="304" width="148" height="8" rx="4" fill="#1E3A5F" fill-opacity="0.55"></rect>
+  <circle cx="362" cy="380" r="28" fill="#4779C2"></circle>
+  <path d="M 350 380 L 359 389 L 376 369" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>

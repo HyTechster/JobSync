@@ -7,6 +7,7 @@ import { useUpdateProfile } from '../../features/profile/mutations'
 import { useLogout } from '../../features/auth/hooks'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { SignOutConfirmDialog } from '../../components/ui/SignOutConfirmDialog'
 
 const profileSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -22,6 +23,7 @@ export default function AdminProfile() {
   const { mutate, isPending, error } = useUpdateProfile()
   const logout = useLogout()
   const [isEditing, setIsEditing] = useState(false)
+  const [showSignOut, setShowSignOut] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -122,12 +124,18 @@ export default function AdminProfile() {
 
       {/* Sign out */}
       <button
-        onClick={() => void logout()}
+        onClick={() => setShowSignOut(true)}
         className="w-full h-10 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-danger hover:bg-red-50 transition-colors inline-flex items-center justify-center gap-2"
       >
         <Icons.logout size={15} color="#E11D48" />
         Sign out
       </button>
+
+      <SignOutConfirmDialog
+        isOpen={showSignOut}
+        onConfirm={() => { setShowSignOut(false); void logout() }}
+        onCancel={() => setShowSignOut(false)}
+      />
     </div>
   )
 }

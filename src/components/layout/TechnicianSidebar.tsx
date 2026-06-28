@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
+import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
 
 const NAV_ITEMS = [
   { to: '/technician/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
@@ -23,6 +24,7 @@ export function TechnicianSidebar() {
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const { data: unread = 0 } = useUnreadAlertCount(activeOrg?.id ?? null)
   const [showOrgMenu, setShowOrgMenu] = useState(false)
+  const [showSignOut, setShowSignOut] = useState(false)
   const orgMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -176,11 +178,17 @@ export function TechnicianSidebar() {
               <div className="text-xs text-text-muted truncate">{profile?.email ?? ''}</div>
             </div>
           </button>
-          <button type="button" onClick={() => void logout()} title="Sign out" className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text-base hover:bg-surface-2 transition-colors flex-shrink-0">
+          <button type="button" onClick={() => setShowSignOut(true)} title="Sign out" className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text-base hover:bg-surface-2 transition-colors flex-shrink-0">
             <Icons.logout size={15} />
           </button>
         </div>
       </div>
+
+      <SignOutConfirmDialog
+        isOpen={showSignOut}
+        onConfirm={() => { setShowSignOut(false); void logout() }}
+        onCancel={() => setShowSignOut(false)}
+      />
     </aside>
   )
 }

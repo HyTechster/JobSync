@@ -1,12 +1,6 @@
-function LogoIcon() {
-  return (
-    <svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <rect x="2" y="2" width="28" height="28" rx="8" fill="rgba(255,255,255,0.25)" />
-      <path d="M10 11.5h12M10 16h8M10 20.5h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="22" cy="20.5" r="1.6" fill="#fff" />
-    </svg>
-  )
-}
+import loginIllustration from '../../assets/login-illustration.svg'
+import dotPattern from '../../assets/dot-pattern.svg'
+
 
 const STATS = [
   { value: '2.3×', label: 'faster turnaround' },
@@ -19,14 +13,12 @@ export function LoginBrandPanel() {
     <div className="relative hidden md:flex flex-col overflow-hidden text-white p-12 xl:p-14"
       style={{ background: 'linear-gradient(135deg, #1E3A5F 0%, #0F1F33 100%)' }}>
 
-      {/* Grid texture */}
-      <div className="absolute inset-0 opacity-15 pointer-events-none"
+      {/* Dot pattern texture */}
+      <div className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
-          backgroundSize: '36px 36px',
-          maskImage: 'radial-gradient(ellipse at 30% 40%, #000 30%, transparent 75%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at 30% 40%, #000 30%, transparent 75%)',
+          backgroundImage: `url(${dotPattern})`,
+          backgroundSize: '40px 40px',
+          opacity: 0.6,
         }}
       />
 
@@ -38,12 +30,24 @@ export function LoginBrandPanel() {
 
       {/* Logo */}
       <div className="relative flex items-center gap-3">
-        <LogoIcon />
+        <img src="/icons/jobsync-icon.svg" alt="JobSync logo" width={36} height={36} className="rounded-lg" />
         <span className="text-xl font-bold tracking-tight">JobSync</span>
       </div>
 
+      {/* Illustration */}
+      <div className="relative flex flex-1 items-center justify-center py-6">
+        <img
+          src={loginIllustration}
+          alt=""
+          aria-hidden="true"
+          className="w-full max-w-[400px] select-none"
+          loading="eager"
+          draggable={false}
+        />
+      </div>
+
       {/* Headline */}
-      <div className="relative mt-auto max-w-lg">
+      <div className="relative max-w-lg">
         <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-4">
           Field operations, in sync
         </p>
@@ -67,7 +71,7 @@ export function LoginBrandPanel() {
       </div>
 
       {/* Footer */}
-      <div className="relative mt-auto pt-8 text-xs opacity-60">
+      <div className="relative pt-6 text-xs opacity-60">
         © 2026 JobSync · Built for service businesses that move
       </div>
     </div>

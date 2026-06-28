@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth, useLogout } from '../../features/auth/hooks'
 import { useOrganization, type OrgMembership } from '../../context/OrganizationContext'
@@ -6,6 +6,7 @@ import { usePendingInvitations, useRespondToInvitation } from '../../features/us
 import { parsePreferences } from '../../features/account/hooks'
 import { useAuthStore } from '../../store/authStore'
 import type { OrgRole } from '../../types'
+import { SignOutConfirmDialog } from '../../components/ui/SignOutConfirmDialog'
 
 function ProfileButton({ name }: { name: string }) {
   const navigate = useNavigate()
@@ -63,6 +64,7 @@ export default function SelectOrganizationPage() {
   const respond = useRespondToInvitation()
   const logout = useLogout()
   const navigate = useNavigate()
+  const [showSignOut, setShowSignOut] = useState(false)
 
   // Show spinner only during initial loads (no cached data yet)
   const isInitialLoading = isAuthLoading || isOrgLoading || isInvLoading
@@ -283,7 +285,7 @@ export default function SelectOrganizationPage() {
         <div className="px-8 py-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => void logout()}
+            onClick={() => setShowSignOut(true)}
             className="w-full h-9 flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text-base transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -295,6 +297,12 @@ export default function SelectOrganizationPage() {
           </button>
         </div>
       </div>
+
+      <SignOutConfirmDialog
+        isOpen={showSignOut}
+        onConfirm={() => { setShowSignOut(false); void logout() }}
+        onCancel={() => setShowSignOut(false)}
+      />
     </main>
   )
 }

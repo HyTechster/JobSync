@@ -5,6 +5,7 @@ import { Icons } from '../ui/Icons'
 import { useAuthStore } from '../../store/authStore'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useLogout } from '../../features/auth/hooks'
+import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
 
 export function AdminMobileHeader() {
   const navigate = useNavigate()
@@ -14,6 +15,7 @@ export function AdminMobileHeader() {
 
   const [showOrgMenu,     setShowOrgMenu]     = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showSignOut,     setShowSignOut]     = useState(false)
 
   const orgMenuRef     = useRef<HTMLDivElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -204,7 +206,7 @@ export function AdminMobileHeader() {
             <div className="h-px bg-border mx-3 my-1" />
             <button
               type="button"
-              onClick={() => { setShowProfileMenu(false); logout() }}
+              onClick={() => { setShowProfileMenu(false); setShowSignOut(true) }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-red-50 transition-colors text-left"
             >
               <Icons.logout size={15} color="currentColor" />
@@ -213,6 +215,12 @@ export function AdminMobileHeader() {
           </div>
         )}
       </div>
+
+      <SignOutConfirmDialog
+        isOpen={showSignOut}
+        onConfirm={() => { setShowSignOut(false); void logout() }}
+        onCancel={() => setShowSignOut(false)}
+      />
     </header>
   )
 }
