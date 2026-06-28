@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createAlertSchema, type CreateAlertFormData } from './alertSchema'
 import { useCreateAlert } from './mutations'
-import { useOrgTechnicians } from '../jobs/hooks'
+import { useOrgTechnicians, useJobs } from '../jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
@@ -19,7 +20,10 @@ const inputCls =
 export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
   const { activeOrgId } = useOrganization()
   const { data: technicians = [] } = useOrgTechnicians(activeOrgId)
+  const { data: allJobs = [] } = useJobs(activeOrgId)
   const { mutate: createAlert, isPending, error } = useCreateAlert()
+
+  const [jobSearch, setJobSearch] = useState('')
 
   const {
     register,
@@ -31,11 +35,21 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
     formState: { errors },
   } = useForm<CreateAlertFormData>({
     resolver: zodResolver(createAlertSchema),
-    defaultValues: { recipient_ids: [] },
+    defaultValues: { recipient_ids: [], job_order_ids: [] },
   })
 
   const selectedIds = watch('recipient_ids')
+  const selectedJobIds = watch('job_order_ids') ?? []
   const allSelected = technicians.length > 0 && selectedIds.length === technicians.length
+
+  const activeJobs = allJobs.filter((j) => j.status !== 'cancelled')
+  const filteredJobs = jobSearch.trim()
+    ? activeJobs.filter(
+        (j) =>
+          j.title.toLowerCase().includes(jobSearch.toLowerCase()) ||
+          j.customer_name.toLowerCase().includes(jobSearch.toLowerCase())
+      )
+    : activeJobs
 
   function toggleAll() {
     setValue('recipient_ids', allSelected ? [] : technicians.map((t) => t.id))
@@ -45,14 +59,16 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
     if (!activeOrgId) return
     createAlert({ form: data, orgId: activeOrgId }, {
       onSuccess: () => {
-        reset({ recipient_ids: [] })
+        reset({ recipient_ids: [], job_order_ids: [] })
+        setJobSearch('')
         onClose()
       },
     })
   }
 
   function handleClose() {
-    reset({ recipient_ids: [] })
+    reset({ recipient_ids: [], job_order_ids: [] })
+    setJobSearch('')
     onClose()
   }
 
@@ -89,6 +105,7 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
         </>
       }
     >
+      {/* Title */}
       <div>
         <label className="block text-[12.5px] font-semibold text-text-base mb-1.5">
           Title <span className="text-danger">*</span>
@@ -103,6 +120,7 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
         )}
       </div>
 
+      {/* Message */}
       <div>
         <label className="block text-[12.5px] font-semibold text-text-base mb-1.5">
           Message <span className="text-danger">*</span>
@@ -118,11 +136,93 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
         )}
       </div>
 
+      {/* Linked jobs */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-[12.5px] font-semibold text-text-base flex items-center gap-1.5">
+            <Icons.jobs size={13} />
+            Link to jobs
+            <span className="text-[11px] font-normal text-text-muted">(optional)</span>
+          </label>
+          {selectedJobIds.length > 0 && (
+            <span className="text-[11.5px] font-semibold text-brand-700">
+              {selectedJobIds.length} selected
+            </span>
+          )}
+        </div>
+
+        <Controller
+          name="job_order_ids"
+          control={control}
+          render={({ field }) => (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <div className="px-2.5 py-1.5 border-b border-slate-100">
+                <input
+                  value={jobSearch}
+                  onChange={(e) => setJobSearch(e.target.value)}
+                  placeholder="Search jobs…"
+                  className="w-full text-[12.5px] text-text-base bg-transparent outline-none placeholder:text-text-muted"
+                />
+              </div>
+              <div className="flex flex-col gap-0 max-h-[160px] overflow-y-auto p-1.5">
+                {filteredJobs.length === 0 ? (
+                  <p className="text-[12px] text-text-muted text-center py-3">
+                    {allJobs.length === 0 ? 'No jobs in this organization.' : 'No matches found.'}
+                  </p>
+                ) : (
+                  filteredJobs.map((job) => {
+                    const checked = (field.value ?? []).includes(job.id)
+                    return (
+                      <label
+                        key={job.id}
+                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                          checked ? 'bg-brand-50' : 'hover:bg-surface-2'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            const cur = field.value ?? []
+                            field.onChange(
+                              checked
+                                ? cur.filter((id) => id !== job.id)
+                                : [...cur, job.id]
+                            )
+                          }}
+                          className="w-3.5 h-3.5 accent-brand-700 flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] text-text-base truncate">{job.title}</p>
+                          <p className="text-[11px] text-text-muted truncate">{job.customer_name}</p>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${
+                          job.status === 'in_progress'
+                            ? 'bg-blue-50 text-blue-700'
+                            : job.status === 'completed'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-slate-100 text-text-muted'
+                        }`}>
+                          {job.status === 'in_progress' ? 'Active' : job.status === 'completed' ? 'Done' : 'Pending'}
+                        </span>
+                      </label>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        />
+      </div>
+
+      {/* Recipients */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="text-[12.5px] font-semibold text-text-base">
-            Recipients ({selectedIds.length} selected){' '}
-            <span className="text-danger">*</span>
+            Recipients <span className="text-danger">*</span>
+            <span className="ml-1 text-[11.5px] font-normal text-text-muted">
+              ({selectedIds.length} of {technicians.length} selected)
+            </span>
           </label>
           <button
             type="button"
@@ -137,7 +237,7 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
           name="recipient_ids"
           control={control}
           render={({ field }) => (
-            <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto border border-slate-200 rounded-lg p-1.5">
+            <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto border border-slate-200 rounded-lg p-1.5">
               {technicians.length === 0 ? (
                 <p className="text-[12px] text-text-muted text-center py-3">
                   No active technicians found.

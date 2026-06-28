@@ -51,7 +51,7 @@ export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
             {alert.message}
           </p>
 
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-3 mt-3 flex-wrap">
             <div className="flex items-center">
               {recipients.slice(0, 5).map((r, i) => (
                 <div
@@ -91,6 +91,25 @@ export function AlertCard({ alert, onView, onDelete }: AlertCardProps) {
               </>
             )}
           </div>
+
+          {(alert.alert_jobs ?? []).length > 0 && (
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <Icons.jobs size={11} color="#64748B" />
+              {alert.alert_jobs.slice(0, 2).map((aj) => (
+                <span
+                  key={aj.job_order_id}
+                  className="text-[11px] bg-slate-100 text-text-muted px-1.5 py-0.5 rounded-full truncate max-w-[140px]"
+                >
+                  {aj.job_orders?.title ?? 'Job'}
+                </span>
+              ))}
+              {alert.alert_jobs.length > 2 && (
+                <span className="text-[11px] text-text-muted">
+                  +{alert.alert_jobs.length - 2} more
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

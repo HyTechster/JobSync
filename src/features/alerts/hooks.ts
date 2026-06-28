@@ -8,6 +8,11 @@ type AlertRecipient = {
   profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
 }
 
+export type AlertJob = {
+  job_order_id: string
+  job_orders: { id: string; title: string; customer_name: string } | null
+}
+
 export type AlertWithDetail = {
   id: string
   title: string
@@ -16,6 +21,7 @@ export type AlertWithDetail = {
   created_at: string
   profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
   alert_recipients: AlertRecipient[]
+  alert_jobs: AlertJob[]
 }
 
 export type MyAlertRow = {
@@ -28,6 +34,7 @@ export type MyAlertRow = {
     message: string
     created_at: string
     profiles: { full_name: string; display_name: string | null } | null
+    alert_jobs: AlertJob[]
   } | null
 }
 
@@ -41,7 +48,7 @@ export function useMyAlerts(orgId: string | null) {
       const { data, error } = await supabase
         .from('alert_recipients')
         .select(
-          '*, alerts:alert_id!inner(title, message, created_at, profiles:created_by(full_name, display_name))'
+          '*, alerts:alert_id!inner(title, message, created_at, profiles:created_by(full_name, display_name), alert_jobs(job_order_id, job_orders:job_order_id(id, title, customer_name)))'
         )
         .eq('recipient_id', userId!)
         .eq('alerts.organization_id', orgId!)
@@ -83,7 +90,7 @@ export function useAlerts(orgId: string | null) {
       const { data, error } = await supabase
         .from('alerts')
         .select(
-          '*, profiles:created_by(full_name, display_name, avatar_url), alert_recipients(recipient_id, read_at, profiles:recipient_id(full_name, display_name, avatar_url))'
+          '*, profiles:created_by(full_name, display_name, avatar_url), alert_recipients(recipient_id, read_at, profiles:recipient_id(full_name, display_name, avatar_url)), alert_jobs(job_order_id, job_orders:job_order_id(id, title, customer_name))'
         )
         .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })

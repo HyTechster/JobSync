@@ -31,6 +31,37 @@ export function AlertDetailModal({ alert, onClose }: AlertDetailModalProps) {
         </p>
       </div>
 
+      {(alert.alert_jobs ?? []).length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Icons.jobs size={14} color="#64748B" />
+            <h3 className="text-sm font-semibold text-text-base">
+              Linked Jobs ({alert.alert_jobs.length})
+            </h3>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {alert.alert_jobs.map((aj) => (
+              <div
+                key={aj.job_order_id}
+                className="flex items-center gap-2.5 px-3 py-2.5 bg-surface-2 rounded-lg"
+              >
+                <div className="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center flex-shrink-0">
+                  <Icons.jobs size={13} color="var(--color-brand-700)" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-text-base truncate">
+                    {aj.job_orders?.title ?? 'Job'}
+                  </p>
+                  {aj.job_orders?.customer_name && (
+                    <p className="text-[11.5px] text-text-muted">{aj.job_orders.customer_name}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-text-base">Recipients</h3>
