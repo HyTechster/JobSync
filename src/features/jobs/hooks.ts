@@ -12,36 +12,129 @@ export interface JobFilters {
   dateTo?: string
 }
 
-interface DashboardStats {
+export interface AdminDashboardStats {
   total: number
+  pending: number
   active: number
   completed: number
+  cancelled: number
   technicians: number
+  totalSheets: number
+  totalAlerts: number
+  unseenAlerts: number
 }
 
 export function useDashboardStats(orgId: string | null) {
-  return useQuery<DashboardStats>({
+  return useQuery<AdminDashboardStats>({
     queryKey: ['dashboard-stats', orgId],
     enabled: !!orgId,
     queryFn: async () => {
-      const [jobsRes, techsRes] = await Promise.all([
+      const [jobsRes, techsRes, sheetsRes, alertsRes, unseenRes] = await Promise.all([
         supabase.from('job_orders').select('status').eq('organization_id' as never, orgId!),
-        supabase
-          .from('organization_members' as never)
+        supabase.from('organization_members' as never)
           .select('id', { count: 'exact', head: true })
           .eq('organization_id' as never, orgId!)
           .eq('role' as never, 'technician'),
+        supabase.from('job_sheets').select('id', { count: 'exact', head: true })
+          .eq('organization_id', orgId!),
+        supabase.from('alerts').select('id', { count: 'exact', head: true })
+          .eq('organization_id' as never, orgId!),
+        supabase.from('alert_recipients')
+          .select('id, alerts:alert_id!inner(organization_id)')
+          .is('read_at', null)
+          .eq('alerts.organization_id' as never, orgId!),
       ])
 
       if (jobsRes.error) throw jobsRes.error
-      if (techsRes.error) throw techsRes.error
 
-      const jobs = jobsRes.data
+      const jobs = jobsRes.data ?? []
       return {
         total: jobs.length,
+        pending: jobs.filter((j) => j.status === 'pending').length,
         active: jobs.filter((j) => j.status === 'in_progress').length,
         completed: jobs.filter((j) => j.status === 'completed').length,
+        cancelled: jobs.filter((j) => j.status === 'cancelled').length,
         technicians: techsRes.count ?? 0,
+        totalSheets: sheetsRes.count ?? 0,
+        totalAlerts: alertsRes.count ?? 0,
+        unseenAlerts: (unseenRes.data ?? []).length,
+      }
+    },
+  })
+}
+
+export interface JobAnalyticsData {
+  byStatus: { pending: number; in_progress: number; completed: number; cancelled: number }
+  byPriority: { low: number; medium: number; high: number; urgent: number }
+  daily: { date: string; count: number; label: string }[]
+  avgTurnaroundHours: number | null
+  completionRate: number
+}
+
+export function useJobAnalytics(orgId: string | null) {
+  return useQuery<JobAnalyticsData>({
+    queryKey: ['job-analytics', orgId],
+    enabled: !!orgId,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+      sevenDaysAgo.setHours(0, 0, 0, 0)
+
+      const [jobsRes, recentRes, sheetsRes] = await Promise.all([
+        supabase.from('job_orders').select('status, priority').eq('organization_id' as never, orgId!),
+        supabase.from('job_orders').select('created_at').eq('organization_id' as never, orgId!)
+          .gte('created_at', sevenDaysAgo.toISOString()),
+        supabase.from('job_sheets').select('submitted_at, job_orders:job_order_id(created_at)')
+          .eq('organization_id', orgId!),
+      ])
+
+      const jobs = jobsRes.data ?? []
+      const byStatus = {
+        pending:     jobs.filter((j) => j.status === 'pending').length,
+        in_progress: jobs.filter((j) => j.status === 'in_progress').length,
+        completed:   jobs.filter((j) => j.status === 'completed').length,
+        cancelled:   jobs.filter((j) => j.status === 'cancelled').length,
+      }
+      const byPriority = {
+        low:    jobs.filter((j) => j.priority === 'low').length,
+        medium: jobs.filter((j) => j.priority === 'medium').length,
+        high:   jobs.filter((j) => j.priority === 'high').length,
+        urgent: jobs.filter((j) => j.priority === 'urgent').length,
+      }
+
+      const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dateMap = new Map<string, number>()
+      const daily: JobAnalyticsData['daily'] = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const key = d.toISOString().slice(0, 10)
+        dateMap.set(key, 0)
+        daily.push({ date: key, count: 0, label: i === 0 ? 'Today' : DAYS[d.getDay()] })
+      }
+      for (const job of recentRes.data ?? []) {
+        const key = (job.created_at as string).slice(0, 10)
+        if (dateMap.has(key)) dateMap.set(key, (dateMap.get(key) ?? 0) + 1)
+      }
+      daily.forEach((d) => { d.count = dateMap.get(d.date) ?? 0 })
+
+      type SheetRow = { submitted_at: string; job_orders: { created_at: string } | null }
+      let totalMs = 0, sheetCount = 0
+      for (const sheet of (sheetsRes.data ?? []) as unknown as SheetRow[]) {
+        if (sheet.job_orders?.created_at) {
+          const ms = new Date(sheet.submitted_at).getTime() - new Date(sheet.job_orders.created_at).getTime()
+          if (ms > 0) { totalMs += ms; sheetCount++ }
+        }
+      }
+
+      const total = byStatus.pending + byStatus.in_progress + byStatus.completed + byStatus.cancelled
+      return {
+        byStatus,
+        byPriority,
+        daily,
+        avgTurnaroundHours: sheetCount > 0 ? totalMs / sheetCount / 3_600_000 : null,
+        completionRate: total > 0 ? Math.round((byStatus.completed / total) * 100) : 0,
       }
     },
   })
@@ -185,6 +278,7 @@ export function useRealtimeDashboard(): { isLive: boolean } {
 
     function invalidate() {
       void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      void qc.invalidateQueries({ queryKey: ['job-analytics'] })
       void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
       void qc.invalidateQueries({ queryKey: ['jobs'] })
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })

@@ -8,10 +8,11 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
 
 const NAV_ITEMS = [
-  { to: '/technician/jobs',       label: 'My Jobs',    Icon: Icons.jobs   },
-  { to: '/technician/job-sheets', label: 'Job Sheets', Icon: Icons.sheets },
-  { to: '/technician/history',    label: 'History',    Icon: Icons.sheets },
-  { to: '/technician/alerts',     label: 'Alerts',     Icon: Icons.bell   },
+  { to: '/technician/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
+  { to: '/technician/jobs',       label: 'My Jobs',    Icon: Icons.jobs      },
+  { to: '/technician/job-sheets', label: 'Job Sheets', Icon: Icons.sheets    },
+  { to: '/technician/history',    label: 'History',    Icon: Icons.check     },
+  { to: '/technician/alerts',     label: 'Alerts',     Icon: Icons.bell      },
 ]
 
 export function TechnicianSidebar() {
