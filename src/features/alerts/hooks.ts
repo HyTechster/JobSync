@@ -96,7 +96,7 @@ export function useAlerts(orgId: string | null) {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return (data ?? []) as AlertWithDetail[]
+      return (data ?? []) as unknown as AlertWithDetail[]
     },
   })
 }
