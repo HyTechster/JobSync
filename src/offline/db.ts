@@ -36,10 +36,28 @@ export interface DraftJobSheet {
   updatedAt: string
 }
 
+/** A full job sheet queued while the device was offline, waiting to sync. */
+export interface PendingFullSheet {
+  id?: number
+  localId: string
+  orgId: string
+  jobOrderId: string | null
+  technicianId: string
+  formDataJson: string
+  additionalTechnicianNames: string[]
+  jobPhotos: Blob[]
+  paymentPhotos: Blob[]
+  customerSigDataUrl: string | null
+  technicianSigDataUrl: string | null
+  createdAt: string
+  syncStatus: 'pending' | 'syncing' | 'failed'
+}
+
 class JobSyncOfflineDB extends Dexie {
   jobSheets!: Table<OfflineJobSheet>
   attachments!: Table<OfflineAttachment>
   draftSheets!: Table<DraftJobSheet>
+  pendingFullSheets!: Table<PendingFullSheet>
 
   constructor() {
     super('jobsync-offline')
@@ -54,6 +72,12 @@ class JobSyncOfflineDB extends Dexie {
       jobSheets: '++id, localId, jobOrderId, syncStatus',
       attachments: '++id, sheetLocalId',
       draftSheets: '++id, localId, organizationId, technicianId',
+    })
+    this.version(4).stores({
+      jobSheets: '++id, localId, jobOrderId, syncStatus',
+      attachments: '++id, sheetLocalId',
+      draftSheets: '++id, localId, organizationId, technicianId',
+      pendingFullSheets: '++id, localId, orgId, syncStatus',
     })
   }
 }

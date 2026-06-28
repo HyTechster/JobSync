@@ -103,7 +103,7 @@ export default function TechnicianProfilePage() {
               {[
                 { icon: <Icons.user size={15} color="var(--color-brand-700)" />, label: 'Full Name', value: profile.full_name },
                 { icon: <Icons.send size={15} color="var(--color-brand-700)" />, label: 'Email', value: profile.email },
-                { icon: <Icons.clock size={15} color="var(--color-brand-700)" />, label: 'Phone', value: profile.phone ?? 'Not set' },
+                { icon: <Icons.phone size={15} color="var(--color-brand-700)" />, label: 'Phone', value: profile.phone ?? 'Not set' },
               ].map(({ icon, label, value }) => (
                 <div key={label} className="flex items-center gap-3 py-3 border-b border-slate-100 last:border-0">
                   <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center flex-shrink-0">

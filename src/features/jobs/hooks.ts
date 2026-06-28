@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
-import type { JobOrder, JobStatus, JobPriority, Profile } from '../../types'
+import type { JobOrder, JobStatus, JobPriority } from '../../types'
 
 export interface JobFilters {
   status?: JobStatus | 'all'
@@ -195,22 +195,6 @@ export function useJobs(orgId: string | null, filters?: JobFilters) {
       const { data, error } = await query
       if (error) throw error
       return (data ?? []) as RecentJobRow[]
-    },
-  })
-}
-
-export function useTechnicians() {
-  return useQuery<Profile[]>({
-    queryKey: ['technicians'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'technician')
-        .eq('is_active', true)
-        .order('full_name')
-      if (error) throw error
-      return data ?? []
     },
   })
 }

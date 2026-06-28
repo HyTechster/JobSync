@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { offlineDb, type OfflineJobSheet } from '../../offline/db'
-import { syncPendingJobSheets } from '../../offline/sync'
+import { offlineDb, type OfflineJobSheet, type PendingFullSheet } from '../../offline/db'
+import { syncPendingJobSheets, syncPendingFullSheets } from '../../offline/sync'
 import { useMyCompletedJobs } from '../../features/jobs/hooks'
 import { useJobSheet } from '../../features/job-sheets/hooks'
 import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
@@ -11,6 +11,7 @@ import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import type { RecentJobRow } from '../../features/jobs/hooks'
+import type { FullSheetFormData } from '../../features/job-sheets/fullSheetSchema'
 
 const SYNC_ICON: Record<OfflineJobSheet['syncStatus'], React.ReactNode> = {
   pending: <Icons.clock   size={14} color="#D97706" />,
@@ -42,6 +43,39 @@ function PendingCard({ sheet, onRetry }: { sheet: OfflineJobSheet; onRetry: () =
         </div>
       </div>
       {sheet.syncStatus === 'failed' && (
+        <button
+          onClick={onRetry}
+          className="mt-2.5 w-full h-[36px] rounded-xl border border-slate-300 text-[12.5px] font-semibold text-text-base hover:bg-surface-2 transition-colors"
+        >
+          Retry sync
+        </button>
+      )}
+    </div>
+  )
+}
+
+function PendingFullCard({ record, onRetry }: { record: PendingFullSheet; onRetry: () => void }) {
+  const jobTitle = useMemo(() => {
+    try { return (JSON.parse(record.formDataJson) as FullSheetFormData).job_title }
+    catch { return 'Pending sheet' }
+  }, [record.formDataJson])
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">
+      <div className="flex items-start gap-2.5">
+        <div className="flex-1 min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded inline-block mb-1">
+            Full Sheet
+          </span>
+          <p className="text-[13.5px] font-semibold text-text-base truncate">{jobTitle}</p>
+          <p className="text-[12px] text-text-muted mt-0.5">{record.createdAt.slice(0, 10)}</p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {SYNC_ICON[record.syncStatus]}
+          <span className="text-[11.5px] text-text-muted">{SYNC_LABEL[record.syncStatus]}</span>
+        </div>
+      </div>
+      {record.syncStatus === 'failed' && (
         <button
           onClick={onRetry}
           className="mt-2.5 w-full h-[36px] rounded-xl border border-slate-300 text-[12.5px] font-semibold text-text-base hover:bg-surface-2 transition-colors"
@@ -111,14 +145,17 @@ export default function TechnicianHistory() {
   const qc = useQueryClient()
   const { activeOrgId } = useOrganization()
   const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs(activeOrgId)
-  const [pending, setPending] = useState<OfflineJobSheet[]>([])
+  const [pendingSimple, setPendingSimple]   = useState<OfflineJobSheet[]>([])
+  const [pendingFull, setPendingFull]       = useState<PendingFullSheet[]>([])
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
 
   async function loadPending() {
-    const records = await offlineDb.jobSheets
-      .filter((s) => s.syncStatus !== 'synced')
-      .toArray()
-    setPending(records)
+    const [simple, full] = await Promise.all([
+      offlineDb.jobSheets.filter((s) => s.syncStatus !== 'synced').toArray(),
+      offlineDb.pendingFullSheets.where('syncStatus').anyOf(['pending', 'syncing', 'failed']).toArray(),
+    ])
+    setPendingSimple(simple)
+    setPendingFull(full)
   }
 
   useEffect(() => { void loadPending() }, [isOnline])
@@ -130,19 +167,32 @@ export default function TechnicianHistory() {
     await loadPending()
   }
 
+  async function handleRetryFull(id: number) {
+    await offlineDb.pendingFullSheets.update(id, { syncStatus: 'pending' })
+    await syncPendingFullSheets()
+    void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
+    void qc.invalidateQueries({ queryKey: ['job-sheets'] })
+    await loadPending()
+  }
+
+  const totalPending = pendingSimple.length + pendingFull.length
+
   return (
     <div className="px-4 pt-6 pb-24 max-w-lg mx-auto">
       <h1 className="text-[22px] font-bold text-text-base mb-5">History</h1>
 
       {/* Pending offline sync */}
-      {pending.length > 0 && (
+      {totalPending > 0 && (
         <section className="mb-5">
           <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
-            Pending Sync · {pending.length}
+            Pending Sync · {totalPending}
           </p>
           <div className="flex flex-col gap-2.5">
-            {pending.map((s) => (
-              <PendingCard key={s.id} sheet={s} onRetry={() => void handleRetry(s.id!)} />
+            {pendingSimple.map((s) => (
+              <PendingCard key={`simple-${s.id}`} sheet={s} onRetry={() => void handleRetry(s.id!)} />
+            ))}
+            {pendingFull.map((r) => (
+              <PendingFullCard key={`full-${r.id}`} record={r} onRetry={() => void handleRetryFull(r.id!)} />
             ))}
           </div>
         </section>

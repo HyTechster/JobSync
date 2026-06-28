@@ -6,7 +6,7 @@ import { JobsTable } from '../../features/jobs/JobsTable'
 import { CreateJobModal } from '../../features/jobs/CreateJobModal'
 import { EditJobModal } from '../../features/jobs/EditJobModal'
 import { DeleteJobDialog } from '../../features/jobs/DeleteJobDialog'
-import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
+import { useJobs, useOrgTechnicians, type RecentJobRow } from '../../features/jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import type { JobStatus } from '../../types'
 
@@ -20,11 +20,17 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: 'cancelled',   label: 'Cancelled' },
 ]
 
+const inputCls =
+  'h-[34px] px-3 border border-slate-200 rounded-lg text-[13px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
+
 export default function AdminJobs() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [search, setSearch] = useState('')
-  const [showCreate, setShowCreate] = useState(false)
-  const [editJob, setEditJob] = useState<RecentJobRow | null>(null)
+  const [search,       setSearch]       = useState('')
+  const [techFilter,   setTechFilter]   = useState('')
+  const [dateFrom,     setDateFrom]     = useState('')
+  const [dateTo,       setDateTo]       = useState('')
+  const [showCreate,   setShowCreate]   = useState(false)
+  const [editJob,      setEditJob]      = useState<RecentJobRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RecentJobRow | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -37,22 +43,47 @@ export default function AdminJobs() {
 
   const { activeOrgId } = useOrganization()
   const { data: allJobs = [], isLoading, isError, error } = useJobs(activeOrgId)
+  const { data: orgTechs = [] } = useOrgTechnicians(activeOrgId)
 
   const filteredJobs = useMemo(() => {
     let result = allJobs
+
     if (statusFilter !== 'all') {
       result = result.filter((j) => j.status === statusFilter)
     }
+
     const q = search.trim().toLowerCase()
     if (q) {
       result = result.filter(
         (j) =>
           j.title.toLowerCase().includes(q) ||
-          j.customer_name.toLowerCase().includes(q)
+          j.customer_name.toLowerCase().includes(q),
       )
     }
+
+    if (techFilter) {
+      result = result.filter((j) =>
+        j.job_assignments.some((a) => a.technician_id === techFilter),
+      )
+    }
+
+    if (dateFrom) {
+      result = result.filter((j) => !!j.scheduled_date && j.scheduled_date >= dateFrom)
+    }
+    if (dateTo) {
+      result = result.filter((j) => !!j.scheduled_date && j.scheduled_date <= dateTo)
+    }
+
     return result
-  }, [allJobs, statusFilter, search])
+  }, [allJobs, statusFilter, search, techFilter, dateFrom, dateTo])
+
+  const hasExtraFilters = techFilter !== '' || dateFrom !== '' || dateTo !== ''
+
+  function clearExtraFilters() {
+    setTechFilter('')
+    setDateFrom('')
+    setDateTo('')
+  }
 
   return (
     <>
@@ -70,7 +101,8 @@ export default function AdminJobs() {
           </button>
         }
       >
-        <div className="flex flex-col gap-2 mt-3 md:mt-4 md:flex-row md:flex-wrap md:items-center">
+        {/* Status tabs */}
+        <div className="flex flex-col gap-2 mt-3 md:mt-4">
           <div className="flex flex-wrap gap-2">
             {STATUS_TABS.map(({ value, label }) => {
               const count =
@@ -97,7 +129,9 @@ export default function AdminJobs() {
             })}
           </div>
 
-          <div className="md:ml-auto">
+          {/* Search + technician + date range row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Text search */}
             <div className="relative">
               <Icons.search
                 size={14}
@@ -108,9 +142,61 @@ export default function AdminJobs() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search jobs…"
-                className="h-[34px] w-full md:w-[220px] pl-8 pr-3 border border-slate-200 rounded-lg text-[13px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all"
+                className={`${inputCls} w-full md:w-[200px] pl-8 pr-3`}
               />
             </div>
+
+            {/* Technician filter */}
+            <div className="relative">
+              <Icons.users
+                size={13}
+                color="#64748B"
+                className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+              <select
+                value={techFilter}
+                onChange={(e) => setTechFilter(e.target.value)}
+                aria-label="Filter by technician"
+                className={`${inputCls} pl-8 pr-7 appearance-none`}
+              >
+                <option value="">All technicians</option>
+                {orgTechs.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.display_name ?? t.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date range */}
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              aria-label="Scheduled from"
+              title="Scheduled from"
+              className={inputCls}
+            />
+            <span className="text-[12px] text-text-muted select-none">–</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              aria-label="Scheduled to"
+              title="Scheduled to"
+              className={inputCls}
+            />
+
+            {/* Clear extra filters */}
+            {hasExtraFilters && (
+              <button
+                onClick={clearExtraFilters}
+                className="h-[34px] px-3 rounded-lg border border-slate-200 text-[12.5px] font-semibold text-text-muted hover:bg-surface-2 transition-colors inline-flex items-center gap-1.5"
+              >
+                <Icons.close size={13} />
+                Clear
+              </button>
+            )}
           </div>
         </div>
       </AdminTopbar>

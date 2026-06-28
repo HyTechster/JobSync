@@ -95,6 +95,7 @@ export default function SubmitJobSheetPage() {
 
   // Extra validation state (for photos + sigs which live outside Zod)
   const [extraErrors, setExtraErrors] = useState<ExtraErrors>({})
+  const [savedOffline, setSavedOffline] = useState(false)
 
   // Draft save — only requires customer_name + job_title
   const [draftSaving, setDraftSaving] = useState(false)
@@ -135,12 +136,35 @@ export default function SubmitJobSheetPage() {
     }
   }
 
+  async function saveToOfflineQueue(data: FullSheetFormData, additionalNames: string[]) {
+    if (!activeOrgId || !userId) return
+    await offlineDb.pendingFullSheets.add({
+      localId:                    crypto.randomUUID(),
+      orgId:                      activeOrgId,
+      jobOrderId:                 jobId ?? null,
+      technicianId:               userId,
+      formDataJson:               JSON.stringify(data),
+      additionalTechnicianNames:  additionalNames,
+      jobPhotos:                  jobPhotos.map((f) => new Blob([f], { type: f.type })),
+      paymentPhotos:              paymentPhotos.map((f) => new Blob([f], { type: f.type })),
+      customerSigDataUrl:         customerSig,
+      technicianSigDataUrl:       technicianSig,
+      createdAt:                  new Date().toISOString(),
+      syncStatus:                 'pending',
+    })
+    if (draftId) {
+      await offlineDb.draftSheets.delete(parseInt(draftId, 10)).catch(() => {})
+    }
+    setSavedOffline(true)
+    setTimeout(() => navigate(jobId ? `/technician/jobs/${jobId}` : '/technician/job-sheets'), 1200)
+  }
+
   function onSubmit(data: FullSheetFormData) {
     const extras: ExtraErrors = {}
-    if (jobPhotos.length === 0)    extras.jobPhotos    = 'At least one job site photo is required'
+    if (jobPhotos.length === 0)     extras.jobPhotos    = 'At least one job site photo is required'
     if (paymentPhotos.length === 0) extras.paymentPhotos = 'At least one payment evidence is required'
-    if (!customerSig)              extras.customerSig   = 'Customer signature is required'
-    if (!technicianSig)            extras.technicianSig = 'Technician signature is required'
+    if (!customerSig)               extras.customerSig   = 'Customer signature is required'
+    if (!technicianSig)             extras.technicianSig = 'Technician signature is required'
 
     if (Object.keys(extras).length > 0) {
       setExtraErrors(extras)
@@ -155,6 +179,12 @@ export default function SubmitJobSheetPage() {
         return t ? (t.display_name || t.full_name) : null
       })
       .filter(Boolean) as string[]
+
+    // Offline path — queue locally and sync on reconnect
+    if (!navigator.onLine) {
+      void saveToOfflineQueue(data, additionalNames)
+      return
+    }
 
     mutate(
       {
@@ -218,6 +248,11 @@ export default function SubmitJobSheetPage() {
 
           {/* Fixed footer */}
           <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-white border-t border-slate-200 px-4 py-3 md:static md:bottom-auto md:border-0 md:px-4 md:pb-8 md:pt-0">
+            {savedOffline && (
+              <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                Saved offline — will submit automatically when you reconnect.
+              </p>
+            )}
             {mutationError && (
               <p className="text-[12px] text-danger mb-2">{(mutationError as Error).message}</p>
             )}
@@ -232,11 +267,13 @@ export default function SubmitJobSheetPage() {
               </button>
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || savedOffline}
                 className="flex-[2] h-[50px] rounded-xl bg-brand-700 text-white text-[14px] font-semibold disabled:opacity-50 transition-colors hover:bg-brand-800 flex items-center justify-center gap-2"
               >
                 {isPending ? (
                   <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting…</>
+                ) : savedOffline ? (
+                  <>Queued for sync</>
                 ) : (
                   <><Icons.send size={16} />Submit Sheet</>
                 )}
