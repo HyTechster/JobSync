@@ -28,9 +28,10 @@ jobs:
         run: npm run lint
 
       - name: Unit tests
+        timeout-minutes: 10
         run: npx vitest run
         env:
-          NODE_OPTIONS: '--max-old-space-size=6144'
+          NODE_OPTIONS: '--max-old-space-size=4096'
 
       - name: Build
         run: npm run build

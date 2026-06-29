@@ -9,11 +9,13 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'e2e'],
-    // Run all test files serially in a single fork so memory from one file is
-    // released before the next starts. singleFork is the Vitest 4 top-level
-    // option (poolOptions.forks.singleFork was removed in Vitest 4).
+    // fileParallelism: false runs each file in its own isolated fork one at a
+    // time (Vitest 4 replacement for the removed poolOptions.forks.singleFork).
+    // Each fork starts fresh so memory from one file doesn't carry into the
+    // next, preventing OOM accumulation in the CI runner.
     pool: 'forks',
-    singleFork: true,
+    fileParallelism: false,
+    testTimeout: 15_000,
     // Provide placeholder Supabase env vars so supabase.ts doesn't throw at
     // import time. The actual client is mocked in test-setup.ts — no network
     // calls are ever made during tests.
