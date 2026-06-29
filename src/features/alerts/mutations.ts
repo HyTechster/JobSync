@@ -29,7 +29,7 @@ export function useCreateAlert() {
       )
       if (re) throw re
 
-      if (form.job_order_ids.length > 0) {
+      if (form.job_order_ids && form.job_order_ids.length > 0) {
         const { error: je } = await supabase.from('alert_jobs' as never).insert(
           form.job_order_ids.map((jid) => ({ alert_id: alert.id, job_order_id: jid })) as never
         )
