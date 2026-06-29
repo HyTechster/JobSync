@@ -9,12 +9,10 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'e2e'],
-    // fileParallelism: false runs each file in its own isolated fork one at a
-    // time (Vitest 4 replacement for the removed poolOptions.forks.singleFork).
-    // Each fork starts fresh so memory from one file doesn't carry into the
-    // next, preventing OOM accumulation in the CI runner.
-    pool: 'forks',
-    fileParallelism: false,
+    // One worker at a time: each file runs in its own isolated fork process so
+    // memory is fully reclaimed between files. Prevents OOM from concurrent
+    // forks on the CI runner's 7 GB limit.
+    maxWorkers: 1,
     testTimeout: 15_000,
     // Provide placeholder Supabase env vars so supabase.ts doesn't throw at
     // import time. The actual client is mocked in test-setup.ts — no network
