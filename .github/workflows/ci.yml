@@ -31,7 +31,7 @@ jobs:
         timeout-minutes: 10
         run: npx vitest run
         env:
-          NODE_OPTIONS: '--max-old-space-size=4096'
+          NODE_OPTIONS: '--max-old-space-size=3072'
 
       - name: Build
         run: npm run build
