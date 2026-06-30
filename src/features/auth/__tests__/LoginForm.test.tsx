@@ -15,6 +15,12 @@ vi.mock('../hooks', async (importOriginal) => {
       isError: false,
       error: null,
     }),
+    useGoogleLogin: () => ({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: false,
+      error: null,
+    }),
   }
 })
 
