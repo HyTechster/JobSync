@@ -24,10 +24,14 @@ export default function AuthCallbackPage() {
 
   // detectSessionInUrl: true in supabase client auto-exchanges the code and fires
   // onAuthStateChange → initAuth updates the store. We just wait for it here.
+  // New users (created within the last 2 minutes) go to additional-info to set
+  // preferences; existing users (Google re-login) go straight to select-organization.
   useEffect(() => {
     if (status === 'error') return
     if (!isLoading && session) {
-      navigate('/dashboard/additional-info', { replace: true })
+      const ageMs = Date.now() - new Date(session.user.created_at).getTime()
+      const isNewUser = ageMs < 120_000
+      navigate(isNewUser ? '/dashboard/additional-info' : '/dashboard/select-organization', { replace: true })
     }
   }, [session, isLoading, status, navigate])
 

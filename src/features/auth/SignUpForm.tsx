@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router-dom'
-import { signUpSchema, type SignUpFormData, useSignUp } from './hooks'
+import { signUpSchema, type SignUpFormData, useSignUp, useGoogleLogin } from './hooks'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -19,6 +19,7 @@ function getErrorMessage(error: unknown): string {
 
 export function SignUpForm() {
   const signUp = useSignUp()
+  const google = useGoogleLogin()
 
   const {
     register,
@@ -178,7 +179,40 @@ export function SignUpForm() {
           </button>
         </form>
 
-        <p className="text-sm text-text-muted text-center mt-6">
+        {/* Divider */}
+        <div className="flex items-center gap-3 mt-5 mb-4">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-xs text-text-subtle font-medium">or</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        {/* Google OAuth */}
+        {google.isError && (
+          <p className="text-xs text-danger mb-3 text-center">
+            Google sign-up failed. Please try again.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => google.mutate()}
+          disabled={google.isPending || signUp.isPending}
+          className="w-full h-11 flex items-center justify-center gap-3 border border-border rounded-lg bg-white hover:bg-surface-2 disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium text-text-base transition-colors"
+        >
+          {google.isPending ? (
+            <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              <path fill="none" d="M0 0h48v48H0z"/>
+            </svg>
+          )}
+          Sign up with Google
+        </button>
+
+        <p className="text-sm text-text-muted text-center mt-5">
           Already have an account?{' '}
           <Link to="/login" className="text-brand-700 font-semibold hover:text-brand-600">
             Sign in

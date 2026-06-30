@@ -40,6 +40,20 @@ export function useAuth() {
   return { session, profile, isLoading }
 }
 
+export function useGoogleLogin() {
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    },
+  })
+}
+
 export function useLogin() {
   const { setSession, setNewDeviceAlert } = useAuthStore()
   const navigate = useNavigate()
