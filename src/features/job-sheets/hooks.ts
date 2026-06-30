@@ -21,13 +21,40 @@ export type JobSheetWithDetail = {
   time_spent_minutes: number
   notes: string | null
   submitted_at: string
-  job_orders: { id: string; title: string; status: string; customer_name: string } | null
+  // Full-sheet extended fields
+  customer_name: string | null
+  customer_phone: string | null
+  customer_email: string | null
+  job_location: string | null
+  job_description: string | null
+  job_type: string | null
+  job_date: string | null
+  time_in: string | null
+  time_out: string | null
+  service_description: string | null
+  total_amount: number | null
+  additional_technician_names: string[] | null
+  customer_signature_url: string | null
+  technician_signature_url: string | null
+  // Relations
+  job_orders: {
+    id: string
+    title: string
+    status: string
+    customer_name: string
+    customer_phone: string | null
+    location: string | null
+    priority: string | null
+    scheduled_date: string | null
+    scheduled_time: string | null
+    description: string | null
+  } | null
   profiles: { full_name: string; display_name: string | null; avatar_url: string | null } | null
   attachments: AttachmentRow[]
 }
 
 const SHEET_SELECT =
-  '*, job_orders:job_order_id(id, title, status, customer_name), profiles:technician_id(full_name, display_name, avatar_url), attachments(id, storage_path, file_name, file_size, mime_type)'
+  '*, job_orders:job_order_id(id, title, status, customer_name, customer_phone, location, priority, scheduled_date, scheduled_time, description), profiles:technician_id(full_name, display_name, avatar_url), attachments(id, storage_path, file_name, file_size, mime_type)'
 
 /** Admin view — sheets for the active org, sorted by sheet_number desc */
 export function useJobSheets(orgId: string | null) {

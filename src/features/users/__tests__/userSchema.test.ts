@@ -35,13 +35,21 @@ describe('createUserSchema', () => {
     if (!r.success) expect(r.error.flatten().fieldErrors.password).toContain('Password must be at least 8 characters')
   })
 
-  it('rejects invalid role', () => {
-    const r = createUserSchema.safeParse({ ...valid, role: 'manager' })
+  it('rejects unknown role like owner', () => {
+    const r = createUserSchema.safeParse({ ...valid, role: 'owner' })
     expect(r.success).toBe(false)
   })
 
   it('accepts admin role', () => {
     expect(createUserSchema.safeParse({ ...valid, role: 'admin' }).success).toBe(true)
+  })
+
+  it('accepts manager role', () => {
+    expect(createUserSchema.safeParse({ ...valid, role: 'manager' }).success).toBe(true)
+  })
+
+  it('accepts technician role', () => {
+    expect(createUserSchema.safeParse({ ...valid, role: 'technician' }).success).toBe(true)
   })
 })
 
@@ -64,8 +72,25 @@ describe('editUserSchema', () => {
     expect(r.success).toBe(false)
   })
 
-  it('rejects invalid role', () => {
+  it('rejects unknown role like owner', () => {
+    const r = editUserSchema.safeParse({ ...valid, role: 'owner' })
+    expect(r.success).toBe(false)
+  })
+
+  it('rejects unknown role like superadmin', () => {
     const r = editUserSchema.safeParse({ ...valid, role: 'superadmin' })
     expect(r.success).toBe(false)
+  })
+
+  it('accepts admin role', () => {
+    expect(editUserSchema.safeParse({ ...valid, role: 'admin' }).success).toBe(true)
+  })
+
+  it('accepts manager role', () => {
+    expect(editUserSchema.safeParse({ ...valid, role: 'manager' }).success).toBe(true)
+  })
+
+  it('accepts technician role', () => {
+    expect(editUserSchema.safeParse({ ...valid, role: 'technician' }).success).toBe(true)
   })
 })

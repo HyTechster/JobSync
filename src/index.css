@@ -63,3 +63,18 @@
   --color-warning: #D97706;
   --color-info:    #0284C7;
 }
+
+@media print {
+  @page { size: A4; margin: 0; }
+
+  /* Hide everything portaled to body except the print area (modals, dialogs, etc.) */
+  body > *:not(.job-sheet-print-area) { display: none !important; }
+
+  /* Preserve the flex-column layout so footer stays pinned to page bottom */
+  .job-sheet-print-area {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 210mm !important;
+    height: 297mm !important;
+  }
+}

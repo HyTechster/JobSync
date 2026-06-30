@@ -62,40 +62,65 @@ function PhotoPicker({
   accept?: string; error?: string
 }) {
   const inputId = useId()
+  const isSingle = max === 1
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className={lbl + ' mb-0'}>{label} {required && <span className="text-danger">*</span>}</span>
-        <span className="text-[11px] text-text-muted">{count}/{max}</span>
+        {!isSingle && <span className="text-[11px] text-text-muted">{count}/{max}</span>}
       </div>
+
       {previews.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 mb-2">
-          {previews.map((src, i) => (
-            <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-              {src.startsWith('blob:') || src.startsWith('data:image') ? (
-                <img src={src} alt={`${label} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-              ) : (
-                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                  <Icons.sheets size={24} color="#94A3B8" />
-                </div>
-              )}
-              <button type="button" onClick={() => onRemove(i)}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
-                aria-label="Remove">
-                <Icons.close size={11} color="white" />
-              </button>
-            </div>
-          ))}
-        </div>
+        isSingle ? (
+          <div className="relative rounded-xl overflow-hidden border border-slate-200 mb-2">
+            <img
+              src={previews[0]} alt={`${label} photo`}
+              className="w-full aspect-[4/3] object-cover" loading="lazy"
+            />
+            <button type="button" onClick={() => onRemove(0)}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center"
+              aria-label="Remove">
+              <Icons.close size={12} color="white" />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {previews.map((src, i) => (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
+                {src.startsWith('blob:') || src.startsWith('data:image') ? (
+                  <img src={src} alt={`${label} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <Icons.sheets size={24} color="#94A3B8" />
+                  </div>
+                )}
+                <button type="button" onClick={() => onRemove(i)}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
+                  aria-label="Remove">
+                  <Icons.close size={11} color="white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )
       )}
+
       {count < max && (
         <label htmlFor={inputId}
-          className={`flex items-center justify-center gap-2 h-[44px] rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-            error ? 'border-danger text-danger' : 'border-slate-300 text-text-muted hover:border-brand-700 hover:text-brand-700'
-          }`}>
-          <Icons.camera size={16} />
-          Add {label.toLowerCase()}
-          <input id={inputId} type="file" accept={accept} multiple
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+            isSingle ? 'h-[110px]' : 'h-[44px] flex-row gap-2'
+          } ${error ? 'border-danger text-danger' : 'border-slate-300 text-text-muted hover:border-brand-700 hover:text-brand-700'}`}>
+          <Icons.camera size={isSingle ? 22 : 16} />
+          {isSingle ? (
+            <>
+              <span className="text-[13px] font-semibold">Add {label.toLowerCase()}</span>
+              <span className="text-[10.5px] opacity-70">Tap to take or upload a photo</span>
+            </>
+          ) : (
+            <span>Add {label.toLowerCase()}</span>
+          )}
+          <input id={inputId} type="file" accept={accept} multiple={!isSingle}
             onChange={(e) => {
               if (!e.target.files) return
               const remaining = max - count
@@ -280,7 +305,7 @@ export function SheetSections({
         <PhotoPicker
           label="Payment Evidence"
           required
-          max={3}
+          max={1}
           previews={paymentPhotoPreviews}
           count={paymentPhotoCount}
           onAdd={onAddPaymentPhotos}
@@ -295,7 +320,7 @@ export function SheetSections({
         <PhotoPicker
           label="Site Photos"
           required
-          max={5}
+          max={3}
           previews={jobPhotoPreviews}
           count={jobPhotoCount}
           onAdd={onAddJobPhotos}
