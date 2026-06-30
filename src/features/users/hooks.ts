@@ -47,7 +47,7 @@ export function useOrgMembers() {
       const [membersRes, orgRes] = await Promise.all([
         supabase
           .from('organization_members')
-          .select('user_id, role')
+          .select('user_id, role, is_active')
           .eq('organization_id', activeOrgId)
           .order('joined_at', { ascending: true }),
         supabase
@@ -86,6 +86,7 @@ export function useOrgMembers() {
           return {
             ...(profile as Profile),
             role: m.role,
+            is_active: (m as { is_active: boolean }).is_active,
             is_owner: profile.id === ownerId,
             unread_alerts: unreadCounts[profile.id] ?? 0,
           }

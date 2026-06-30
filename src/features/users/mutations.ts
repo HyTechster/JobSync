@@ -87,16 +87,19 @@ export function useRemoveOrgMember() {
 
 export function useToggleUserActive() {
   const qc = useQueryClient()
+  const { activeOrgId } = useOrganization()
+
   return useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const currentUserId = useAuthStore.getState().profile?.id
-      if (id === currentUserId) {
-        throw new Error('You cannot deactivate your own account')
-      }
+      if (id === currentUserId) throw new Error('You cannot deactivate your own account')
+      if (!activeOrgId) throw new Error('No active organization.')
+
       const { error } = await supabase
-        .from('profiles')
+        .from('organization_members')
         .update({ is_active })
-        .eq('id', id)
+        .eq('organization_id', activeOrgId)
+        .eq('user_id', id)
       if (error) throw error
     },
     onSuccess: () => invalidateUsers(qc),

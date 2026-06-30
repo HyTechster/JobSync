@@ -102,7 +102,9 @@ export function AdminSidebar() {
             </div>
 
             {memberships.map((m) => {
-              const isActive = m.organization_id === activeOrg?.id
+              const isActive  = m.organization_id === activeOrg?.id
+              const isOwner   = (m.organizations as { owner_id?: string }).owner_id === profile?.id
+              const roleLabel = isOwner ? 'Owner' : m.role
               return (
                 <button
                   key={m.organization_id}
@@ -116,7 +118,7 @@ export function AdminSidebar() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-text-base truncate">{m.organizations.name}</div>
-                    <div className="text-[10px] text-text-muted capitalize">{m.role}</div>
+                    <div className="text-[10px] text-text-muted capitalize">{roleLabel}</div>
                   </div>
                   {isActive && (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-shrink-0">

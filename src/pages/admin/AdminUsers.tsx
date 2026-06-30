@@ -179,13 +179,15 @@ export default function AdminUsers() {
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => cancelInvitation.mutate(inv.id)}
-                      disabled={cancelInvitation.isPending}
-                      className="text-[12px] text-text-muted hover:text-danger transition-colors px-2 py-1 rounded hover:bg-red-50 disabled:opacity-40"
-                    >
-                      Cancel
-                    </button>
+                    {!isManager && (
+                      <button
+                        onClick={() => cancelInvitation.mutate(inv.id)}
+                        disabled={cancelInvitation.isPending}
+                        className="text-[12px] text-text-muted hover:text-danger transition-colors px-2 py-1 rounded hover:bg-red-50 disabled:opacity-40"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

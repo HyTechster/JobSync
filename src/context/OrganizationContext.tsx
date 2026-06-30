@@ -9,6 +9,7 @@ export interface OrgMembership {
   organization_id: string
   role: OrgRole
   joined_at: string
+  is_active: boolean
   organizations: Organization
 }
 
@@ -41,7 +42,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organization_members')
-        .select('id, organization_id, role, joined_at, organizations(*)')
+        .select('id, organization_id, role, joined_at, is_active, organizations(*)')
         .eq('user_id', session!.user.id)
         .order('joined_at', { ascending: true })
       if (error) throw error
@@ -67,7 +68,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   const activeMembership = useMemo(() => {
     if (memberships.length === 0) return null
-    return memberships.find((m) => m.organization_id === activeOrgId) ?? memberships[0]
+    const eligible = memberships.filter((m) => m.is_active)
+    return eligible.find((m) => m.organization_id === activeOrgId) ?? eligible[0] ?? null
   }, [memberships, activeOrgId])
 
   function setActiveOrganization(orgId: string) {

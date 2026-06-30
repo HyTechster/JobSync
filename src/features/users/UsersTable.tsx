@@ -112,8 +112,10 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
             </div>
           )
           : users.map((user) => {
-              const isSelf    = user.id === currentUserId
-              const canRemove = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)
+              const isSelf       = user.id === currentUserId
+              const canRemove    = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)
+              const canEdit      = isCurrentUserOwner || (!user.is_owner && user.role !== 'admin')
+              const canDeactivate = !isSelf && (isCurrentUserOwner ? true : (!user.is_owner && user.role !== 'admin'))
 
               return (
                 <div key={user.id} className="px-4 py-4">
@@ -159,27 +161,40 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
                     {/* Actions pushed to right — hidden for managers (read-only view) */}
                     {!isManager && (
                       <div className="ml-auto flex items-center gap-1">
-                        <button
-                          onClick={() => onEdit(user)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
-                          aria-label={`Edit ${user.full_name}`}
-                        >
-                          <Icons.edit size={15} />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => onEdit(user)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
+                            aria-label={`Edit ${user.full_name}`}
+                          >
+                            <Icons.edit size={15} />
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => !isSelf && setPendingToggle({ user })}
-                          disabled={isSelf}
-                          title={isSelf ? 'Cannot change your own status' : user.is_active ? 'Deactivate' : 'Reactivate'}
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                            user.is_active
-                              ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
-                              : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
-                          }`}
-                          aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
-                        >
-                          {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
-                        </button>
+                        <div className="relative group/dt">
+                          <button
+                            onClick={() => canDeactivate && setPendingToggle({ user })}
+                            disabled={!canDeactivate}
+                            title={isSelf ? 'Cannot change your own status' : undefined}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                              user.is_active
+                                ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
+                                : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
+                            }`}
+                            aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
+                          >
+                            {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
+                          </button>
+                          {!canDeactivate && !isSelf && (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-20 pointer-events-none hidden group-hover/dt:block">
+                              <div className="bg-slate-800 text-white text-[10.5px] font-medium rounded-lg px-2.5 py-1.5 whitespace-nowrap leading-snug">
+                                {user.is_owner
+                                  ? 'Cannot deactivate the owner'
+                                  : 'Cannot deactivate another admin'}
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
                         <button
                           onClick={() => canRemove && setPendingRemove({ user })}
@@ -221,10 +236,12 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               : users.map((user, i) => {
-                  const isLast  = i === users.length - 1
-                  const border  = isLast ? '' : 'border-b border-slate-100'
-                  const isSelf  = user.id === currentUserId
-                  const canRemove = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)
+                  const isLast      = i === users.length - 1
+                  const border      = isLast ? '' : 'border-b border-slate-100'
+                  const isSelf      = user.id === currentUserId
+                  const canRemove    = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)
+                  const canEdit      = isCurrentUserOwner || (!user.is_owner && user.role !== 'admin')
+                  const canDeactivate = !isSelf && (isCurrentUserOwner ? true : (!user.is_owner && user.role !== 'admin'))
 
                   return (
                     <tr key={user.id} className="hover:bg-surface-2 transition-colors group">
@@ -279,30 +296,40 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
                       <td className={`px-4 py-[14px] ${border}`}>
                         {!isManager && (
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => onEdit(user)}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
-                              aria-label={`Edit ${user.full_name}`}
-                            >
-                              <Icons.edit size={15} />
-                            </button>
+                            {canEdit && (
+                              <button
+                                onClick={() => onEdit(user)}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
+                                aria-label={`Edit ${user.full_name}`}
+                              >
+                                <Icons.edit size={15} />
+                              </button>
+                            )}
 
-                            <button
-                              onClick={() => !isSelf && setPendingToggle({ user })}
-                              disabled={isSelf}
-                              title={
-                                isSelf ? 'Cannot change your own status'
-                                : user.is_active ? 'Deactivate user' : 'Reactivate user'
-                              }
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                                user.is_active
-                                  ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
-                                  : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
-                              }`}
-                              aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
-                            >
-                              {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
-                            </button>
+                            <div className="relative group/dt">
+                              <button
+                                onClick={() => canDeactivate && setPendingToggle({ user })}
+                                disabled={!canDeactivate}
+                                title={isSelf ? 'Cannot change your own status' : undefined}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                  user.is_active
+                                    ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
+                                    : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
+                                }`}
+                                aria-label={user.is_active ? 'Deactivate user' : 'Reactivate user'}
+                              >
+                                {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
+                              </button>
+                              {!canDeactivate && !isSelf && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-20 pointer-events-none hidden group-hover/dt:block">
+                                  <div className="bg-slate-800 text-white text-[10.5px] font-medium rounded-lg px-2.5 py-1.5 whitespace-nowrap leading-snug">
+                                    {user.is_owner
+                                      ? 'Cannot deactivate the owner'
+                                      : 'Cannot deactivate another admin'}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
 
                             <button
                               onClick={() => canRemove && setPendingRemove({ user })}

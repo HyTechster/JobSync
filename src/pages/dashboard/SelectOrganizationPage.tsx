@@ -51,6 +51,7 @@ function orgColor(index: number) {
 
 export default function SelectOrganizationPage() {
   const { session, profile, isLoading: isAuthLoading } = useAuth()
+  const currentUserId = session?.user.id
   const newDeviceAlert = useAuthStore((s) => s.newDeviceAlert)
   const setNewDeviceAlert = useAuthStore((s) => s.setNewDeviceAlert)
   const prefs = parsePreferences(profile?.preferences)
@@ -224,34 +225,70 @@ export default function SelectOrganizationPage() {
             </div>
 
             <div className="px-4 py-3 flex flex-col gap-1">
-              {memberships.map((m, i) => (
-                <button
-                  key={m.organization_id}
-                  type="button"
-                  onClick={() => selectOrg(m)}
-                  className="flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-surface-2 text-left transition-colors group"
-                >
-                  <div className={`w-11 h-11 rounded-xl ${orgColor(i)} text-white text-sm font-bold flex items-center justify-center flex-shrink-0`}>
-                    {m.organizations.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[14px] font-semibold text-text-base truncate leading-tight">
-                      {m.organizations.name}
+              {memberships.map((m, i) => {
+                const isOwner    = (m.organizations as { owner_id?: string }).owner_id === currentUserId
+                const badgeLabel = isOwner ? 'Owner' : ROLE_LABEL[m.role]
+                const badgeColor = isOwner ? 'bg-amber-100 text-amber-700' : ROLE_COLOR[m.role]
+
+                if (!m.is_active) {
+                  return (
+                    <div
+                      key={m.organization_id}
+                      className="flex items-center gap-4 px-4 py-3.5 rounded-xl opacity-50 cursor-not-allowed select-none"
+                      aria-disabled="true"
+                    >
+                      <div className={`w-11 h-11 rounded-xl ${orgColor(i)} text-white text-sm font-bold flex items-center justify-center flex-shrink-0 grayscale`}>
+                        {m.organizations.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] font-semibold text-text-base truncate leading-tight">
+                          {m.organizations.name}
+                        </div>
+                        <span className="inline-block text-[10.5px] font-bold px-2 py-0.5 rounded-full mt-1 bg-red-100 text-red-600">
+                          Access suspended
+                        </span>
+                      </div>
+                      <svg
+                        width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                        aria-hidden="true"
+                        className="flex-shrink-0"
+                      >
+                        <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
                     </div>
-                    <span className={`inline-block text-[10.5px] font-bold px-2 py-0.5 rounded-full mt-1 ${ROLE_COLOR[m.role]}`}>
-                      {ROLE_LABEL[m.role]}
-                    </span>
-                  </div>
-                  <svg
-                    width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                    aria-hidden="true"
-                    className="flex-shrink-0 group-hover:stroke-brand-700 transition-colors"
+                  )
+                }
+
+                return (
+                  <button
+                    key={m.organization_id}
+                    type="button"
+                    onClick={() => selectOrg(m)}
+                    className="flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-surface-2 text-left transition-colors group"
                   >
-                    <path d="M5 12h14M13 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ))}
+                    <div className={`w-11 h-11 rounded-xl ${orgColor(i)} text-white text-sm font-bold flex items-center justify-center flex-shrink-0`}>
+                      {m.organizations.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[14px] font-semibold text-text-base truncate leading-tight">
+                        {m.organizations.name}
+                      </div>
+                      <span className={`inline-block text-[10.5px] font-bold px-2 py-0.5 rounded-full mt-1 ${badgeColor}`}>
+                        {badgeLabel}
+                      </span>
+                    </div>
+                    <svg
+                      width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      aria-hidden="true"
+                      className="flex-shrink-0 group-hover:stroke-brand-700 transition-colors"
+                    >
+                      <path d="M5 12h14M13 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )
+              })}
             </div>
           </>
         )}
