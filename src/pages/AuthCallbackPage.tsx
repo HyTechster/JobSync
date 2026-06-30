@@ -24,14 +24,16 @@ export default function AuthCallbackPage() {
 
   // detectSessionInUrl: true in supabase client auto-exchanges the code and fires
   // onAuthStateChange → initAuth updates the store. We just wait for it here.
-  // New users (created within the last 2 minutes) go to additional-info to set
-  // preferences; existing users (Google re-login) go straight to select-organization.
+  // Distinguish first-ever login from a returning user by comparing created_at with
+  // last_sign_in_at: on a brand-new account these are the same timestamp; on every
+  // subsequent sign-in last_sign_in_at is updated to "now" while created_at stays fixed.
   useEffect(() => {
     if (status === 'error') return
     if (!isLoading && session) {
-      const ageMs = Date.now() - new Date(session.user.created_at).getTime()
-      const isNewUser = ageMs < 120_000
-      navigate(isNewUser ? '/dashboard/additional-info' : '/dashboard/select-organization', { replace: true })
+      const created     = new Date(session.user.created_at).getTime()
+      const lastSignIn  = new Date(session.user.last_sign_in_at ?? session.user.created_at).getTime()
+      const isFirstLogin = lastSignIn - created < 30_000
+      navigate(isFirstLogin ? '/dashboard/additional-info' : '/dashboard/select-organization', { replace: true })
     }
   }, [session, isLoading, status, navigate])
 
