@@ -11,7 +11,7 @@ export const createUserSchema = z.object({
 export const editUserSchema = z.object({
   full_name: z.string().min(1, 'Full name is required'),
   phone: z.string().optional(),
-  role: z.enum(['admin', 'technician']),
+  role: z.enum(['admin', 'manager', 'technician']),
 })
 
 export type CreateUserFormData = z.infer<typeof createUserSchema>

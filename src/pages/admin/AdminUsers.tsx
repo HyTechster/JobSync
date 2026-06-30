@@ -13,11 +13,12 @@ import {
 import { useOrganization } from '../../context/OrganizationContext'
 import { useAuthStore } from '../../store/authStore'
 
-type RoleFilter = 'all' | 'admin' | 'technician'
+type RoleFilter = 'all' | 'admin' | 'manager' | 'technician'
 
 const ROLE_TABS: { value: RoleFilter; label: string }[] = [
   { value: 'all',        label: 'All'          },
   { value: 'admin',      label: 'Admins'       },
+  { value: 'manager',    label: 'Managers'     },
   { value: 'technician', label: 'Technicians'  },
 ]
 
@@ -33,9 +34,10 @@ export default function AdminUsers() {
   const [showInvite, setShowInvite]     = useState(false)
   const [editUser, setEditUser]         = useState<UserWithAlertCount | null>(null)
 
-  const { activeOrg } = useOrganization()
-  const currentUserId = useAuthStore((s) => s.profile?.id)
+  const { activeOrg, userRole } = useOrganization()
+  const currentUserId      = useAuthStore((s) => s.profile?.id)
   const isCurrentUserOwner = !!(activeOrg?.owner_id && activeOrg.owner_id === currentUserId)
+  const isManager          = userRole === 'manager'
 
   const { data: allUsers = [],      isLoading,    isError, error }   = useOrgMembers()
   const { data: invitations = [],   isLoading: isInvLoading }        = useOrgInvitations()
@@ -63,14 +65,16 @@ export default function AdminUsers() {
         title="Users"
         subtitle="Members and pending invitations for this organization"
         right={
-          <button
-            onClick={() => setShowInvite(true)}
-            className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5"
-          >
-            <Icons.plus size={14} color="white" />
-            <span className="hidden sm:inline">Invite by email</span>
-            <span className="sm:hidden">Invite</span>
-          </button>
+          !isManager ? (
+            <button
+              onClick={() => setShowInvite(true)}
+              className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5"
+            >
+              <Icons.plus size={14} color="white" />
+              <span className="hidden sm:inline">Invite by email</span>
+              <span className="sm:hidden">Invite</span>
+            </button>
+          ) : undefined
         }
       >
         <div className="flex flex-col gap-2 mt-3 md:mt-4 md:flex-row md:flex-wrap md:items-center">
@@ -130,6 +134,7 @@ export default function AdminUsers() {
               users={filteredUsers}
               isLoading={isLoading}
               isCurrentUserOwner={isCurrentUserOwner}
+              isManager={isManager}
               onEdit={setEditUser}
             />
           </div>
@@ -189,7 +194,11 @@ export default function AdminUsers() {
         )}
       </div>
 
-      <EditUserModal user={editUser} onClose={() => setEditUser(null)} />
+      <EditUserModal
+        user={editUser}
+        isCurrentUserOwner={isCurrentUserOwner}
+        onClose={() => setEditUser(null)}
+      />
       <AddToCompanyModal isOpen={showInvite} onClose={() => setShowInvite(false)} />
     </>
   )

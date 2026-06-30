@@ -40,17 +40,24 @@ export function useCreateUser() {
 
 export function useUpdateUser() {
   const qc = useQueryClient()
+  const { activeOrgId } = useOrganization()
+
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: EditUserFormData }) => {
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: data.full_name,
-          phone: data.phone ?? null,
-          role: data.role,
-        })
+        .update({ full_name: data.full_name, phone: data.phone ?? null })
         .eq('id', id)
       if (error) throw error
+
+      if (activeOrgId) {
+        const { error: roleError } = await supabase
+          .from('organization_members')
+          .update({ role: data.role })
+          .eq('organization_id', activeOrgId)
+          .eq('user_id', id)
+        if (roleError) throw roleError
+      }
     },
     onSuccess: () => invalidateUsers(qc),
   })

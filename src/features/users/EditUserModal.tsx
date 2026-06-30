@@ -8,14 +8,17 @@ import type { UserWithAlertCount } from './hooks'
 
 interface EditUserModalProps {
   user: UserWithAlertCount | null
+  isCurrentUserOwner: boolean
   onClose: () => void
 }
 
 const inputCls =
   'w-full h-[38px] px-3 border border-slate-200 rounded-lg text-[13.5px] text-text-base bg-white outline-none focus:border-brand-700 focus:ring-[3px] focus:ring-brand-700/10 transition-all'
 
-export function EditUserModal({ user, onClose }: EditUserModalProps) {
+export function EditUserModal({ user, isCurrentUserOwner, onClose }: EditUserModalProps) {
   const { mutate: updateUser, isPending, error } = useUpdateUser()
+  const isOwnerTarget = user?.is_owner ?? false
+  const roleIsLocked  = isOwnerTarget && !isCurrentUserOwner
 
   const {
     register,
@@ -31,7 +34,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
     reset({
       full_name: user.full_name,
       phone: user.phone ?? '',
-      role: user.role as 'admin' | 'technician',
+      role: user.role as 'admin' | 'manager' | 'technician',
     })
   }, [user, reset])
 
@@ -94,11 +97,18 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
             </label>
             <select
               {...register('role')}
-              className="w-full h-[38px] px-3 border border-slate-200 rounded-lg text-[13.5px] text-text-base bg-white outline-none focus:border-brand-700 transition-all appearance-none"
+              disabled={roleIsLocked}
+              className="w-full h-[38px] px-3 border border-slate-200 rounded-lg text-[13.5px] text-text-base bg-white outline-none focus:border-brand-700 transition-all appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <option value="technician">Technician</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
             </select>
+            {roleIsLocked && (
+              <p className="text-[11px] text-text-muted mt-1">
+                Only the owner can change their own role.
+              </p>
+            )}
           </div>
         </div>
 

@@ -10,6 +10,7 @@ interface UsersTableProps {
   users: UserWithAlertCount[]
   isLoading?: boolean
   isCurrentUserOwner?: boolean
+  isManager?: boolean
   onEdit: (user: UserWithAlertCount) => void
 }
 
@@ -72,7 +73,7 @@ function MobileSkeletonCard() {
   )
 }
 
-export function UsersTable({ users, isLoading, isCurrentUserOwner = false, onEdit }: UsersTableProps) {
+export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isManager = false, onEdit }: UsersTableProps) {
   const currentUserId = useAuthStore((s) => s.profile?.id)
   const { mutate: toggleActive, isPending: isToggling } = useToggleUserActive()
   const { mutate: removeUser,   isPending: isRemoving  } = useRemoveOrgMember()
@@ -155,44 +156,46 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, onEdi
                       <span className="text-[12px] text-text-muted truncate">{user.phone}</span>
                     )}
 
-                    {/* Actions pushed to right */}
-                    <div className="ml-auto flex items-center gap-1">
-                      <button
-                        onClick={() => onEdit(user)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
-                        aria-label={`Edit ${user.full_name}`}
-                      >
-                        <Icons.edit size={15} />
-                      </button>
+                    {/* Actions pushed to right — hidden for managers (read-only view) */}
+                    {!isManager && (
+                      <div className="ml-auto flex items-center gap-1">
+                        <button
+                          onClick={() => onEdit(user)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
+                          aria-label={`Edit ${user.full_name}`}
+                        >
+                          <Icons.edit size={15} />
+                        </button>
 
-                      <button
-                        onClick={() => !isSelf && setPendingToggle({ user })}
-                        disabled={isSelf}
-                        title={isSelf ? 'Cannot change your own status' : user.is_active ? 'Deactivate' : 'Reactivate'}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                          user.is_active
-                            ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
-                            : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
-                        }`}
-                        aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
-                      >
-                        {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
-                      </button>
+                        <button
+                          onClick={() => !isSelf && setPendingToggle({ user })}
+                          disabled={isSelf}
+                          title={isSelf ? 'Cannot change your own status' : user.is_active ? 'Deactivate' : 'Reactivate'}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                            user.is_active
+                              ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
+                              : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
+                          }`}
+                          aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
+                        >
+                          {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
+                        </button>
 
-                      <button
-                        onClick={() => canRemove && setPendingRemove({ user })}
-                        disabled={!canRemove}
-                        title={
-                          isSelf ? 'Cannot remove yourself'
-                          : user.is_owner && !isCurrentUserOwner ? 'Admins cannot remove the owner'
-                          : 'Remove from organization'
-                        }
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        aria-label={`Remove ${user.full_name}`}
-                      >
-                        <Icons.logout size={15} />
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => canRemove && setPendingRemove({ user })}
+                          disabled={!canRemove}
+                          title={
+                            isSelf ? 'Cannot remove yourself'
+                            : user.is_owner && !isCurrentUserOwner ? 'Admins cannot remove the owner'
+                            : 'Remove from organization'
+                          }
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          aria-label={`Remove ${user.full_name}`}
+                        >
+                          <Icons.logout size={15} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -274,46 +277,48 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, onEdi
                       </td>
 
                       <td className={`px-4 py-[14px] ${border}`}>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => onEdit(user)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
-                            aria-label={`Edit ${user.full_name}`}
-                          >
-                            <Icons.edit size={15} />
-                          </button>
+                        {!isManager && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => onEdit(user)}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
+                              aria-label={`Edit ${user.full_name}`}
+                            >
+                              <Icons.edit size={15} />
+                            </button>
 
-                          <button
-                            onClick={() => !isSelf && setPendingToggle({ user })}
-                            disabled={isSelf}
-                            title={
-                              isSelf ? 'Cannot change your own status'
-                              : user.is_active ? 'Deactivate user' : 'Reactivate user'
-                            }
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                              user.is_active
-                                ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
-                                : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
-                            }`}
-                            aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
-                          >
-                            {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
-                          </button>
+                            <button
+                              onClick={() => !isSelf && setPendingToggle({ user })}
+                              disabled={isSelf}
+                              title={
+                                isSelf ? 'Cannot change your own status'
+                                : user.is_active ? 'Deactivate user' : 'Reactivate user'
+                              }
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                                user.is_active
+                                  ? 'text-text-muted hover:bg-[#FFE4E6] hover:text-danger'
+                                  : 'text-text-muted hover:bg-[#D1FAE5] hover:text-success'
+                              }`}
+                              aria-label={user.is_active ? 'Deactivate' : 'Reactivate'}
+                            >
+                              {user.is_active ? <Icons.close size={15} /> : <Icons.check size={15} />}
+                            </button>
 
-                          <button
-                            onClick={() => canRemove && setPendingRemove({ user })}
-                            disabled={!canRemove}
-                            title={
-                              isSelf ? 'Cannot remove yourself'
-                              : user.is_owner && !isCurrentUserOwner ? 'Admins cannot remove the owner'
-                              : 'Remove from organization'
-                            }
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label={`Remove ${user.full_name} from organization`}
-                          >
-                            <Icons.logout size={15} />
-                          </button>
-                        </div>
+                            <button
+                              onClick={() => canRemove && setPendingRemove({ user })}
+                              disabled={!canRemove}
+                              title={
+                                isSelf ? 'Cannot remove yourself'
+                                : user.is_owner && !isCurrentUserOwner ? 'Admins cannot remove the owner'
+                                : 'Remove from organization'
+                              }
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              aria-label={`Remove ${user.full_name} from organization`}
+                            >
+                              <Icons.logout size={15} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )
