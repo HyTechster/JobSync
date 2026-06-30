@@ -20,6 +20,7 @@ vi.mock('../../../lib/supabase', () => ({
 vi.mock('../../../hooks/useDateFormatter', () => ({
   useDateFormatter: () => ({
     fmtDateTime: (iso: string) => new Date(iso).toLocaleString('en-MY'),
+    fmtDate: (iso: string) => new Date(iso).toLocaleDateString('en-MY'),
   }),
 }))
 
@@ -98,7 +99,8 @@ describe('JobSheetDetailModal', () => {
 
   it('renders the technician name', () => {
     render(<JobSheetDetailModal sheet={SHEET} onClose={vi.fn()} />)
-    expect(screen.getByText('Ali Hassan')).toBeInTheDocument()
+    const matches = screen.getAllByText('Ali Hassan')
+    expect(matches.length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders work performed text', () => {
