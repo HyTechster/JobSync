@@ -20,11 +20,15 @@ const ROLE_OPTIONS: { value: OrgRole; label: string; description: string }[] = [
 
 interface Props {
   isOpen: boolean
+  isCurrentUserOwner: boolean
   onClose: () => void
 }
 
-export function AddToCompanyModal({ isOpen, onClose }: Props) {
+export function AddToCompanyModal({ isOpen, isCurrentUserOwner, onClose }: Props) {
   const inviteUser = useInviteUser()
+  const visibleRoles = isCurrentUserOwner
+    ? ROLE_OPTIONS
+    : ROLE_OPTIONS.filter((r) => r.value !== 'admin')
 
   const {
     register,
@@ -104,7 +108,7 @@ export function AddToCompanyModal({ isOpen, onClose }: Props) {
           <fieldset>
             <legend className="block text-xs font-semibold text-text-base mb-2">Role</legend>
             <div className="flex flex-col gap-2">
-              {ROLE_OPTIONS.map(({ value, label, description }) => (
+              {visibleRoles.map(({ value, label, description }) => (
                 <label
                   key={value}
                   className="flex items-start gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-surface-2 transition-colors has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50"

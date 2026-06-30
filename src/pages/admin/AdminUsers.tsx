@@ -199,7 +199,11 @@ export default function AdminUsers() {
         isCurrentUserOwner={isCurrentUserOwner}
         onClose={() => setEditUser(null)}
       />
-      <AddToCompanyModal isOpen={showInvite} onClose={() => setShowInvite(false)} />
+      <AddToCompanyModal
+        isOpen={showInvite}
+        isCurrentUserOwner={isCurrentUserOwner}
+        onClose={() => setShowInvite(false)}
+      />
     </>
   )
 }

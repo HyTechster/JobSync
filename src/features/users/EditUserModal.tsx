@@ -17,8 +17,9 @@ const inputCls =
 
 export function EditUserModal({ user, isCurrentUserOwner, onClose }: EditUserModalProps) {
   const { mutate: updateUser, isPending, error } = useUpdateUser()
-  const isOwnerTarget = user?.is_owner ?? false
-  const roleIsLocked  = isOwnerTarget && !isCurrentUserOwner
+  const isOwnerTarget  = user?.is_owner ?? false
+  const targetIsAdmin  = user?.role === 'admin'
+  const roleIsLocked   = isOwnerTarget || (targetIsAdmin && !isCurrentUserOwner)
 
   const {
     register,
@@ -102,11 +103,13 @@ export function EditUserModal({ user, isCurrentUserOwner, onClose }: EditUserMod
             >
               <option value="technician">Technician</option>
               <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
+              {isCurrentUserOwner && <option value="admin">Admin</option>}
             </select>
             {roleIsLocked && (
               <p className="text-[11px] text-text-muted mt-1">
-                Only the owner can change their own role.
+                {isOwnerTarget
+                  ? "The organization owner's role cannot be changed."
+                  : 'Only the owner can change an admin\'s role.'}
               </p>
             )}
           </div>
