@@ -212,45 +212,84 @@ export type Database = {
       }
       job_sheets: {
         Row: {
+          additional_technician_names: string[] | null
           created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           customer_signature_url: string | null
           id: string
+          job_date: string | null
+          job_description: string | null
+          job_location: string | null
           job_order_id: string | null
           job_title: string | null
+          job_type: string | null
           notes: string | null
           organization_id: string | null
+          service_description: string | null
           sheet_number: number | null
           submitted_at: string
           technician_id: string
+          technician_signature_url: string | null
+          time_in: string | null
+          time_out: string | null
           time_spent_minutes: number
+          total_amount: number | null
           work_performed: string
         }
         Insert: {
+          additional_technician_names?: string[] | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           customer_signature_url?: string | null
           id?: string
+          job_date?: string | null
+          job_description?: string | null
+          job_location?: string | null
           job_order_id?: string | null
           job_title?: string | null
+          job_type?: string | null
           notes?: string | null
           organization_id?: string | null
+          service_description?: string | null
           sheet_number?: number | null
           submitted_at?: string
           technician_id: string
+          technician_signature_url?: string | null
+          time_in?: string | null
+          time_out?: string | null
           time_spent_minutes: number
+          total_amount?: number | null
           work_performed: string
         }
         Update: {
+          additional_technician_names?: string[] | null
           created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           customer_signature_url?: string | null
           id?: string
+          job_date?: string | null
+          job_description?: string | null
+          job_location?: string | null
           job_order_id?: string | null
           job_title?: string | null
+          job_type?: string | null
           notes?: string | null
           organization_id?: string | null
+          service_description?: string | null
           sheet_number?: number | null
           submitted_at?: string
           technician_id?: string
+          technician_signature_url?: string | null
+          time_in?: string | null
+          time_out?: string | null
           time_spent_minutes?: number
+          total_amount?: number | null
           work_performed?: string
         }
         Relationships: [
@@ -416,6 +455,7 @@ export type Database = {
         Row: {
           added_by: string | null
           id: string
+          is_active: boolean
           joined_at: string
           organization_id: string
           role: 'admin' | 'manager' | 'technician'
@@ -424,6 +464,7 @@ export type Database = {
         Insert: {
           added_by?: string | null
           id?: string
+          is_active?: boolean
           joined_at?: string
           organization_id: string
           role: 'admin' | 'manager' | 'technician'
@@ -432,6 +473,7 @@ export type Database = {
         Update: {
           added_by?: string | null
           id?: string
+          is_active?: boolean
           joined_at?: string
           organization_id?: string
           role?: 'admin' | 'manager' | 'technician'
