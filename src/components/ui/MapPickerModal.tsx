@@ -127,9 +127,7 @@ export function MapPickerModal({ isOpen, onClose, onConfirm }: MapPickerModalPro
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
     if (!searchQuery.trim()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([])
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowDropdown(false)
       return
     }

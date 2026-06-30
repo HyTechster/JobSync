@@ -38,9 +38,7 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
     defaultValues: { recipient_ids: [], job_order_ids: [] },
   })
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedIds = watch('recipient_ids')
-  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedJobIds = watch('job_order_ids') ?? []
   const allSelected = technicians.length > 0 && selectedIds.length === technicians.length
 

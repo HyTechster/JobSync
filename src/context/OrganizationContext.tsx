@@ -58,12 +58,12 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   // When the logged-in user changes (switch account), reset to the stored key.
   // This prevents Account A's in-memory activeOrgId leaking into Account B's session.
-  // Intentional: reset org selection when the logged-in account changes.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!session) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveOrgIdState(null)
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveOrgIdState(localStorage.getItem(STORAGE_KEY))
     }
   }, [session?.user.id])  // eslint-disable-line react-hooks/exhaustive-deps
