@@ -29,14 +29,14 @@ export default function AdminJobs() {
   const [techFilter,   setTechFilter]   = useState('')
   const [dateFrom,     setDateFrom]     = useState('')
   const [dateTo,       setDateTo]       = useState('')
-  const [showCreate,   setShowCreate]   = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [showCreate,   setShowCreate]   = useState(() => searchParams.get('create') === '1')
   const [editJob,      setEditJob]      = useState<RecentJobRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RecentJobRow | null>(null)
-  const [searchParams, setSearchParams] = useSearchParams()
 
+  // Clean the ?create=1 param from the URL after it has been consumed above
   useEffect(() => {
     if (searchParams.get('create') === '1') {
-      setShowCreate(true)
       setSearchParams({}, { replace: true })
     }
   }, [searchParams, setSearchParams])

@@ -158,6 +158,7 @@ export default function TechnicianHistory() {
     setPendingFull(full)
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void loadPending() }, [isOnline])
 
   async function handleRetry(id: number) {

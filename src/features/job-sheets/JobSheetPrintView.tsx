@@ -3,10 +3,8 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { supabase } from '../../lib/supabase'
 import { formatDuration } from '../../utils/formatters'
 import type { JobSheetWithDetail } from './hooks'
-import {
-  Lbl, Val, PrintHeader, PrintFooter,
-  SEC, BORDER, STATUS_LABEL, PRIORITY_LABEL, getJobTypeLabel,
-} from './JobSheetPrintHelpers'
+import { Lbl, Val, PrintHeader, PrintFooter } from './JobSheetPrintHelpers'
+import { SEC, BORDER, STATUS_LABEL, PRIORITY_LABEL, getJobTypeLabel } from './jobSheetPrintConstants'
 
 function getPublicUrl(path: string) {
   return supabase.storage.from('job-attachments').getPublicUrl(path).data.publicUrl

@@ -120,6 +120,7 @@ export default function TechnicianJobSheets() {
     setDrafts(rows.reverse())
   }, [activeOrgId])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void loadDrafts() }, [loadDrafts])
 
   async function deleteDraft(id: number) {

@@ -5,22 +5,16 @@ import { useAuthStore } from '../store/authStore'
 type Status = 'verifying' | 'error'
 
 export default function AuthCallbackPage() {
-  const [status, setStatus]   = useState<Status>('verifying')
-  const [errorMsg, setErrorMsg] = useState('')
   const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
   const session   = useAuthStore((s) => s.session)
   const isLoading = useAuthStore((s) => s.isLoading)
 
-  // Handle Supabase error params in the redirect URL (e.g. expired link)
-  useEffect(() => {
-    const error = searchParams.get('error')
-    const desc  = searchParams.get('error_description')
-    if (error) {
-      setErrorMsg(desc ?? error)
-      setStatus('error')
-    }
-  }, [searchParams])
+  // Derive error state directly from URL params — no useEffect needed
+  const urlError  = searchParams.get('error')
+  const urlDesc   = searchParams.get('error_description')
+  const [status,   setStatus]   = useState<Status>(() => urlError ? 'error' : 'verifying')
+  const [errorMsg, setErrorMsg] = useState(() => urlError ? (urlDesc ?? urlError) : '')
 
   // detectSessionInUrl: true in supabase client auto-exchanges the code and fires
   // onAuthStateChange → initAuth updates the store. We just wait for it here.
