@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { AdminTopbar } from '../../components/layout/AdminTopbar'
 import { Icons } from '../../components/ui/Icons'
 import { JobsTable } from '../../features/jobs/JobsTable'
+import { TechMultiSelect } from '../../features/jobs/TechMultiSelect'
 import { CreateJobModal } from '../../features/jobs/CreateJobModal'
 import { EditJobModal } from '../../features/jobs/EditJobModal'
 import { DeleteJobDialog } from '../../features/jobs/DeleteJobDialog'
@@ -26,7 +27,7 @@ const inputCls =
 export default function AdminJobs() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [search,       setSearch]       = useState('')
-  const [techFilter,   setTechFilter]   = useState('')
+  const [techFilters,  setTechFilters]  = useState<string[]>([])
   const [dateFrom,     setDateFrom]     = useState('')
   const [dateTo,       setDateTo]       = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
@@ -61,9 +62,9 @@ export default function AdminJobs() {
       )
     }
 
-    if (techFilter) {
+    if (techFilters.length > 0) {
       result = result.filter((j) =>
-        j.job_assignments.some((a) => a.technician_id === techFilter),
+        techFilters.some((id) => j.job_assignments.some((a) => a.technician_id === id)),
       )
     }
 
@@ -75,12 +76,12 @@ export default function AdminJobs() {
     }
 
     return result
-  }, [allJobs, statusFilter, search, techFilter, dateFrom, dateTo])
+  }, [allJobs, statusFilter, search, techFilters, dateFrom, dateTo])
 
-  const hasExtraFilters = techFilter !== '' || dateFrom !== '' || dateTo !== ''
+  const hasExtraFilters = techFilters.length > 0 || dateFrom !== '' || dateTo !== ''
 
   function clearExtraFilters() {
-    setTechFilter('')
+    setTechFilters([])
     setDateFrom('')
     setDateTo('')
   }
@@ -105,10 +106,7 @@ export default function AdminJobs() {
         <div className="flex flex-col gap-2 mt-3 md:mt-4">
           <div className="flex flex-wrap gap-2">
             {STATUS_TABS.map(({ value, label }) => {
-              const count =
-                value === 'all'
-                  ? allJobs.length
-                  : allJobs.filter((j) => j.status === value).length
+              const count  = value === 'all' ? allJobs.length : allJobs.filter((j) => j.status === value).length
               const active = statusFilter === value
               return (
                 <button
@@ -129,7 +127,7 @@ export default function AdminJobs() {
             })}
           </div>
 
-          {/* Search + technician + date range row */}
+          {/* Search + technician multi-select + date range */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Text search */}
             <div className="relative">
@@ -146,27 +144,12 @@ export default function AdminJobs() {
               />
             </div>
 
-            {/* Technician filter */}
-            <div className="relative">
-              <Icons.users
-                size={13}
-                color="#64748B"
-                className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              />
-              <select
-                value={techFilter}
-                onChange={(e) => setTechFilter(e.target.value)}
-                aria-label="Filter by technician"
-                className={`${inputCls} pl-8 pr-7 appearance-none`}
-              >
-                <option value="">All technicians</option>
-                {orgTechs.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.display_name ?? t.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Technician multi-select */}
+            <TechMultiSelect
+              techs={orgTechs}
+              selected={techFilters}
+              onChange={setTechFilters}
+            />
 
             {/* Date range */}
             <input

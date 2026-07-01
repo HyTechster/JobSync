@@ -1,3 +1,5 @@
+import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Avatar } from '../../components/ui/Avatar'
@@ -11,17 +13,46 @@ interface JobsTableProps {
   onDelete: (job: RecentJobRow) => void
 }
 
-const HEADERS = ['Job', 'Customer', 'Priority', 'Schedule', 'Technicians', 'Status', '']
+type SortKey = 'title' | 'customer' | 'priority' | 'schedule'
+type SortDir = 'asc' | 'desc'
+
+interface TooltipState {
+  x: number
+  y: number
+  assignees: RecentJobRow['job_assignments']
+}
+
+const PRIORITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, urgent: 3 }
+
+const COLS: { label: string; sortKey?: SortKey }[] = [
+  { label: 'Job',          sortKey: 'title' },
+  { label: 'Customer',     sortKey: 'customer' },
+  { label: 'Priority',     sortKey: 'priority' },
+  { label: 'Schedule',     sortKey: 'schedule' },
+  { label: 'Technicians' },
+  { label: 'Status' },
+  { label: '' },
+]
+
+function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
+  return (
+    <span className="ml-1 inline-flex flex-col gap-[2px] align-middle">
+      <svg width="6" height="4" viewBox="0 0 6 4" fill={active && dir === 'asc' ? 'var(--color-brand-700)' : '#CBD5E1'}>
+        <path d="M3 0L6 4H0Z" />
+      </svg>
+      <svg width="6" height="4" viewBox="0 0 6 4" fill={active && dir === 'desc' ? 'var(--color-brand-700)' : '#CBD5E1'}>
+        <path d="M3 4L0 0H6Z" />
+      </svg>
+    </span>
+  )
+}
 
 function SkeletonRow() {
   return (
     <tr>
-      {HEADERS.map((_, i) => (
+      {COLS.map((_, i) => (
         <td key={i} className="px-4 py-[14px] border-b border-slate-100">
-          <div
-            className="h-4 bg-slate-200 rounded animate-pulse"
-            style={{ width: `${55 + ((i * 17) % 35)}%` }}
-          />
+          <div className="h-4 bg-slate-200 rounded animate-pulse" style={{ width: `${55 + ((i * 17) % 35)}%` }} />
         </td>
       ))}
     </tr>
@@ -29,120 +60,180 @@ function SkeletonRow() {
 }
 
 export function JobsTable({ jobs, isLoading, onEdit, onDelete }: JobsTableProps) {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [tooltip,  setTooltip]  = useState<TooltipState | null>(null)
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      if (sortDir === 'asc') {
+        setSortDir('desc')
+      } else {
+        setSortKey(null)
+        setSortDir('asc')
+      }
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  function showTooltip(e: React.MouseEvent, assignees: RecentJobRow['job_assignments']) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setTooltip({ x: rect.left, y: rect.bottom + 8, assignees })
+  }
+
+  const sortedJobs = useMemo(() => {
+    if (!sortKey) return jobs
+    return [...jobs].sort((a, b) => {
+      let cmp = 0
+      if (sortKey === 'title')    cmp = a.title.localeCompare(b.title)
+      if (sortKey === 'customer') cmp = a.customer_name.localeCompare(b.customer_name)
+      if (sortKey === 'priority') cmp = (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0)
+      if (sortKey === 'schedule') cmp = (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? '')
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [jobs, sortKey, sortDir])
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr className="bg-surface-2 text-text-muted">
-            {HEADERS.map((h) => (
-              <th
-                key={h}
-                className="px-4 py-3 text-left text-[11px] font-semibold tracking-wide uppercase border-b border-slate-200 whitespace-nowrap"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            : jobs.map((job, i) => {
-                const isLast = i === jobs.length - 1
-                const border = isLast ? '' : 'border-b border-slate-100'
-                const shortId = job.id.slice(0, 8).toUpperCase()
-                const assignees = job.job_assignments
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[13px]">
+          <thead>
+            <tr className="bg-surface-2 text-text-muted">
+              {COLS.map(({ label, sortKey: sk }) => (
+                <th
+                  key={label || 'actions'}
+                  className={`px-4 py-3 text-left text-[11px] font-semibold tracking-wide uppercase border-b border-slate-200 whitespace-nowrap ${sk ? 'cursor-pointer select-none hover:text-text-base transition-colors' : ''}`}
+                  onClick={sk ? () => handleSort(sk) : undefined}
+                >
+                  {label}
+                  {sk && <SortIndicator active={sortKey === sk} dir={sortKey === sk ? sortDir : 'asc'} />}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              : sortedJobs.map((job, i) => {
+                  const isLast    = i === sortedJobs.length - 1
+                  const border    = isLast ? '' : 'border-b border-slate-100'
+                  const shortId   = job.id.slice(0, 8).toUpperCase()
+                  const assignees = job.job_assignments
+                  const shown     = assignees.slice(0, 3)
+                  const overflow  = assignees.length - 3
 
-                return (
-                  <tr key={job.id} className="hover:bg-surface-2 transition-colors group">
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      <div className="text-[11px] text-text-muted font-semibold tracking-wide">
-                        {shortId}
-                      </div>
-                      <div className="text-[13.5px] font-semibold text-text-base mt-0.5">
-                        {job.title}
-                      </div>
-                    </td>
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      <div className="font-medium text-text-base">{job.customer_name}</div>
-                      <div className="text-[11.5px] text-text-muted mt-0.5 truncate max-w-[160px]">
-                        {job.location}
-                      </div>
-                    </td>
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      <PriorityBadge priority={job.priority} />
-                    </td>
-                    <td className={`px-4 py-[14px] ${border} text-text-muted whitespace-nowrap`}>
-                      {job.scheduled_date}
-                      {job.scheduled_time && (
-                        <span className="ml-1">· {job.scheduled_time.slice(0, 5)}</span>
-                      )}
-                    </td>
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      {assignees.length > 0 ? (
-                        <div className="flex items-center">
-                          {assignees.slice(0, 3).map((a, idx) => (
-                            <div
-                              key={a.technician_id}
-                              style={{ marginLeft: idx ? -6 : 0 }}
-                              title={a.profiles ? (a.profiles.display_name ?? a.profiles.full_name) : ''}
-                            >
-                              <Avatar
-                                name={a.profiles?.full_name ?? '?'}
-                                size={24}
-                                src={a.profiles?.avatar_url}
-                              />
-                            </div>
-                          ))}
-                          {assignees.length > 3 && (
-                            <div
-                              className="w-6 h-6 rounded-full bg-surface-2 border-2 border-white text-[10px] font-semibold text-text-muted flex items-center justify-center"
-                              style={{ marginLeft: -6 }}
-                            >
-                              +{assignees.length - 3}
-                            </div>
-                          )}
+                  return (
+                    <tr key={job.id} className="hover:bg-surface-2 transition-colors group">
+                      {/* Job */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        <div className="text-[11px] text-text-muted font-semibold tracking-wide">{shortId}</div>
+                        <div className="text-[13.5px] font-semibold text-text-base mt-0.5">{job.title}</div>
+                      </td>
+
+                      {/* Customer */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        <div className="font-medium text-text-base">{job.customer_name}</div>
+                        <div className="text-[11.5px] text-text-muted mt-0.5 truncate max-w-[160px]">{job.location}</div>
+                      </td>
+
+                      {/* Priority */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        <PriorityBadge priority={job.priority} />
+                      </td>
+
+                      {/* Schedule */}
+                      <td className={`px-4 py-[14px] ${border} text-text-muted whitespace-nowrap`}>
+                        {job.scheduled_date}
+                        {job.scheduled_time && <span className="ml-1">· {job.scheduled_time.slice(0, 5)}</span>}
+                      </td>
+
+                      {/* Technicians — portal tooltip on hover */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        {assignees.length > 0 ? (
+                          <div
+                            className="inline-flex items-center cursor-default"
+                            onMouseEnter={(e) => showTooltip(e, assignees)}
+                            onMouseLeave={() => setTooltip(null)}
+                          >
+                            {shown.map((a, idx) => (
+                              <div key={a.technician_id} style={{ marginLeft: idx ? -6 : 0 }}>
+                                <Avatar name={a.profiles?.full_name ?? '?'} size={24} src={a.profiles?.avatar_url} />
+                              </div>
+                            ))}
+                            {overflow > 0 && (
+                              <div
+                                className="w-6 h-6 rounded-full bg-surface-2 border-2 border-white text-[10px] font-semibold text-text-muted flex items-center justify-center"
+                                style={{ marginLeft: -6 }}
+                              >
+                                +{overflow}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[12px] text-text-muted italic">Unassigned</span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        <StatusBadge status={job.status} />
+                      </td>
+
+                      {/* Actions */}
+                      <td className={`px-4 py-[14px] ${border}`}>
+                        <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => onEdit(job)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
+                            aria-label={`Edit ${job.title}`}
+                          >
+                            <Icons.edit size={15} />
+                          </button>
+                          <button
+                            onClick={() => onDelete(job)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors"
+                            aria-label={`Delete ${job.title}`}
+                          >
+                            <Icons.trash size={15} />
+                          </button>
                         </div>
-                      ) : (
-                        <span className="text-[12px] text-text-muted italic">Unassigned</span>
-                      )}
-                    </td>
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className={`px-4 py-[14px] ${border}`}>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => onEdit(job)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-slate-100 hover:text-text-base transition-colors"
-                          aria-label={`Edit ${job.title}`}
-                        >
-                          <Icons.edit size={15} />
-                        </button>
-                        <button
-                          onClick={() => onDelete(job)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors"
-                          aria-label={`Delete ${job.title}`}
-                        >
-                          <Icons.trash size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-        </tbody>
-      </table>
+                      </td>
+                    </tr>
+                  )
+                })}
+          </tbody>
+        </table>
 
-      {!isLoading && jobs.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Icons.jobs size={40} color="#94A3B8" />
-          <p className="text-sm font-medium text-text-muted">No jobs found</p>
-          <p className="text-xs text-text-subtle">
-            Try adjusting your filters or create a new job order.
-          </p>
-        </div>
+        {!isLoading && sortedJobs.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Icons.jobs size={40} color="#94A3B8" />
+            <p className="text-sm font-medium text-text-muted">No jobs found</p>
+            <p className="text-xs text-text-subtle">Try adjusting your filters or create a new job order.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Portal tooltip — renders into document.body, escapes all overflow clipping */}
+      {tooltip && createPortal(
+        <div
+          style={{ position: 'fixed', left: tooltip.x, top: tooltip.y, zIndex: 9999 }}
+          className="pointer-events-none"
+        >
+          {/* upward caret */}
+          <div className="w-0 h-0 ml-4 border-l-[5px] border-r-[5px] border-b-[6px] border-l-transparent border-r-transparent border-b-slate-800" />
+          <div className="bg-slate-800 text-white text-[11.5px] rounded-xl px-3 py-2.5 shadow-xl min-w-[150px] max-w-[220px]">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">All Technicians</p>
+            {tooltip.assignees.map((a) => (
+              <p key={a.technician_id} className="py-[2px] truncate">
+                {a.profiles?.display_name ?? a.profiles?.full_name ?? '—'}
+              </p>
+            ))}
+          </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   )
 }
