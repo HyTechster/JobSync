@@ -101,12 +101,13 @@ function SheetRow({ sheet }: { sheet: JobSheetWithDetail }) {
 
 // ── My progress mini bar chart ────────────────────────────────────────────────
 
-function MyProgressBars({ active, completed, total }: { active: number; completed: number; total: number }) {
-  const max = Math.max(total, 1)
+function MyProgressBars({ inProgress, completed, pending }: { inProgress: number; completed: number; pending: number }) {
+  const total = inProgress + completed + pending
+  const max   = Math.max(total, 1)
   const bars = [
-    { label: 'Active',    value: active,              pct: (active / max) * 100,    color: 'bg-blue-500' },
-    { label: 'Completed', value: completed,            pct: (completed / max) * 100, color: 'bg-emerald-500' },
-    { label: 'Pending',   value: total - active - completed, pct: ((total - active - completed) / max) * 100, color: 'bg-slate-300' },
+    { label: 'Active',    value: inProgress, pct: (inProgress / max) * 100, color: 'bg-blue-500' },
+    { label: 'Completed', value: completed,  pct: (completed  / max) * 100, color: 'bg-emerald-500' },
+    { label: 'Pending',   value: pending,    pct: (pending    / max) * 100, color: 'bg-slate-300' },
   ]
   return (
     <div className="flex flex-col gap-2">
@@ -134,8 +135,10 @@ export default function TechnicianDashboard() {
 
   const firstName = profile?.full_name.split(' ')[0] ?? 'there'
 
-  const activeCount    = useMemo(() => jobs.filter((j) => j.status === 'pending' || j.status === 'in_progress').length, [jobs])
-  const completedCount = useMemo(() => jobs.filter((j) => j.status === 'completed').length, [jobs])
+  const inProgressCount = useMemo(() => jobs.filter((j) => j.status === 'in_progress').length, [jobs])
+  const pendingCount    = useMemo(() => jobs.filter((j) => j.status === 'pending').length, [jobs])
+  const completedCount  = useMemo(() => jobs.filter((j) => j.status === 'completed').length, [jobs])
+  const activeCount     = inProgressCount + pendingCount
   const recentJobs     = useMemo(() => jobs.slice(0, 5), [jobs])
   const recentSheets   = useMemo(() => sheets.slice(0, 5), [sheets])
 
@@ -209,7 +212,7 @@ export default function TechnicianDashboard() {
         <div className="flex flex-col gap-4">
           <div className="bg-white border border-slate-200 rounded-xl p-4">
             <p className="text-[12px] font-semibold text-text-muted uppercase tracking-wide mb-3">My Job Progress</p>
-            <MyProgressBars active={activeCount} completed={completedCount} total={jobs.length} />
+            <MyProgressBars inProgress={inProgressCount} completed={completedCount} pending={pendingCount} />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex-1">
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
