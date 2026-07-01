@@ -107,7 +107,7 @@ function MyProgressBars({ inProgress, completed, pending }: { inProgress: number
   const bars = [
     { label: 'Active',    value: inProgress, pct: (inProgress / max) * 100, color: 'bg-blue-500' },
     { label: 'Completed', value: completed,  pct: (completed  / max) * 100, color: 'bg-emerald-500' },
-    { label: 'Pending',   value: pending,    pct: (pending    / max) * 100, color: 'bg-slate-300' },
+    { label: 'Pending',   value: pending,    pct: (pending    / max) * 100, color: 'bg-amber-400' },
   ]
   return (
     <div className="flex flex-col gap-2">
