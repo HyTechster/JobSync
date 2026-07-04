@@ -182,11 +182,12 @@ export default function AdminDashboard() {
               <div className="flex-1 text-center md:text-left">
                 <p className="text-[11px] font-bold text-brand-700 uppercase tracking-widest mb-1.5">Getting Started</p>
                 <h2 className="text-[20px] md:text-[22px] font-bold text-text-base leading-snug mb-2">
-                  Your workspace is ready — create your first job order
+                  <span className="block text-text-muted font-medium text-[15px] md:text-[16px] mb-0.5">Your workspace is ready</span>
+                  <span className="block">Create your first job order</span>
                 </h2>
                 <p className="text-[13.5px] text-text-muted leading-relaxed max-w-[480px]">
-                  Add a job, assign it to a technician, and start tracking work in real time.
-                  Everything else — job sheets, analytics, and alerts — flows from here.
+                  Add a job, assign it to a technician, and track work in real time.
+                  Job sheets, analytics, and alerts all build from there.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 mt-5 justify-center md:justify-start">
                   <Link
