@@ -534,6 +534,10 @@ export type Database = {
         Args: { p_org_id: string }
         Returns: number
       }
+      claim_open_job: {
+        Args: { p_job_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
