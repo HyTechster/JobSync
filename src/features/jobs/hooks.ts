@@ -218,6 +218,12 @@ export function useJob(id: string) {
   })
 }
 
+// !inner ensures only jobs where this technician has an assignment row are returned.
+// After the RLS update (045_open_jobs_feature.sql), the technician can also see
+// unassigned open jobs, so the inner join scopes this hook to "my assigned jobs" only.
+const MY_JOBS_SELECT =
+  '*, job_assignments!inner(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
+
 export function useMyJobs(orgId: string | null) {
   return useQuery<RecentJobRow[]>({
     queryKey: ['my-jobs', orgId],
@@ -225,11 +231,31 @@ export function useMyJobs(orgId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('job_orders')
-        .select(JOB_DETAIL_SELECT)
+        .select(MY_JOBS_SELECT)
         .eq('organization_id' as never, orgId!)
         .order('updated_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
+export function useOpenJobs(orgId: string | null) {
+  return useQuery<RecentJobRow[]>({
+    queryKey: ['open-jobs', orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(JOB_DETAIL_SELECT)
+        .eq('organization_id' as never, orgId!)
+        .eq('status', 'pending')
+        .order('scheduled_date', { ascending: true })
+      if (error) throw error
+      const jobs = (data ?? []) as RecentJobRow[]
+      // With the updated RLS, job_assignments only contains the current user's rows.
+      // An empty array means no one is assigned → truly an open job.
+      return jobs.filter((j) => j.job_assignments.length === 0)
     },
   })
 }
@@ -346,6 +372,7 @@ export function useRealtimeTechnicianJobs() {
 
     function invalidate() {
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['open-jobs'] })
     }
 
     const channel = supabase
@@ -360,9 +387,11 @@ export function useRealtimeTechnicianJobs() {
         },
         invalidate
       )
+      // Watch all job_orders changes — needed so an open job disappearing
+      // (when claimed by any tech) is reflected immediately.
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'job_orders' },
+        { event: '*', schema: 'public', table: 'job_orders' },
         invalidate
       )
       .subscribe()

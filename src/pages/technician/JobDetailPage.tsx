@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useJob } from '../../features/jobs/hooks'
-import { useUpdateJobStatus } from '../../features/jobs/mutations'
+import { useUpdateJobStatus, useClaimJob } from '../../features/jobs/mutations'
 import { useJobSheet } from '../../features/job-sheets/hooks'
 import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { StatusBadge } from '../../components/ui/StatusBadge'
@@ -38,8 +38,10 @@ export default function JobDetailPage() {
   const navigate = useNavigate()
   const { data: job, isLoading, isError } = useJob(jobId ?? '')
   const { mutate: updateStatus, isPending } = useUpdateJobStatus()
+  const { mutate: claimJob, isPending: isClaiming } = useClaimJob()
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
+  const [claimError, setClaimError] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -64,6 +66,7 @@ export default function JobDetailPage() {
   }
 
   const hasSheet = (job.job_sheets ?? []).length > 0
+  const isOpenJob = job.status === 'pending' && job.job_assignments.length === 0
   const displayStatus: DisplayStatus =
     job.status === 'completed' && !hasSheet ? 'completed_no_sheet' : job.status
 
@@ -73,6 +76,13 @@ export default function JobDetailPage() {
 
   function handleStartJob() {
     updateStatus({ id: job!.id, status: 'in_progress' })
+  }
+
+  function handleClaimJob() {
+    setClaimError(null)
+    claimJob(job!.id, {
+      onError: (err) => setClaimError(err.message),
+    })
   }
 
   function handleComplete() {
@@ -114,7 +124,33 @@ export default function JobDetailPage() {
 
         {/* ── Action buttons ──────────────────────────────────── */}
 
-        {job.status === 'pending' && (
+        {job.status === 'pending' && isOpenJob && (
+          <div className="space-y-2">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <p className="text-[12.5px] text-amber-800 font-medium">
+                This job is open — no technician has been assigned yet. Claim it to take ownership and start working.
+              </p>
+            </div>
+            {claimError && (
+              <p className="text-[12px] text-danger bg-[#FFF1F2] border border-[#FFD6DB] rounded-xl px-4 py-3">
+                {claimError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleClaimJob}
+              disabled={isClaiming}
+              className="w-full h-[48px] rounded-xl bg-brand-700 text-white text-[14px] font-semibold disabled:opacity-50 transition-colors hover:bg-brand-800 flex items-center justify-center gap-2"
+            >
+              {isClaiming
+                ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Claiming…</>
+                : 'Claim & Start Job'
+              }
+            </button>
+          </div>
+        )}
+
+        {job.status === 'pending' && !isOpenJob && (
           <button
             type="button"
             onClick={handleStartJob}

@@ -120,6 +120,25 @@ export function useUpdateJobStatus() {
   })
 }
 
+export function useClaimJob() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const { data, error } = await supabase.rpc('claim_open_job', { p_job_id: jobId })
+      if (error) throw error
+      const result = data as { success: boolean; error?: string }
+      if (!result.success) throw new Error(result.error ?? 'Failed to claim job')
+      return result
+    },
+    onSuccess: (_data, jobId) => {
+      void qc.invalidateQueries({ queryKey: ['open-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['my-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['job', jobId] })
+      void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
+  })
+}
+
 export function useDeleteJob() {
   const qc = useQueryClient()
   return useMutation({
