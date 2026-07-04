@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createAlertSchema, type CreateAlertFormData } from './alertSchema'
 import { useCreateAlert } from './mutations'
@@ -31,15 +31,14 @@ export function CreateAlertModal({ isOpen, onClose }: CreateAlertModalProps) {
     control,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<CreateAlertFormData>({
     resolver: zodResolver(createAlertSchema),
     defaultValues: { recipient_ids: [], job_order_ids: [] },
   })
 
-  const selectedIds = watch('recipient_ids')
-  const selectedJobIds = watch('job_order_ids') ?? []
+  const selectedIds = useWatch({ control, name: 'recipient_ids' }) ?? []
+  const selectedJobIds = useWatch({ control, name: 'job_order_ids' }) ?? []
   const allSelected = technicians.length > 0 && selectedIds.length === technicians.length
 
   const activeJobs = allJobs.filter((j) => j.status !== 'cancelled')

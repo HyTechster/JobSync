@@ -126,12 +126,14 @@ export function MapPickerModal({ isOpen, onClose, onConfirm }: MapPickerModalPro
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    if (!searchQuery.trim()) {
-      setSearchResults([])
-      setShowDropdown(false)
-      return
-    }
+    // Delay of 0 when clearing, 500ms when searching — setState runs inside the
+    // callback so it is never called synchronously in the effect body.
     searchTimeout.current = setTimeout(async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([])
+        setShowDropdown(false)
+        return
+      }
       setIsSearching(true)
       try {
         const res = await fetch(
@@ -146,7 +148,7 @@ export function MapPickerModal({ isOpen, onClose, onConfirm }: MapPickerModalPro
       } finally {
         setIsSearching(false)
       }
-    }, 500)
+    }, searchQuery.trim() ? 500 : 0)
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current)
     }

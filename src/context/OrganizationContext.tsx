@@ -63,7 +63,6 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveOrgIdState(null)
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveOrgIdState(localStorage.getItem(STORAGE_KEY))
     }
   }, [session?.user.id])  // eslint-disable-line react-hooks/exhaustive-deps
