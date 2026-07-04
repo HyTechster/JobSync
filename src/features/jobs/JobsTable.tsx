@@ -8,9 +8,11 @@ import type { RecentJobRow } from './hooks'
 
 interface JobsTableProps {
   jobs: RecentJobRow[]
+  totalUnfiltered?: number
   isLoading?: boolean
   onEdit: (job: RecentJobRow) => void
   onDelete: (job: RecentJobRow) => void
+  onCreateFirst?: () => void
 }
 
 type SortKey = 'title' | 'customer' | 'priority' | 'schedule'
@@ -59,7 +61,7 @@ function SkeletonRow() {
   )
 }
 
-export function JobsTable({ jobs, isLoading, onEdit, onDelete }: JobsTableProps) {
+export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onDelete, onCreateFirst }: JobsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [tooltip,  setTooltip]  = useState<TooltipState | null>(null)
@@ -207,11 +209,34 @@ export function JobsTable({ jobs, isLoading, onEdit, onDelete }: JobsTableProps)
         </table>
 
         {!isLoading && sortedJobs.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Icons.jobs size={40} color="#94A3B8" />
-            <p className="text-sm font-medium text-text-muted">No jobs found</p>
-            <p className="text-xs text-text-subtle">Try adjusting your filters or create a new job order.</p>
-          </div>
+          totalUnfiltered === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center">
+                <Icons.jobs size={26} color="#1E3A5F" />
+              </div>
+              <div className="text-center">
+                <p className="text-[14px] font-semibold text-text-base mb-1">No job orders yet</p>
+                <p className="text-[13px] text-text-muted max-w-[280px]">
+                  Create your first job order to assign work to your team and start tracking progress.
+                </p>
+              </div>
+              {onCreateFirst && (
+                <button
+                  onClick={onCreateFirst}
+                  className="inline-flex items-center gap-2 h-[38px] px-5 bg-brand-700 hover:bg-brand-800 text-white text-[13.5px] font-semibold rounded-xl transition-colors"
+                >
+                  <Icons.plus size={14} color="white" />
+                  Create first job order
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Icons.jobs size={40} color="#94A3B8" />
+              <p className="text-sm font-medium text-text-muted">No jobs match your filters</p>
+              <p className="text-xs text-text-subtle">Try adjusting the status, technician, or date range.</p>
+            </div>
+          )
         )}
       </div>
 

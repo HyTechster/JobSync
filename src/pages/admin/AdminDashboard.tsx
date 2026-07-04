@@ -172,10 +172,62 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ── Getting started (shown only when no jobs exist yet) ── */}
+        {!statsLoading && !statsError && stats?.total === 0 && (
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-6 py-8 md:px-10 md:py-10">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center flex-shrink-0">
+                <Icons.jobs size={32} color="#1E3A5F" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <p className="text-[11px] font-bold text-brand-700 uppercase tracking-widest mb-1.5">Getting Started</p>
+                <h2 className="text-[20px] md:text-[22px] font-bold text-text-base leading-snug mb-2">
+                  Your workspace is ready — create your first job order
+                </h2>
+                <p className="text-[13.5px] text-text-muted leading-relaxed max-w-[480px]">
+                  Add a job, assign it to a technician, and start tracking work in real time.
+                  Everything else — job sheets, analytics, and alerts — flows from here.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 mt-5 justify-center md:justify-start">
+                  <Link
+                    to="/admin/jobs?create=1"
+                    className="inline-flex items-center gap-2 h-[38px] px-5 bg-brand-700 hover:bg-brand-800 text-white text-[13.5px] font-semibold rounded-xl transition-colors"
+                  >
+                    <Icons.plus size={14} color="white" />
+                    Create first job order
+                  </Link>
+                  <Link
+                    to="/admin/users"
+                    className="inline-flex items-center gap-2 h-[38px] px-5 border border-slate-200 hover:bg-surface-2 text-text-base text-[13.5px] font-semibold rounded-xl transition-colors"
+                  >
+                    <Icons.users size={14} />
+                    Manage team first
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+              {[
+                { step: '1', title: 'Add your team', desc: 'Invite technicians so you can assign them to jobs.', to: '/admin/users' },
+                { step: '2', title: 'Create a job order', desc: 'Fill in the customer, location, schedule and priority.', to: '/admin/jobs?create=1' },
+                { step: '3', title: 'Track in real time', desc: 'Watch status updates and job sheets come in live.', to: '/admin/jobs' },
+              ].map(({ step, title, desc, to }) => (
+                <Link key={step} to={to} className="flex items-start gap-3 px-6 py-4 hover:bg-surface-2 transition-colors group">
+                  <span className="w-6 h-6 rounded-full bg-brand-700 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{step}</span>
+                  <div>
+                    <p className="text-[13px] font-semibold text-text-base group-hover:text-brand-700 transition-colors">{title}</p>
+                    <p className="text-[12px] text-text-muted mt-0.5">{desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── Analytics ── */}
         {analyticsLoading ? (
           <AnalyticsSkeleton />
-        ) : analytics ? (
+        ) : analytics && (stats?.total ?? 0) > 0 ? (
           <>
             {/* Row 1: Status Donut + Priority Bars */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

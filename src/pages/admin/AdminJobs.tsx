@@ -193,9 +193,11 @@ export default function AdminJobs() {
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <JobsTable
               jobs={filteredJobs}
+              totalUnfiltered={allJobs.length}
               isLoading={isLoading}
               onEdit={setEditJob}
               onDelete={setDeleteTarget}
+              onCreateFirst={() => setShowCreate(true)}
             />
           </div>
         )}
