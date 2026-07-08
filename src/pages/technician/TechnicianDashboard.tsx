@@ -48,6 +48,21 @@ function MiniStat({ label, value, icon, to, accent, loading }: {
   )
 }
 
+// ── Sheet-needed badge ──────────────────────────────────────────────────────
+
+function NeedsSheetBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
+      <Icons.warning size={10} />
+      Sheet needed
+    </span>
+  )
+}
+
+function needsSheet(job: RecentJobRow): boolean {
+  return job.status === 'completed' && (job.job_sheets?.length ?? 0) === 0
+}
+
 // ── Job card (mobile) ─────────────────────────────────────────────────────────
 
 function JobCard({ job }: { job: RecentJobRow }) {
@@ -60,7 +75,10 @@ function JobCard({ job }: { job: RecentJobRow }) {
           <p className="text-[14px] font-semibold text-text-base truncate">{job.title}</p>
           <p className="text-[12.5px] text-text-muted mt-0.5 truncate">{job.customer_name}</p>
         </div>
-        <StatusBadge status={job.status} />
+        <div className="flex flex-col items-end gap-1">
+          <StatusBadge status={job.status} />
+          {needsSheet(job) && <NeedsSheetBadge />}
+        </div>
       </div>
       <div className="flex items-center gap-3 mt-2">
         <span className="inline-flex items-center gap-1 text-[12px] text-text-muted">
@@ -135,10 +153,11 @@ export default function TechnicianDashboard() {
 
   const firstName = profile?.full_name.split(' ')[0] ?? 'there'
 
-  const inProgressCount = useMemo(() => jobs.filter((j) => j.status === 'in_progress').length, [jobs])
-  const pendingCount    = useMemo(() => jobs.filter((j) => j.status === 'pending').length, [jobs])
-  const completedCount  = useMemo(() => jobs.filter((j) => j.status === 'completed').length, [jobs])
-  const activeCount     = inProgressCount + pendingCount
+  const inProgressCount  = useMemo(() => jobs.filter((j) => j.status === 'in_progress').length, [jobs])
+  const pendingCount     = useMemo(() => jobs.filter((j) => j.status === 'pending').length, [jobs])
+  const completedCount   = useMemo(() => jobs.filter((j) => j.status === 'completed').length, [jobs])
+  const needsSheetCount  = useMemo(() => jobs.filter(needsSheet).length, [jobs])
+  const activeCount      = inProgressCount + pendingCount
   const recentJobs     = useMemo(() => jobs.slice(0, 5), [jobs])
   const recentSheets   = useMemo(() => sheets.slice(0, 5), [sheets])
 
@@ -148,6 +167,7 @@ export default function TechnicianDashboard() {
     { label: 'Active Jobs',       value: activeCount,      to: '/technician/jobs',        accent: '#1E3A5F', icon: <Icons.jobs size={20} color="#1E3A5F" /> },
     { label: 'Completed Jobs',    value: completedCount,   to: '/technician/history',     accent: '#059669', icon: <Icons.check size={20} color="#059669" /> },
     { label: 'Sheets Submitted',  value: sheets.length,    to: '/technician/job-sheets',  accent: '#7C3AED', icon: <Icons.sheets size={20} color="#7C3AED" /> },
+    { label: 'Sheets Due',        value: needsSheetCount,  to: '/technician/history',     accent: '#B45309', icon: <Icons.warning size={20} color="#B45309" /> },
     { label: 'Unread Alerts',     value: unread,           to: '/technician/alerts',      accent: '#D97706', icon: <Icons.bell size={20} color="#D97706" /> },
   ]
 
@@ -160,7 +180,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Stat cards — 2 col mobile, 4 col desktop */}
-      <div data-tour="dash-stats" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div data-tour="dash-stats" className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {STATS.map((s) => (
           <MiniStat key={s.label} {...s} loading={loading} />
         ))}
@@ -201,6 +221,7 @@ export default function TechnicianDashboard() {
                     <p className="text-[11.5px] text-text-muted mt-0.5 truncate">{job.customer_name}</p>
                   </div>
                   <StatusBadge status={job.status} />
+                  {needsSheet(job) && <NeedsSheetBadge />}
                   <Icons.chevronR size={13} color="#CBD5E1" />
                 </Link>
               ))

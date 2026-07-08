@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { offlineDb, type OfflineJobSheet, type PendingFullSheet } from '../../offline/db'
 import { syncPendingJobSheets, syncPendingFullSheets } from '../../offline/sync'
@@ -115,6 +116,12 @@ function CompletedJobCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet
     <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">
       <div className="flex items-start gap-2 mb-1">
         <p className="text-[13.5px] font-semibold text-text-base truncate flex-1">{job.title}</p>
+        {!sheetId && (
+          <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
+            <Icons.warning size={10} />
+            Sheet needed
+          </span>
+        )}
         <PriorityBadge priority={job.priority} />
       </div>
       <p className="text-[12.5px] text-text-muted truncate">{job.customer_name}</p>
@@ -132,7 +139,7 @@ function CompletedJobCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet
             Scheduled {scheduledOn}
           </span>
         </div>
-        {sheetId && (
+        {sheetId ? (
           <button
             type="button"
             onClick={() => onViewSheet(sheetId)}
@@ -141,6 +148,14 @@ function CompletedJobCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet
             <Icons.sheets size={12} />
             {sheetNumber != null ? `Sheet #${sheetNumber}` : 'View Sheet'}
           </button>
+        ) : (
+          <Link
+            to={`/technician/jobs/${job.id}/submit`}
+            className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-white bg-amber-600 hover:bg-amber-700 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0"
+          >
+            <Icons.sheets size={12} color="white" />
+            Submit Sheet
+          </Link>
         )}
       </div>
     </div>

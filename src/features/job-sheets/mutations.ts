@@ -65,6 +65,9 @@ export function useSubmitJobSheet() {
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
       void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
       void qc.invalidateQueries({ queryKey: ['jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs-missing-sheet'] })
+      void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
     },
   })
 }
@@ -225,6 +228,9 @@ export function useSubmitFullSheet() {
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
       void qc.invalidateQueries({ queryKey: ['my-completed-jobs'] })
       void qc.invalidateQueries({ queryKey: ['jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs-missing-sheet'] })
+      void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
       if (vars.jobOrderId) void qc.invalidateQueries({ queryKey: ['job', vars.jobOrderId] })
       if (vars.orgId) void qc.invalidateQueries({ queryKey: ['next-sheet-id', vars.orgId] })
     },

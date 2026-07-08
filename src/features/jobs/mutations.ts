@@ -8,6 +8,7 @@ function invalidateDashboard(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: ['jobs'] })
   void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
   void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
+  void qc.invalidateQueries({ queryKey: ['jobs-missing-sheet'] })
 }
 
 function buildJobPayload(form: JobOrderFormData) {

@@ -13,6 +13,7 @@ interface JobsTableProps {
   totalUnfiltered?: number
   isLoading?: boolean
   onEdit: (job: RecentJobRow) => void
+  onCancel: (job: RecentJobRow) => void
   onDelete: (job: RecentJobRow) => void
   onCreateFirst?: () => void
 }
@@ -56,7 +57,7 @@ function SkeletonRow() {
   )
 }
 
-export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onDelete, onCreateFirst }: JobsTableProps) {
+export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onCancel, onDelete, onCreateFirst }: JobsTableProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const { sortKey, sortDir, handleSort, sorted: sortedJobs } = useSort(jobs, COMPARATORS)
 
@@ -161,6 +162,15 @@ export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onDelete, 
                           >
                             <Icons.edit size={15} />
                           </button>
+                          {job.status !== 'completed' && job.status !== 'cancelled' && (
+                            <button
+                              onClick={() => onCancel(job)}
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                              aria-label={`Cancel ${job.title}`}
+                            >
+                              <Icons.ban size={15} />
+                            </button>
+                          )}
                           <button
                             onClick={() => onDelete(job)}
                             className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-[#FFE4E6] hover:text-danger transition-colors"

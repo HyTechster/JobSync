@@ -6,7 +6,13 @@ import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock'
 import { useAuthStore } from '../../store/authStore'
-import { useDashboardStats, useRecentJobs, useRealtimeDashboard, useJobAnalytics } from '../../features/jobs/hooks'
+import {
+  useDashboardStats,
+  useRecentJobs,
+  useJobsMissingSheet,
+  useRealtimeDashboard,
+  useJobAnalytics,
+} from '../../features/jobs/hooks'
 import { StatusDonut, PriorityBars, WeeklyAreaChart, CompletionRing } from '../../features/jobs/DashboardCharts'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
@@ -38,6 +44,15 @@ function AnalyticsSkeleton() {
         </div>
       ))}
     </div>
+  )
+}
+
+function NoSheetBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
+      <Icons.warning size={10} />
+      No sheet
+    </span>
   )
 }
 
@@ -78,12 +93,14 @@ function RecentJobsTable() {
     <div className="divide-y divide-border">
       {jobs.map((job) => {
         const techs = job.job_assignments ?? []
+        const missingSheet = job.status === 'completed' && (job.job_sheets?.length ?? 0) === 0
         return (
           <Link key={job.id} to={`/admin/jobs?job=${job.id}`} className="block hover:bg-surface-2 transition-colors">
             <div className="flex items-center gap-3 px-4 py-3 md:hidden">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   <StatusBadge status={job.status} /><PriorityBadge priority={job.priority} />
+                  {missingSheet && <NoSheetBadge />}
                 </div>
                 <p className="text-[13.5px] font-semibold text-text-base truncate">{job.title}</p>
                 <p className="text-[11.5px] text-text-muted truncate mt-0.5">{job.customer_name}</p>
@@ -104,6 +121,7 @@ function RecentJobsTable() {
               </div>
               <div className="text-xs text-text-muted w-20 flex-shrink-0">{fmtDate(job.scheduled_date)}</div>
               <StatusBadge status={job.status} />
+              {missingSheet && <NoSheetBadge />}
               <PriorityBadge priority={job.priority} />
               <div className="flex -space-x-1.5 flex-shrink-0">
                 {techs.length === 0 && <span className="text-xs text-text-subtle italic">Unassigned</span>}
@@ -123,6 +141,80 @@ function RecentJobsTable() {
   )
 }
 
+function PendingSheetsList() {
+  const { activeOrgId } = useOrganization()
+  const { fmtDate } = useDateFormatter()
+  const { data: jobs, isLoading, isError } = useJobsMissingSheet(activeOrgId)
+
+  if (isError) return <p className="px-4 py-6 text-sm text-danger">Failed to load pending sheets. Please refresh.</p>
+
+  if (isLoading) {
+    return (
+      <div className="divide-y divide-border">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+            <SkeletonBlock className="h-4 w-28 md:w-36" />
+            <SkeletonBlock className="h-4 flex-1" />
+            <SkeletonBlock className="h-5 w-16 rounded-full" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (!jobs?.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <Icons.check size={28} color="#059669" />
+        <p className="mt-2.5 text-sm font-medium text-text-muted">
+          All caught up — every completed job has a sheet.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {jobs.map((job) => {
+        const techs = job.job_assignments ?? []
+        return (
+          <Link key={job.id} to={`/admin/jobs?job=${job.id}`} className="block hover:bg-surface-2 transition-colors">
+            <div className="flex items-center gap-3 px-4 py-3 md:hidden">
+              <div className="flex-1 min-w-0">
+                <p className="text-[13.5px] font-semibold text-text-base truncate">{job.title}</p>
+                <p className="text-[11.5px] text-text-muted truncate mt-0.5">{job.customer_name}</p>
+              </div>
+              <div className="flex-shrink-0 text-right">
+                <p className="text-[11px] text-text-muted">Completed {fmtDate(job.updated_at)}</p>
+                <Icons.chevronR size={13} color="#CBD5E1" className="mt-1 ml-auto" />
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-4 px-5 py-3.5">
+              <div className="w-52 flex-shrink-0">
+                <div className="text-sm font-semibold text-text-base truncate">{job.title}</div>
+                <div className="text-xs text-text-muted truncate mt-0.5">{job.customer_name}</div>
+              </div>
+              <div className="flex-1 min-w-0 flex items-center -space-x-1.5">
+                {techs.length === 0 && <span className="text-xs text-text-subtle italic">Unassigned</span>}
+                {techs.slice(0, 3).map((a) => (
+                  <div key={a.technician_id} title={a.profiles?.full_name ?? ''}
+                    className="w-6 h-6 rounded-full bg-brand-700 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
+                    {(a.profiles?.full_name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs text-text-muted w-32 flex-shrink-0 text-right">
+                Completed {fmtDate(job.updated_at)}
+              </div>
+              <Icons.chevronR size={15} color="#94A3B8" />
+            </div>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const profile = useAuthStore((s) => s.profile)
   const { activeOrgId } = useOrganization()
@@ -131,13 +223,14 @@ export default function AdminDashboard() {
   const { isLive } = useRealtimeDashboard()
 
   const STAT_CARDS = [
-    { label: 'Total Jobs',         value: stats?.total ?? 0,       icon: <Icons.jobs size={16} />,   accent: '#1E3A5F' },
-    { label: 'Total Job Sheets',   value: stats?.totalSheets ?? 0, icon: <Icons.sheets size={16} />, accent: '#7C3AED' },
-    { label: 'Active Jobs',        value: stats?.active ?? 0,      icon: <Icons.spark size={16} />,  accent: '#2563EB' },
-    { label: 'Completed Jobs',     value: stats?.completed ?? 0,   icon: <Icons.check size={16} />,  accent: '#059669' },
-    { label: 'Active Technicians', value: stats?.technicians ?? 0, icon: <Icons.users size={16} />,  accent: '#D97706' },
-    { label: 'Total Alerts',       value: stats?.totalAlerts ?? 0, icon: <Icons.bell size={16} />,   accent: '#DC2626' },
-    { label: 'Unseen Alerts',      value: stats?.unseenAlerts ?? 0,icon: <Icons.alerts size={16} />, accent: '#EA580C' },
+    { label: 'Total Jobs',         value: stats?.total ?? 0,        icon: <Icons.jobs size={16} />,    accent: '#1E3A5F' },
+    { label: 'Total Job Sheets',   value: stats?.totalSheets ?? 0,  icon: <Icons.sheets size={16} />,  accent: '#7C3AED' },
+    { label: 'Active Jobs',        value: stats?.active ?? 0,       icon: <Icons.spark size={16} />,   accent: '#2563EB' },
+    { label: 'Completed Jobs',     value: stats?.completed ?? 0,    icon: <Icons.check size={16} />,   accent: '#059669' },
+    { label: 'Pending Sheets',     value: stats?.pendingSheets ?? 0, icon: <Icons.warning size={16} />, accent: '#B45309' },
+    { label: 'Active Technicians', value: stats?.technicians ?? 0,  icon: <Icons.users size={16} />,   accent: '#D97706' },
+    { label: 'Total Alerts',       value: stats?.totalAlerts ?? 0,  icon: <Icons.bell size={16} />,    accent: '#DC2626' },
+    { label: 'Unseen Alerts',      value: stats?.unseenAlerts ?? 0, icon: <Icons.alerts size={16} />,  accent: '#EA580C' },
   ]
 
   return (
@@ -165,9 +258,9 @@ export default function AdminDashboard() {
         {statsError ? (
           <p className="text-sm text-danger">Failed to load statistics.</p>
         ) : (
-          <div data-tour="dash-stats" className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3">
+          <div data-tour="dash-stats" className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
             {statsLoading
-              ? Array.from({ length: 7 }).map((_, i) => <StatCardSkeleton key={i} />)
+              ? Array.from({ length: 8 }).map((_, i) => <StatCardSkeleton key={i} />)
               : STAT_CARDS.map((s) => <StatCard key={s.label} {...s} />)}
           </div>
         )}
@@ -288,6 +381,24 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <RecentJobsTable />
+        </div>
+
+        {/* ── Pending job sheets ── */}
+        <div className="bg-white border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3.5 md:px-5 md:py-4 border-b border-border">
+            <div>
+              <h2 className="text-sm font-semibold text-text-base">Pending job sheets</h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Jobs marked completed without a submitted job sheet
+              </p>
+            </div>
+            {!!stats?.pendingSheets && (
+              <span className="text-[11px] font-semibold bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 flex-shrink-0">
+                {stats.pendingSheets}
+              </span>
+            )}
+          </div>
+          <PendingSheetsList />
         </div>
       </div>
     </>

@@ -20,6 +20,7 @@ export interface AdminDashboardStats {
   cancelled: number
   technicians: number
   totalSheets: number
+  pendingSheets: number
   totalAlerts: number
   unseenAlerts: number
 }
@@ -30,7 +31,7 @@ export function useDashboardStats(orgId: string | null) {
     enabled: !!orgId,
     queryFn: async () => {
       const [jobsRes, techsRes, sheetsRes, alertsRes, unseenRes] = await Promise.all([
-        supabase.from('job_orders').select('status').eq('organization_id' as never, orgId!),
+        supabase.from('job_orders').select('status, job_sheets(id)').eq('organization_id' as never, orgId!),
         supabase.from('organization_members' as never)
           .select('id', { count: 'exact', head: true })
           .eq('organization_id' as never, orgId!)
@@ -47,7 +48,7 @@ export function useDashboardStats(orgId: string | null) {
 
       if (jobsRes.error) throw jobsRes.error
 
-      const jobs = jobsRes.data ?? []
+      const jobs = (jobsRes.data ?? []) as { status: JobStatus; job_sheets: { id: string }[] }[]
       return {
         total: jobs.length,
         pending: jobs.filter((j) => j.status === 'pending').length,
@@ -56,6 +57,7 @@ export function useDashboardStats(orgId: string | null) {
         cancelled: jobs.filter((j) => j.status === 'cancelled').length,
         technicians: techsRes.count ?? 0,
         totalSheets: sheetsRes.count ?? 0,
+        pendingSheets: jobs.filter((j) => j.status === 'completed' && j.job_sheets.length === 0).length,
         totalAlerts: alertsRes.count ?? 0,
         unseenAlerts: (unseenRes.data ?? []).length,
       }
@@ -158,7 +160,7 @@ export function useRecentJobs(orgId: string | null) {
       const { data, error } = await supabase
         .from('job_orders')
         .select(
-          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url))'
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
         )
         .eq('organization_id' as never, orgId!)
         .order('created_at', { ascending: false })
@@ -166,6 +168,29 @@ export function useRecentJobs(orgId: string | null) {
 
       if (error) throw error
       return (data ?? []) as RecentJobRow[]
+    },
+  })
+}
+
+/** Completed jobs that don't have a job sheet submitted yet — lets admins spot
+ *  technicians who marked a job complete but never filed the paperwork. */
+export function useJobsMissingSheet(orgId: string | null) {
+  return useQuery<RecentJobRow[]>({
+    queryKey: ['jobs-missing-sheet', orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('job_orders')
+        .select(
+          '*, job_assignments(technician_id, profiles:technician_id(full_name, display_name, avatar_url)), job_sheets(id, sheet_number)'
+        )
+        .eq('organization_id' as never, orgId!)
+        .eq('status', 'completed')
+        .order('updated_at', { ascending: false })
+
+      if (error) throw error
+      const jobs = (data ?? []) as RecentJobRow[]
+      return jobs.filter((j) => (j.job_sheets?.length ?? 0) === 0)
     },
   })
 }
@@ -290,6 +315,7 @@ export function useRealtimeDashboard(): { isLive: boolean } {
       void qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
       void qc.invalidateQueries({ queryKey: ['job-analytics'] })
       void qc.invalidateQueries({ queryKey: ['recent-jobs'] })
+      void qc.invalidateQueries({ queryKey: ['jobs-missing-sheet'] })
       void qc.invalidateQueries({ queryKey: ['jobs'] })
       void qc.invalidateQueries({ queryKey: ['my-jobs'] })
     }

@@ -6,6 +6,7 @@ import { JobsTable } from '../../features/jobs/JobsTable'
 import { TechMultiSelect } from '../../features/jobs/TechMultiSelect'
 import { CreateJobModal } from '../../features/jobs/CreateJobModal'
 import { EditJobModal } from '../../features/jobs/EditJobModal'
+import { CancelJobDialog } from '../../features/jobs/CancelJobDialog'
 import { DeleteJobDialog } from '../../features/jobs/DeleteJobDialog'
 import { useJobs, useOrgTechnicians, type RecentJobRow } from '../../features/jobs/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
@@ -33,6 +34,7 @@ export default function AdminJobs() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [showCreate,   setShowCreate]   = useState(() => searchParams.get('create') === '1')
   const [editJob,      setEditJob]      = useState<RecentJobRow | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<RecentJobRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RecentJobRow | null>(null)
 
   // Clean the ?create=1 param from the URL after it has been consumed above
@@ -207,6 +209,7 @@ export default function AdminJobs() {
               totalUnfiltered={allJobs.length}
               isLoading={isLoading}
               onEdit={setEditJob}
+              onCancel={setCancelTarget}
               onDelete={setDeleteTarget}
               onCreateFirst={() => setShowCreate(true)}
             />
@@ -216,6 +219,11 @@ export default function AdminJobs() {
 
       <CreateJobModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
       <EditJobModal job={editJob} onClose={() => setEditJob(null)} />
+      <CancelJobDialog
+        jobId={cancelTarget?.id ?? null}
+        jobTitle={cancelTarget?.title ?? ''}
+        onClose={() => setCancelTarget(null)}
+      />
       <DeleteJobDialog
         jobId={deleteTarget?.id ?? null}
         jobTitle={deleteTarget?.title ?? ''}
