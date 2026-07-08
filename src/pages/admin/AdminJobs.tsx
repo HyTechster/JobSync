@@ -46,6 +46,15 @@ export default function AdminJobs() {
   const { data: allJobs = [], isLoading, isError, error } = useJobs(activeOrgId)
   const { data: orgTechs = [] } = useOrgTechnicians(activeOrgId)
 
+  // Auto-open a job's detail/edit modal when linked to via ?job=<id> (e.g. from the dashboard)
+  useEffect(() => {
+    const jobId = searchParams.get('job')
+    if (!jobId || allJobs.length === 0) return
+    const target = allJobs.find((j) => j.id === jobId)
+    if (target) setEditJob(target)
+    setSearchParams({}, { replace: true })
+  }, [searchParams, setSearchParams, allJobs])
+
   const filteredJobs = useMemo(() => {
     let result = allJobs
 

@@ -79,7 +79,7 @@ function RecentJobsTable() {
       {jobs.map((job) => {
         const techs = job.job_assignments ?? []
         return (
-          <div key={job.id} className="hover:bg-surface-2 transition-colors">
+          <Link key={job.id} to={`/admin/jobs?job=${job.id}`} className="block hover:bg-surface-2 transition-colors">
             <div className="flex items-center gap-3 px-4 py-3 md:hidden">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
@@ -116,7 +116,7 @@ function RecentJobsTable() {
               </div>
               <Icons.chevronR size={15} color="#94A3B8" />
             </div>
-          </div>
+          </Link>
         )
       })}
     </div>
