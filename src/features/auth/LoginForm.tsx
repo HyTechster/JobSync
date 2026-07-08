@@ -31,15 +31,15 @@ export function LoginForm() {
   return (
     <div className="flex items-center justify-center bg-white min-h-screen md:min-h-0 p-8 md:p-12">
       <div className="w-full max-w-sm">
-        {/* Mobile logo */}
-        <div className="flex items-center gap-2 mb-8 md:hidden">
+        {/* Mobile logo — back to homepage */}
+        <Link to="/" className="flex items-center gap-2 mb-8 md:hidden w-fit">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect x="2" y="2" width="28" height="28" rx="8" fill="#1E3A5F" />
             <path d="M10 11.5h12M10 16h8M10 20.5h12" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
             <circle cx="22" cy="20.5" r="1.6" fill="#fff" />
           </svg>
           <span className="text-lg font-bold text-text-base tracking-tight">JobSync</span>
-        </div>
+        </Link>
 
         <h2 className="text-2xl font-bold text-text-base tracking-tight">Welcome back</h2>
         <p className="text-sm text-text-muted mt-1.5 mb-7">Sign in to continue to your workspace</p>

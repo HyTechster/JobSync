@@ -66,6 +66,8 @@ export const Icons = {
   sync:        make(<><path d="M21 12a9 9 0 01-15 6.7L3 16"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></>),
   warning:     make(<><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4M12 17.5v.5"/></>),
   ban:         make(<><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></>),
+  building:    make(<><rect x="4" y="3" width="10" height="18" rx="1"/><path d="M14 8h6v13h-6"/><path d="M7 7h.01M11 7h.01M7 11h.01M11 11h.01M7 15h.01M11 15h.01"/></>),
+  shield:      make(<path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/>),
   spark:       make(<><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"/></>),
   wifiOff:     make(<><path d="M2 2l20 20"/><path d="M8.5 16a5 5 0 017 0"/><path d="M5 12.5a10 10 0 0110.5-2.3"/><circle cx="12" cy="19.5" r="1"/></>),
   pin:         make(<><path d="M12 22s7-7 7-12a7 7 0 10-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></>),

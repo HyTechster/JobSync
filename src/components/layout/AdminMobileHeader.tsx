@@ -215,7 +215,7 @@ export function AdminMobileHeader() {
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-base hover:bg-surface-2 transition-colors text-left"
             >
               <Icons.pin size={15} color="#64748B" />
-              Take a tour
+              App Walkthrough
             </button>
             <div className="h-px bg-border mx-3 my-1" />
             <button

@@ -25,7 +25,8 @@ import TechnicianAlertsPage  from '../pages/technician/TechnicianAlertsPage'
 import TechnicianProfilePage from '../pages/technician/TechnicianProfilePage'
 
 // Auth + dashboard pages — lazy, each has its own Suspense (no shell)
-const LoginPage              = lazy(() => import('../pages/LoginPage'))
+const HomePage                = lazy(() => import('../pages/home/HomePage'))
+const LoginPage               = lazy(() => import('../pages/LoginPage'))
 const SignUpPage             = lazy(() => import('../pages/SignUpPage'))
 const AuthCallbackPage       = lazy(() => import('../pages/AuthCallbackPage'))
 const WelcomePage            = lazy(() => import('../pages/dashboard/WelcomePage'))
@@ -59,7 +60,7 @@ export const router = createBrowserRouter([
     children: [
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <Suspense fallback={<PageLoader />}><HomePage /></Suspense>,
   },
   {
     path: '/login',

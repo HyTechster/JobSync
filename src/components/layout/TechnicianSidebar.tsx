@@ -176,7 +176,7 @@ export function TechnicianSidebar() {
             className="mb-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-xs font-semibold text-text-muted hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
           >
             <Icons.pin size={13} color="currentColor" />
-            Take a tour
+            App Walkthrough
           </button>
         )}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">

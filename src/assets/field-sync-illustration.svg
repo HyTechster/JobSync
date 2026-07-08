@@ -1,0 +1,97 @@
+<svg width="520" height="340" viewBox="0 0 520 340" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Field technician updating a job sheet on their phone, syncing to the office dashboard">
+
+  <!-- Background rings -->
+  <circle cx="150" cy="170" r="150" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1"></circle>
+  <circle cx="400" cy="140" r="120" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1"></circle>
+  <circle cx="270" cy="180" r="200" stroke="#FFFFFF" stroke-opacity="0.045" stroke-width="1"></circle>
+
+  <!-- Scattered geometric accents -->
+  <rect x="60" y="55" width="10" height="10" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1" transform="rotate(45 65 60)"></rect>
+  <polygon points="470,235 478,250 462,250" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="1" fill="none"></polygon>
+  <polygon points="40,255 48,259.6 48,268.8 40,273.4 32,268.8 32,259.6" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1" fill="none"></polygon>
+
+  <!-- Floating dots -->
+  <circle cx="30" cy="120" r="1.5" fill="#FFFFFF" fill-opacity="0.22"></circle>
+  <circle cx="255" cy="40" r="1.5" fill="#FFFFFF" fill-opacity="0.22"></circle>
+  <circle cx="490" cy="90" r="1.5" fill="#FFFFFF" fill-opacity="0.22"></circle>
+  <circle cx="475" cy="300" r="1.5" fill="#FFFFFF" fill-opacity="0.22"></circle>
+  <circle cx="95" cy="310" r="1.5" fill="#FFFFFF" fill-opacity="0.22"></circle>
+
+  <!-- ── Field technician (geometric figure) ───────────────────────────── -->
+
+  <!-- hard hat -->
+  <path d="M133 93 A17 21 0 0 1 167 93" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></path>
+  <line x1="128" y1="93" x2="172" y2="93" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5" stroke-linecap="round"></line>
+
+  <!-- head -->
+  <circle cx="150" cy="106" r="15" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="1.5"></circle>
+
+  <!-- torso (hi-vis vest) -->
+  <rect x="132" y="124" width="36" height="58" rx="11" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></rect>
+  <line x1="135" y1="127" x2="163" y2="153" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></line>
+  <rect x="140" y="148" width="13" height="10" rx="2" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></rect>
+
+  <!-- right arm, bent up toward phone -->
+  <path d="M167 134 L189 123 L204 99" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5" stroke-linecap="round" fill="none"></path>
+
+  <!-- left arm, resting -->
+  <path d="M133 134 L121 152 L118 174" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5" stroke-linecap="round" fill="none"></path>
+
+  <!-- legs -->
+  <rect x="135" y="182" width="13" height="92" rx="5" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></rect>
+  <rect x="155" y="182" width="13" height="92" rx="5" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></rect>
+  <rect x="126" y="273" width="25" height="10" rx="4" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></rect>
+  <rect x="151" y="273" width="25" height="10" rx="4" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></rect>
+
+  <!-- toolbox by feet -->
+  <rect x="88" y="252" width="30" height="20" rx="3" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"></rect>
+  <path d="M96 252 v-8 a1 1 0 0 1 1 -1 h14 a1 1 0 0 1 1 1 v8" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5" fill="none"></path>
+
+  <!-- phone with job sheet -->
+  <rect x="195" y="79" width="21" height="35" rx="3.5" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.5" fill="#0F1F33"></rect>
+  <line x1="199" y1="88" x2="212" y2="88" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="1.4"></line>
+  <line x1="199" y1="94" x2="212" y2="94" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="1.4"></line>
+  <line x1="199" y1="100" x2="208" y2="100" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="1.4"></line>
+  <circle cx="205.5" cy="107" r="3.5" fill="#A0BDE4" fill-opacity="0.9"></circle>
+
+  <!-- signal waves from phone -->
+  <path d="M219 90 A15 15 0 0 1 233 75" stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="1.3" fill="none"></path>
+  <path d="M219 97 A24 24 0 0 1 243 72" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1.3" fill="none"></path>
+  <path d="M219 104 A33 33 0 0 1 252 70" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1.3" fill="none"></path>
+
+  <!-- ── Office ─────────────────────────────────────────────────────────── -->
+
+  <!-- faint building silhouette -->
+  <rect x="300" y="42" width="150" height="165" rx="6" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="314" y="56" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="337" y="56" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="360" y="56" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="422" y="56" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="314" y="200" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+  <rect x="422" y="200" width="14" height="14" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"></rect>
+
+  <!-- monitor / dashboard -->
+  <rect x="330" y="90" width="140" height="96" rx="8" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="1.5"></rect>
+  <line x1="400" y1="186" x2="400" y2="201" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="1.5"></line>
+  <line x1="379" y1="202" x2="421" y2="202" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="1.5" stroke-linecap="round"></line>
+
+  <rect x="343" y="102" width="55" height="25" rx="4" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></rect>
+  <rect x="405" y="102" width="51" height="25" rx="4" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></rect>
+  <line x1="343" y1="141" x2="456" y2="141" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></line>
+  <line x1="343" y1="154" x2="456" y2="154" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></line>
+  <line x1="343" y1="167" x2="428" y2="167" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.5"></line>
+  <circle cx="459" cy="99" r="4" fill="#6F99D4" fill-opacity="0.9"></circle>
+
+  <!-- desk plant -->
+  <path d="M303 205 l4 -16 h10 l4 16 z" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.4" fill="none"></path>
+  <path d="M312 189 q-3 -10 -10 -12" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.3" fill="none"></path>
+  <path d="M312 189 q1 -12 9 -15" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.3" fill="none"></path>
+  <path d="M312 189 q6 -8 4 -16" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="1.3" fill="none"></path>
+
+  <!-- sync path linking phone to dashboard -->
+  <path d="M226 96 C 262 62, 300 128, 337 118" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="6 4" fill="none"></path>
+  <circle cx="257" cy="80" r="3" fill="#FFFFFF" fill-opacity="0.4"></circle>
+  <circle cx="291" cy="102" r="3" fill="#FFFFFF" fill-opacity="0.4"></circle>
+  <circle cx="322" cy="113" r="3" fill="#FFFFFF" fill-opacity="0.4"></circle>
+
+</svg>

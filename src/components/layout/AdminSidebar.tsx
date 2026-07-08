@@ -195,7 +195,7 @@ export function AdminSidebar() {
             className="mb-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-xs font-semibold text-text-muted hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 transition-colors"
           >
             <Icons.pin size={13} color="currentColor" />
-            Take a tour
+            App Walkthrough
           </button>
         )}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">

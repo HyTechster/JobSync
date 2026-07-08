@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import loginIllustration from '../../assets/login-illustration.svg'
 import dotPattern from '../../assets/dot-pattern.svg'
 
@@ -28,11 +29,11 @@ export function LoginBrandPanel() {
       <div className="absolute -left-16 -bottom-28 w-80 h-80 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%)' }} />
 
-      {/* Logo */}
-      <div className="relative flex items-center gap-3">
+      {/* Logo — back to homepage */}
+      <Link to="/" className="relative flex items-center gap-3 w-fit hover:opacity-90 transition-opacity">
         <img src="/icons/jobsync-icon.svg" alt="JobSync logo" width={36} height={36} className="rounded-lg" />
         <span className="text-xl font-bold tracking-tight">JobSync</span>
-      </div>
+      </Link>
 
       {/* Illustration */}
       <div className="relative flex flex-1 items-center justify-center py-6">
