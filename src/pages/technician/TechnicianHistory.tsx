@@ -10,8 +10,25 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+import { SortSelect } from '../../components/ui/SortSelect'
+import { useSort } from '../../hooks/useSort'
 import type { RecentJobRow } from '../../features/jobs/hooks'
 import type { FullSheetFormData } from '../../features/job-sheets/fullSheetSchema'
+
+type SortKey = 'completed' | 'scheduled' | 'title'
+
+const COMPARATORS: Record<SortKey, (a: RecentJobRow, b: RecentJobRow) => number> = {
+  completed: (a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? ''),
+  scheduled: (a, b) => (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? ''),
+  title:     (a, b) => a.title.localeCompare(b.title),
+}
+
+const SORT_OPTIONS = [
+  { key: 'completed' as SortKey, dir: 'desc' as const, label: 'Completed (newest)' },
+  { key: 'completed' as SortKey, dir: 'asc'  as const, label: 'Completed (oldest)' },
+  { key: 'scheduled' as SortKey, dir: 'desc' as const, label: 'Scheduled (newest)' },
+  { key: 'title'     as SortKey, dir: 'asc'  as const, label: 'Job (A–Z)' },
+]
 
 const SYNC_ICON: Record<OfflineJobSheet['syncStatus'], React.ReactNode> = {
   pending: <Icons.clock   size={14} color="#D97706" />,
@@ -145,6 +162,7 @@ export default function TechnicianHistory() {
   const qc = useQueryClient()
   const { activeOrgId } = useOrganization()
   const { data: completedJobs = [], isLoading, isError } = useMyCompletedJobs(activeOrgId)
+  const { sortKey, sortDir, setSort, sorted: sortedCompleted } = useSort<RecentJobRow, SortKey>(completedJobs, COMPARATORS, 'completed', 'desc')
   const [pendingSimple, setPendingSimple]   = useState<OfflineJobSheet[]>([])
   const [pendingFull, setPendingFull]       = useState<PendingFullSheet[]>([])
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
@@ -201,9 +219,14 @@ export default function TechnicianHistory() {
 
       {/* Completed jobs */}
       <section>
-        <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
-          Completed · {isLoading ? '…' : completedJobs.length}
-        </p>
+        <div className="flex items-center justify-between mb-2 px-0.5">
+          <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide">
+            Completed · {isLoading ? '…' : completedJobs.length}
+          </p>
+          {!isLoading && sortedCompleted.length > 0 && (
+            <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+          )}
+        </div>
 
         {isError && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-3">
@@ -224,7 +247,7 @@ export default function TechnicianHistory() {
               </div>
             ))}
           </div>
-        ) : completedJobs.length === 0 ? (
+        ) : sortedCompleted.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 px-4 py-10 text-center">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
               <Icons.check size={24} color="#059669" />
@@ -236,7 +259,7 @@ export default function TechnicianHistory() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {completedJobs.map((j) => (
+            {sortedCompleted.map((j) => (
               <CompletedJobCard key={j.id} job={j} onViewSheet={setSelectedSheetId} />
             ))}
           </div>

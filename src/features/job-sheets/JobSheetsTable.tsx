@@ -1,7 +1,10 @@
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { SortableTh } from '../../components/ui/SortIndicator'
+import { SortSelect } from '../../components/ui/SortSelect'
 import { formatDuration } from '../../utils/formatters'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
+import { useSort } from '../../hooks/useSort'
 import type { JobSheetWithDetail } from './hooks'
 
 interface JobSheetsTableProps {
@@ -9,6 +12,30 @@ interface JobSheetsTableProps {
   isLoading: boolean
   onView: (sheet: JobSheetWithDetail) => void
 }
+
+type SortKey = 'sheetNumber' | 'title' | 'technician' | 'submitted' | 'duration' | 'photos'
+
+function techName(s: JobSheetWithDetail): string {
+  return s.profiles ? (s.profiles.display_name ?? s.profiles.full_name) : ''
+}
+
+const COMPARATORS: Record<SortKey, (a: JobSheetWithDetail, b: JobSheetWithDetail) => number> = {
+  sheetNumber: (a, b) => (a.sheet_number ?? 0) - (b.sheet_number ?? 0),
+  title:       (a, b) => (a.job_title ?? a.job_orders?.title ?? '').localeCompare(b.job_title ?? b.job_orders?.title ?? ''),
+  technician:  (a, b) => techName(a).localeCompare(techName(b)),
+  submitted:   (a, b) => a.submitted_at.localeCompare(b.submitted_at),
+  duration:    (a, b) => a.time_spent_minutes - b.time_spent_minutes,
+  photos:      (a, b) => a.attachments.length - b.attachments.length,
+}
+
+const SORT_OPTIONS = [
+  { key: 'submitted'   as SortKey, dir: 'desc' as const, label: 'Submitted (newest)' },
+  { key: 'submitted'   as SortKey, dir: 'asc'  as const, label: 'Submitted (oldest)' },
+  { key: 'sheetNumber' as SortKey, dir: 'desc' as const, label: 'Sheet # (highest)' },
+  { key: 'title'       as SortKey, dir: 'asc'  as const, label: 'Job (A–Z)' },
+  { key: 'technician'  as SortKey, dir: 'asc'  as const, label: 'Technician (A–Z)' },
+  { key: 'duration'    as SortKey, dir: 'desc' as const, label: 'Duration (longest)' },
+]
 
 // ─── Mobile card skeleton ───────────────────────────────────────────────────
 
@@ -115,19 +142,34 @@ function SkeletonRow() {
   )
 }
 
-const HEADERS = ['Sheet #', 'Job / Title', 'Technician', 'Submitted', 'Duration', 'Photos', '']
+const HEADERS: { label: string; sortKey?: SortKey }[] = [
+  { label: 'Sheet #',     sortKey: 'sheetNumber' },
+  { label: 'Job / Title', sortKey: 'title' },
+  { label: 'Technician',  sortKey: 'technician' },
+  { label: 'Submitted',   sortKey: 'submitted' },
+  { label: 'Duration',    sortKey: 'duration' },
+  { label: 'Photos',      sortKey: 'photos' },
+  { label: '' },
+]
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProps) {
   const { fmtDateTime } = useDateFormatter()
+  const { sortKey, sortDir, handleSort, setSort, sorted } = useSort<JobSheetWithDetail, SortKey>(sheets, COMPARATORS, 'submitted', 'desc')
+
   return (
     <>
       {/* Mobile card list (hidden on md+) */}
       <div className="flex flex-col gap-2.5 md:hidden">
+        {!isLoading && sorted.length > 0 && (
+          <div className="flex justify-end mb-0.5">
+            <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+          </div>
+        )}
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <MobileSkeletonCard key={i} />)
-          : sheets.map((sheet) => (
+          : sorted.map((sheet) => (
               <MobileCard key={sheet.id} sheet={sheet} onView={() => onView(sheet)} />
             ))}
       </div>
@@ -139,20 +181,22 @@ export function JobSheetsTable({ sheets, isLoading, onView }: JobSheetsTableProp
           <table className="w-full text-left">
             <thead>
               <tr className="bg-surface-2 border-b border-slate-200">
-                {HEADERS.map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-[11.5px] font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
+                {HEADERS.map(({ label, sortKey: sk }) => (
+                  <SortableTh
+                    key={label || 'actions'}
+                    label={label}
+                    sortable={!!sk}
+                    active={sortKey === sk}
+                    dir={sortKey === sk ? sortDir : 'asc'}
+                    onClick={sk ? () => handleSort(sk) : undefined}
+                  />
                 ))}
               </tr>
             </thead>
             <tbody>
               {isLoading
                 ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                : sheets.map((sheet) => {
+                : sorted.map((sheet) => {
                     const title      = sheet.job_title ?? sheet.job_orders?.title ?? 'Untitled Sheet'
                     const subtitle   = sheet.job_orders?.customer_name ?? null
                     const isStandalone = !sheet.job_order_id

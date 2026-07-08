@@ -6,7 +6,26 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { offlineDb, type DraftJobSheet } from '../../offline/db'
 import { formatDuration } from '../../utils/formatters'
 import { Icons } from '../../components/ui/Icons'
+import { SortSelect } from '../../components/ui/SortSelect'
+import { useSort } from '../../hooks/useSort'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
+
+type SortKey = 'submitted' | 'sheetNumber' | 'title' | 'duration'
+
+const COMPARATORS: Record<SortKey, (a: JobSheetWithDetail, b: JobSheetWithDetail) => number> = {
+  submitted:   (a, b) => a.submitted_at.localeCompare(b.submitted_at),
+  sheetNumber: (a, b) => (a.sheet_number ?? 0) - (b.sheet_number ?? 0),
+  title:       (a, b) => (a.job_title ?? a.job_orders?.title ?? '').localeCompare(b.job_title ?? b.job_orders?.title ?? ''),
+  duration:    (a, b) => a.time_spent_minutes - b.time_spent_minutes,
+}
+
+const SORT_OPTIONS = [
+  { key: 'submitted'   as SortKey, dir: 'desc' as const, label: 'Submitted (newest)' },
+  { key: 'submitted'   as SortKey, dir: 'asc'  as const, label: 'Submitted (oldest)' },
+  { key: 'sheetNumber' as SortKey, dir: 'desc' as const, label: 'Sheet # (highest)' },
+  { key: 'title'       as SortKey, dir: 'asc'  as const, label: 'Job (A–Z)' },
+  { key: 'duration'    as SortKey, dir: 'desc' as const, label: 'Duration (longest)' },
+]
 
 function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
   const { data: sheet, isLoading } = useJobSheet(sheetId)
@@ -106,6 +125,7 @@ export default function TechnicianJobSheets() {
   const navigate = useNavigate()
   const { activeOrgId } = useOrganization()
   const { data: sheets = [], isLoading, isError } = useMyJobSheets(activeOrgId)
+  const { sortKey, sortDir, setSort, sorted: sortedSheets } = useSort<JobSheetWithDetail, SortKey>(sheets, COMPARATORS, 'submitted', 'desc')
   const { data: nextSheetId } = useNextSheetId(activeOrgId)
   const [drafts, setDrafts] = useState<DraftJobSheet[]>([])
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
@@ -178,9 +198,14 @@ export default function TechnicianJobSheets() {
 
       {/* Submitted sheets */}
       <section>
-        <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
-          Submitted · {isLoading ? '…' : sheets.length}
-        </p>
+        <div className="flex items-center justify-between mb-2 px-0.5">
+          <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide">
+            Submitted · {isLoading ? '…' : sheets.length}
+          </p>
+          {!isLoading && sortedSheets.length > 0 && (
+            <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+          )}
+        </div>
 
         {isError && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-3">
@@ -202,7 +227,7 @@ export default function TechnicianJobSheets() {
               </div>
             ))}
           </div>
-        ) : sheets.length === 0 ? (
+        ) : sortedSheets.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 px-4 py-10 text-center">
             <Icons.sheets size={28} color="#94A3B8" className="mx-auto mb-3" />
             <p className="text-[13.5px] font-medium text-text-base mb-1">No sheets submitted yet</p>
@@ -219,7 +244,7 @@ export default function TechnicianJobSheets() {
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {sheets.map((s) => <SheetCard key={s.id} sheet={s} onView={setSelectedSheetId} />)}
+            {sortedSheets.map((s) => <SheetCard key={s.id} sheet={s} onView={setSelectedSheetId} />)}
           </div>
         )}
       </section>

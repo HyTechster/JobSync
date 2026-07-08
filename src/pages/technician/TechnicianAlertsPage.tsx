@@ -4,7 +4,24 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { useMarkAlertRead } from '../../features/alerts/mutations'
 import { AlertBottomSheet } from '../../features/alerts/AlertBottomSheet'
 import { Icons } from '../../components/ui/Icons'
+import { SortSelect } from '../../components/ui/SortSelect'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
+import { useSort } from '../../hooks/useSort'
+
+type SortKey = 'date' | 'unread' | 'title'
+
+const COMPARATORS: Record<SortKey, (a: MyAlertRow, b: MyAlertRow) => number> = {
+  date:   (a, b) => a.created_at.localeCompare(b.created_at),
+  unread: (a, b) => Number(!a.read_at) - Number(!b.read_at),
+  title:  (a, b) => (a.alerts?.title ?? '').localeCompare(b.alerts?.title ?? ''),
+}
+
+const SORT_OPTIONS = [
+  { key: 'date'   as SortKey, dir: 'desc' as const, label: 'Newest first' },
+  { key: 'date'   as SortKey, dir: 'asc'  as const, label: 'Oldest first' },
+  { key: 'unread' as SortKey, dir: 'desc' as const, label: 'Unread first' },
+  { key: 'title'  as SortKey, dir: 'asc'  as const, label: 'Title (A–Z)' },
+]
 
 function AlertItem({ alert, onOpen }: { alert: MyAlertRow; onOpen: () => void }) {
   const { fmtDate } = useDateFormatter()
@@ -50,6 +67,7 @@ export default function TechnicianAlertsPage() {
   const { data: alerts = [], isLoading, isError } = useMyAlerts(activeOrgId)
   const { mutate: markRead } = useMarkAlertRead()
   const [selected, setSelected] = useState<MyAlertRow | null>(null)
+  const { sortKey, sortDir, setSort, sorted } = useSort<MyAlertRow, SortKey>(alerts, COMPARATORS, 'date', 'desc')
 
   function handleOpen(alert: MyAlertRow) {
     if (!alert.read_at) markRead(alert.id)
@@ -66,11 +84,17 @@ export default function TechnicianAlertsPage() {
         </div>
       )}
 
+      {!isLoading && sorted.length > 0 && (
+        <div className="flex justify-end mb-3">
+          <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex flex-col gap-2.5">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonItem key={i} />)}
         </div>
-      ) : alerts.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 px-4 py-12 text-center">
           <div className="w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto mb-3">
             <Icons.bell size={24} color="var(--color-text-muted)" />
@@ -80,7 +104,7 @@ export default function TechnicianAlertsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {alerts.map((alert) => (
+          {sorted.map((alert) => (
             <AlertItem key={alert.id} alert={alert} onOpen={() => handleOpen(alert)} />
           ))}
         </div>

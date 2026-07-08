@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { SortableTh } from '../../components/ui/SortIndicator'
+import { SortSelect } from '../../components/ui/SortSelect'
 import { useAuthStore } from '../../store/authStore'
+import { useSort } from '../../hooks/useSort'
 import { useToggleUserActive, useRemoveOrgMember } from './mutations'
 import type { UserWithAlertCount } from './hooks'
 
@@ -17,7 +20,31 @@ interface UsersTableProps {
 type PendingToggle = { user: UserWithAlertCount }
 type PendingRemove = { user: UserWithAlertCount }
 
-const HEADERS = ['User', 'Role', 'Phone', 'Status', 'Alerts', '']
+type SortKey = 'name' | 'role' | 'phone' | 'status' | 'alerts'
+
+const COMPARATORS: Record<SortKey, (a: UserWithAlertCount, b: UserWithAlertCount) => number> = {
+  name:   (a, b) => (a.display_name ?? a.full_name).localeCompare(b.display_name ?? b.full_name),
+  role:   (a, b) => a.role.localeCompare(b.role),
+  phone:  (a, b) => (a.phone ?? '').localeCompare(b.phone ?? ''),
+  status: (a, b) => Number(b.is_active) - Number(a.is_active),
+  alerts: (a, b) => a.unread_alerts - b.unread_alerts,
+}
+
+const SORT_OPTIONS = [
+  { key: 'name'   as SortKey, dir: 'asc'  as const, label: 'Name (A–Z)' },
+  { key: 'role'   as SortKey, dir: 'asc'  as const, label: 'Role (A–Z)' },
+  { key: 'status' as SortKey, dir: 'asc'  as const, label: 'Status (active first)' },
+  { key: 'alerts' as SortKey, dir: 'desc' as const, label: 'Unread alerts (most)' },
+]
+
+const HEADERS: { label: string; sortKey?: SortKey }[] = [
+  { label: 'User',   sortKey: 'name' },
+  { label: 'Role',   sortKey: 'role' },
+  { label: 'Phone',  sortKey: 'phone' },
+  { label: 'Status', sortKey: 'status' },
+  { label: 'Alerts', sortKey: 'alerts' },
+  { label: '' },
+]
 
 const ROLE_STYLE: Record<string, string> = {
   owner:      'bg-amber-100 text-amber-700',
@@ -80,6 +107,7 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
 
   const [pendingToggle, setPendingToggle] = useState<PendingToggle | null>(null)
   const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null)
+  const { sortKey, sortDir, handleSort, setSort, sorted: sortedUsers } = useSort(users, COMPARATORS)
 
   function handleConfirmToggle() {
     if (!pendingToggle) return
@@ -101,17 +129,22 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
   return (
     <>
       {/* ── Mobile card list ─────────────────────────────────────────── */}
+      {!isLoading && sortedUsers.length > 0 && (
+        <div className="md:hidden flex justify-end px-4 pt-3">
+          <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+        </div>
+      )}
       <div className="md:hidden flex flex-col divide-y divide-slate-100">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <MobileSkeletonCard key={i} />)
-          : users.length === 0
+          : sortedUsers.length === 0
           ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
               <Icons.users size={36} color="#94A3B8" />
               <p className="text-sm font-medium text-text-muted">No users found</p>
             </div>
           )
-          : users.map((user) => {
+          : sortedUsers.map((user) => {
               const isSelf       = user.id === currentUserId
               const canRemove    = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)
               const canEdit      = isCurrentUserOwner || (!user.is_owner && user.role !== 'admin')
@@ -222,21 +255,23 @@ export function UsersTable({ users, isLoading, isCurrentUserOwner = false, isMan
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr className="bg-surface-2 text-text-muted">
-              {HEADERS.map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-3 text-left text-[11px] font-semibold tracking-wide uppercase border-b border-slate-200 whitespace-nowrap"
-                >
-                  {h}
-                </th>
+              {HEADERS.map(({ label, sortKey: sk }) => (
+                <SortableTh
+                  key={label || 'actions'}
+                  label={label}
+                  sortable={!!sk}
+                  active={sortKey === sk}
+                  dir={sortKey === sk ? sortDir : 'asc'}
+                  onClick={sk ? () => handleSort(sk) : undefined}
+                />
               ))}
             </tr>
           </thead>
           <tbody>
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-              : users.map((user, i) => {
-                  const isLast      = i === users.length - 1
+              : sortedUsers.map((user, i) => {
+                  const isLast      = i === sortedUsers.length - 1
                   const border      = isLast ? '' : 'border-b border-slate-100'
                   const isSelf      = user.id === currentUserId
                   const canRemove    = !isSelf && (isCurrentUserOwner ? true : !user.is_owner)

@@ -6,7 +6,24 @@ import { AlertCard } from '../../features/alerts/AlertCard'
 import { CreateAlertModal } from '../../features/alerts/CreateAlertModal'
 import { AlertDetailModal } from '../../features/alerts/AlertDetailModal'
 import { Icons } from '../../components/ui/Icons'
+import { SortSelect } from '../../components/ui/SortSelect'
+import { useSort } from '../../hooks/useSort'
 import type { AlertWithDetail } from '../../features/alerts/hooks'
+
+type SortKey = 'date' | 'title' | 'recipients'
+
+const COMPARATORS: Record<SortKey, (a: AlertWithDetail, b: AlertWithDetail) => number> = {
+  date:       (a, b) => a.created_at.localeCompare(b.created_at),
+  title:      (a, b) => a.title.localeCompare(b.title),
+  recipients: (a, b) => a.alert_recipients.length - b.alert_recipients.length,
+}
+
+const SORT_OPTIONS = [
+  { key: 'date'       as SortKey, dir: 'desc' as const, label: 'Newest first' },
+  { key: 'date'       as SortKey, dir: 'asc'  as const, label: 'Oldest first' },
+  { key: 'title'      as SortKey, dir: 'asc'  as const, label: 'Title (A–Z)' },
+  { key: 'recipients' as SortKey, dir: 'desc' as const, label: 'Recipients (most)' },
+]
 
 function SkeletonCard() {
   return (
@@ -39,6 +56,7 @@ export default function AdminAlerts() {
   const [showCreate, setShowCreate] = useState(false)
   const [viewAlert, setViewAlert] = useState<AlertWithDetail | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AlertWithDetail | null>(null)
+  const { sortKey, sortDir, setSort, sorted } = useSort<AlertWithDetail, SortKey>(alerts, COMPARATORS, 'date', 'desc')
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return
@@ -96,11 +114,17 @@ export default function AdminAlerts() {
         </div>
       )}
 
+      {!isLoading && sorted.length > 0 && (
+        <div className="flex justify-end mb-3">
+          <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
-      ) : alerts.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mb-4">
             <Icons.bell size={26} color="var(--color-brand-700)" />
@@ -119,7 +143,7 @@ export default function AdminAlerts() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {alerts.map((alert) => (
+          {sorted.map((alert) => (
             <AlertCard
               key={alert.id}
               alert={alert}

@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
+import { SortableTh } from '../../components/ui/SortIndicator'
+import { useSort } from '../../hooks/useSort'
 import type { RecentJobRow } from './hooks'
 
 interface JobsTableProps {
@@ -16,7 +18,6 @@ interface JobsTableProps {
 }
 
 type SortKey = 'title' | 'customer' | 'priority' | 'schedule'
-type SortDir = 'asc' | 'desc'
 
 interface TooltipState {
   x: number
@@ -25,6 +26,13 @@ interface TooltipState {
 }
 
 const PRIORITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, urgent: 3 }
+
+const COMPARATORS: Record<SortKey, (a: RecentJobRow, b: RecentJobRow) => number> = {
+  title:    (a, b) => a.title.localeCompare(b.title),
+  customer: (a, b) => a.customer_name.localeCompare(b.customer_name),
+  priority: (a, b) => (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0),
+  schedule: (a, b) => (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? ''),
+}
 
 const COLS: { label: string; sortKey?: SortKey }[] = [
   { label: 'Job',          sortKey: 'title' },
@@ -35,19 +43,6 @@ const COLS: { label: string; sortKey?: SortKey }[] = [
   { label: 'Status' },
   { label: '' },
 ]
-
-function SortIndicator({ active, dir }: { active: boolean; dir: SortDir }) {
-  return (
-    <span className="ml-1 inline-flex flex-col gap-[2px] align-middle">
-      <svg width="6" height="4" viewBox="0 0 6 4" fill={active && dir === 'asc' ? 'var(--color-brand-700)' : '#CBD5E1'}>
-        <path d="M3 0L6 4H0Z" />
-      </svg>
-      <svg width="6" height="4" viewBox="0 0 6 4" fill={active && dir === 'desc' ? 'var(--color-brand-700)' : '#CBD5E1'}>
-        <path d="M3 4L0 0H6Z" />
-      </svg>
-    </span>
-  )
-}
 
 function SkeletonRow() {
   return (
@@ -62,40 +57,13 @@ function SkeletonRow() {
 }
 
 export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onDelete, onCreateFirst }: JobsTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [tooltip,  setTooltip]  = useState<TooltipState | null>(null)
-
-  function handleSort(key: SortKey) {
-    if (sortKey === key) {
-      if (sortDir === 'asc') {
-        setSortDir('desc')
-      } else {
-        setSortKey(null)
-        setSortDir('asc')
-      }
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
-  }
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const { sortKey, sortDir, handleSort, sorted: sortedJobs } = useSort(jobs, COMPARATORS)
 
   function showTooltip(e: React.MouseEvent, assignees: RecentJobRow['job_assignments']) {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     setTooltip({ x: rect.left, y: rect.bottom + 8, assignees })
   }
-
-  const sortedJobs = useMemo(() => {
-    if (!sortKey) return jobs
-    return [...jobs].sort((a, b) => {
-      let cmp = 0
-      if (sortKey === 'title')    cmp = a.title.localeCompare(b.title)
-      if (sortKey === 'customer') cmp = a.customer_name.localeCompare(b.customer_name)
-      if (sortKey === 'priority') cmp = (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0)
-      if (sortKey === 'schedule') cmp = (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? '')
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-  }, [jobs, sortKey, sortDir])
 
   return (
     <>
@@ -104,14 +72,14 @@ export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onDelete, 
           <thead>
             <tr className="bg-surface-2 text-text-muted">
               {COLS.map(({ label, sortKey: sk }) => (
-                <th
+                <SortableTh
                   key={label || 'actions'}
-                  className={`px-4 py-3 text-left text-[11px] font-semibold tracking-wide uppercase border-b border-slate-200 whitespace-nowrap ${sk ? 'cursor-pointer select-none hover:text-text-base transition-colors' : ''}`}
+                  label={label}
+                  sortable={!!sk}
+                  active={sortKey === sk}
+                  dir={sortKey === sk ? sortDir : 'asc'}
                   onClick={sk ? () => handleSort(sk) : undefined}
-                >
-                  {label}
-                  {sk && <SortIndicator active={sortKey === sk} dir={sortKey === sk ? sortDir : 'asc'} />}
-                </th>
+                />
               ))}
             </tr>
           </thead>

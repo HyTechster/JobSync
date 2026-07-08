@@ -2,11 +2,32 @@ import { useState, useMemo } from 'react'
 import { AdminTopbar } from '../../components/layout/AdminTopbar'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+import { SortableTh } from '../../components/ui/SortIndicator'
+import { SortSelect } from '../../components/ui/SortSelect'
+import { useSort } from '../../hooks/useSort'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
 import { useJobSheet } from '../../features/job-sheets/hooks'
 import { JobSheetDetailModal } from '../../features/job-sheets/JobSheetDetailModal'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
+
+type SortKey = 'title' | 'customer' | 'scheduled' | 'completed'
+
+const COMPARATORS: Record<SortKey, (a: RecentJobRow, b: RecentJobRow) => number> = {
+  title:     (a, b) => a.title.localeCompare(b.title),
+  customer:  (a, b) => a.customer_name.localeCompare(b.customer_name),
+  scheduled: (a, b) => (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? ''),
+  completed: (a, b) => (a.updated_at ?? '').localeCompare(b.updated_at ?? ''),
+}
+
+const SORT_OPTIONS = [
+  { key: 'completed' as SortKey, dir: 'desc' as const, label: 'Completed (newest)' },
+  { key: 'completed' as SortKey, dir: 'asc'  as const, label: 'Completed (oldest)' },
+  { key: 'scheduled' as SortKey, dir: 'desc' as const, label: 'Scheduled (newest)' },
+  { key: 'scheduled' as SortKey, dir: 'asc'  as const, label: 'Scheduled (oldest)' },
+  { key: 'title'     as SortKey, dir: 'asc'  as const, label: 'Job (A–Z)' },
+  { key: 'customer'  as SortKey, dir: 'asc'  as const, label: 'Customer (A–Z)' },
+]
 
 function SheetViewer({ sheetId, onClose }: { sheetId: string; onClose: () => void }) {
   const { data: sheet, isLoading } = useJobSheet(sheetId)
@@ -117,7 +138,14 @@ function SkeletonRow() {
   )
 }
 
-const HEADERS = ['Job', 'Customer', 'Technicians', 'Scheduled', 'Completed On', 'Sheet']
+const HEADERS: { label: string; sortKey?: SortKey }[] = [
+  { label: 'Job',          sortKey: 'title' },
+  { label: 'Customer',     sortKey: 'customer' },
+  { label: 'Technicians' },
+  { label: 'Scheduled',    sortKey: 'scheduled' },
+  { label: 'Completed On', sortKey: 'completed' },
+  { label: 'Sheet' },
+]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -138,6 +166,8 @@ export default function AdminHistory() {
         j.location.toLowerCase().includes(q)
     )
   }, [allJobs, search])
+
+  const { sortKey, sortDir, handleSort, setSort, sorted } = useSort<RecentJobRow, SortKey>(filtered, COMPARATORS, 'completed', 'desc')
 
   return (
     <>
@@ -178,9 +208,14 @@ export default function AdminHistory() {
 
         {/* ── Mobile card list ── */}
         <div className="flex flex-col gap-2.5 md:hidden">
+          {!isLoading && sorted.length > 0 && (
+            <div className="flex justify-end mb-0.5">
+              <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+            </div>
+          )}
           {isLoading
             ? Array.from({ length: 4 }).map((_, i) => <MobileSkeleton key={i} />)
-            : filtered.length === 0
+            : sorted.length === 0
             ? (
               <div className="bg-white rounded-xl border border-slate-200 px-4 py-12 text-center">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
@@ -194,7 +229,7 @@ export default function AdminHistory() {
                 </p>
               </div>
             )
-            : filtered.map((j) => <MobileCard key={j.id} job={j} onViewSheet={setSelectedSheetId} />)
+            : sorted.map((j) => <MobileCard key={j.id} job={j} onViewSheet={setSelectedSheetId} />)
           }
         </div>
 
@@ -204,20 +239,22 @@ export default function AdminHistory() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-surface-2 border-b border-slate-200">
-                  {HEADERS.map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-[11.5px] font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
+                  {HEADERS.map(({ label, sortKey: sk }) => (
+                    <SortableTh
+                      key={label}
+                      label={label}
+                      sortable={!!sk}
+                      active={sortKey === sk}
+                      dir={sortKey === sk ? sortDir : 'asc'}
+                      onClick={sk ? () => handleSort(sk) : undefined}
+                    />
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {isLoading
                   ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                  : filtered.length === 0
+                  : sorted.length === 0
                   ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-16 text-center">
@@ -235,7 +272,7 @@ export default function AdminHistory() {
                       </td>
                     </tr>
                   )
-                  : filtered.map((job) => {
+                  : sorted.map((job) => {
                     const techs = job.job_assignments ?? []
                     return (
                       <tr key={job.id} className="border-t border-slate-100 hover:bg-surface-2 transition-colors">

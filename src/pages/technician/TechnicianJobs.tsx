@@ -6,7 +6,25 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { TechnicianJobCard } from '../../features/jobs/TechnicianJobCard'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+import { SortSelect } from '../../components/ui/SortSelect'
+import { useSort } from '../../hooks/useSort'
 import type { RecentJobRow } from '../../features/jobs/hooks'
+
+type SortKey = 'scheduled' | 'priority' | 'title'
+
+const PRIORITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, urgent: 3 }
+
+const COMPARATORS: Record<SortKey, (a: RecentJobRow, b: RecentJobRow) => number> = {
+  scheduled: (a, b) => (a.scheduled_date ?? '').localeCompare(b.scheduled_date ?? ''),
+  priority:  (a, b) => (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0),
+  title:     (a, b) => a.title.localeCompare(b.title),
+}
+
+const SORT_OPTIONS = [
+  { key: 'scheduled' as SortKey, dir: 'asc'  as const, label: 'Scheduled (soonest)' },
+  { key: 'priority'  as SortKey, dir: 'desc' as const, label: 'Priority (highest)' },
+  { key: 'title'     as SortKey, dir: 'asc'  as const, label: 'Job (A–Z)' },
+]
 
 interface JobGroupProps {
   title: string
@@ -127,14 +145,15 @@ export default function TechnicianJobsPage() {
   const { activeOrgId } = useOrganization()
   const { data: jobs = [], isLoading, isError } = useMyJobs(activeOrgId)
   const { data: openJobs = [], isLoading: openLoading } = useOpenJobs(activeOrgId)
+  const { sortKey, sortDir, setSort, sorted: sortedJobs } = useSort<RecentJobRow, SortKey>(jobs, COMPARATORS, 'scheduled', 'asc')
 
   const groups = useMemo(
     () => ({
-      inProgress: jobs.filter((j) => j.status === 'in_progress'),
-      pending:    jobs.filter((j) => j.status === 'pending'),
-      done:       jobs.filter((j) => j.status === 'completed' || j.status === 'cancelled'),
+      inProgress: sortedJobs.filter((j) => j.status === 'in_progress'),
+      pending:    sortedJobs.filter((j) => j.status === 'pending'),
+      done:       sortedJobs.filter((j) => j.status === 'completed' || j.status === 'cancelled'),
     }),
-    [jobs]
+    [sortedJobs]
   )
 
   const hasMyJobs = jobs.length > 0
@@ -184,11 +203,14 @@ export default function TechnicianJobsPage() {
         </div>
       ) : hasMyJobs ? (
         <>
-          {hasOpenJobs && (
-            <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide mb-2 px-0.5">
-              My Jobs
-            </p>
-          )}
+          <div className="flex items-center justify-between mb-2 px-0.5">
+            {hasOpenJobs ? (
+              <p className="text-[11.5px] font-semibold text-text-muted uppercase tracking-wide">
+                My Jobs
+              </p>
+            ) : <span />}
+            <SortSelect options={SORT_OPTIONS} sortKey={sortKey} sortDir={sortDir} onChange={setSort} />
+          </div>
           <JobGroup title="In Progress" jobs={groups.inProgress} />
           <JobGroup title="Pending"     jobs={groups.pending} />
           <JobGroup title="Completed / Cancelled" jobs={groups.done} />
