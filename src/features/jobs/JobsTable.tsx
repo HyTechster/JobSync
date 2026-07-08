@@ -5,6 +5,7 @@ import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Avatar } from '../../components/ui/Avatar'
 import { Icons } from '../../components/ui/Icons'
 import { SortableTh } from '../../components/ui/SortIndicator'
+import { SheetPendingBadge } from '../../components/ui/SheetPendingBadge'
 import { useSort } from '../../hooks/useSort'
 import type { RecentJobRow } from './hooks'
 
@@ -149,7 +150,10 @@ export function JobsTable({ jobs, totalUnfiltered, isLoading, onEdit, onCancel, 
 
                       {/* Status */}
                       <td className={`px-4 py-[14px] ${border}`}>
-                        <StatusBadge status={job.status} />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <StatusBadge status={job.status} />
+                          {job.status === 'completed' && (job.job_sheets?.length ?? 0) === 0 && <SheetPendingBadge />}
+                        </div>
                       </td>
 
                       {/* Actions */}

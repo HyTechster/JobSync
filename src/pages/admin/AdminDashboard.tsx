@@ -5,6 +5,7 @@ import { StatusBadge } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock'
+import { SheetPendingBadge } from '../../components/ui/SheetPendingBadge'
 import { useAuthStore } from '../../store/authStore'
 import {
   useDashboardStats,
@@ -44,15 +45,6 @@ function AnalyticsSkeleton() {
         </div>
       ))}
     </div>
-  )
-}
-
-function NoSheetBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
-      <Icons.warning size={10} />
-      No sheet
-    </span>
   )
 }
 
@@ -100,7 +92,7 @@ function RecentJobsTable() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   <StatusBadge status={job.status} /><PriorityBadge priority={job.priority} />
-                  {missingSheet && <NoSheetBadge />}
+                  {missingSheet && <SheetPendingBadge />}
                 </div>
                 <p className="text-[13.5px] font-semibold text-text-base truncate">{job.title}</p>
                 <p className="text-[11.5px] text-text-muted truncate mt-0.5">{job.customer_name}</p>
@@ -121,7 +113,7 @@ function RecentJobsTable() {
               </div>
               <div className="text-xs text-text-muted w-20 flex-shrink-0">{fmtDate(job.scheduled_date)}</div>
               <StatusBadge status={job.status} />
-              {missingSheet && <NoSheetBadge />}
+              {missingSheet && <SheetPendingBadge />}
               <PriorityBadge priority={job.priority} />
               <div className="flex -space-x-1.5 flex-shrink-0">
                 {techs.length === 0 && <span className="text-xs text-text-subtle italic">Unassigned</span>}

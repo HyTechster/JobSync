@@ -11,6 +11,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useDateFormatter } from '../../hooks/useDateFormatter'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+import { SheetPendingBadge } from '../../components/ui/SheetPendingBadge'
 import { SortSelect } from '../../components/ui/SortSelect'
 import { useSort } from '../../hooks/useSort'
 import type { RecentJobRow } from '../../features/jobs/hooks'
@@ -116,12 +117,7 @@ function CompletedJobCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet
     <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3.5">
       <div className="flex items-start gap-2 mb-1">
         <p className="text-[13.5px] font-semibold text-text-base truncate flex-1">{job.title}</p>
-        {!sheetId && (
-          <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
-            <Icons.warning size={10} />
-            Sheet needed
-          </span>
-        )}
+        {!sheetId && <SheetPendingBadge />}
         <PriorityBadge priority={job.priority} />
       </div>
       <p className="text-[12.5px] text-text-muted truncate">{job.customer_name}</p>

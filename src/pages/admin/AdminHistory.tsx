@@ -4,6 +4,7 @@ import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
 import { SortableTh } from '../../components/ui/SortIndicator'
 import { SortSelect } from '../../components/ui/SortSelect'
+import { SheetPendingBadge } from '../../components/ui/SheetPendingBadge'
 import { useSort } from '../../hooks/useSort'
 import { useJobs, type RecentJobRow } from '../../features/jobs/hooks'
 import { useJobSheet } from '../../features/job-sheets/hooks'
@@ -94,7 +95,7 @@ function MobileCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet: (id:
             {fmtDate(job.scheduled_date)}
           </span>
         </div>
-        {sheetId && (
+        {sheetId ? (
           <button
             type="button"
             onClick={() => onViewSheet(sheetId)}
@@ -103,6 +104,8 @@ function MobileCard({ job, onViewSheet }: { job: RecentJobRow; onViewSheet: (id:
             <Icons.sheets size={12} />
             {sheetNumber != null ? `Sheet #${sheetNumber}` : 'View Sheet'}
           </button>
+        ) : (
+          <SheetPendingBadge />
         )}
       </div>
     </div>
@@ -333,7 +336,7 @@ export default function AdminHistory() {
                                 : 'View'}
                             </button>
                           ) : (
-                            <span className="text-[12px] text-text-subtle italic">—</span>
+                            <SheetPendingBadge />
                           )}
                         </td>
                       </tr>

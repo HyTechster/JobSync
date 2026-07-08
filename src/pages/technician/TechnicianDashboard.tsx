@@ -8,6 +8,7 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { Icons } from '../../components/ui/Icons'
+import { SheetPendingBadge } from '../../components/ui/SheetPendingBadge'
 import { formatDuration } from '../../utils/formatters'
 import type { RecentJobRow } from '../../features/jobs/hooks'
 import type { JobSheetWithDetail } from '../../features/job-sheets/hooks'
@@ -48,17 +49,6 @@ function MiniStat({ label, value, icon, to, accent, loading }: {
   )
 }
 
-// ── Sheet-needed badge ──────────────────────────────────────────────────────
-
-function NeedsSheetBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">
-      <Icons.warning size={10} />
-      Sheet needed
-    </span>
-  )
-}
-
 function needsSheet(job: RecentJobRow): boolean {
   return job.status === 'completed' && (job.job_sheets?.length ?? 0) === 0
 }
@@ -77,7 +67,7 @@ function JobCard({ job }: { job: RecentJobRow }) {
         </div>
         <div className="flex flex-col items-end gap-1">
           <StatusBadge status={job.status} />
-          {needsSheet(job) && <NeedsSheetBadge />}
+          {needsSheet(job) && <SheetPendingBadge />}
         </div>
       </div>
       <div className="flex items-center gap-3 mt-2">
@@ -221,7 +211,7 @@ export default function TechnicianDashboard() {
                     <p className="text-[11.5px] text-text-muted mt-0.5 truncate">{job.customer_name}</p>
                   </div>
                   <StatusBadge status={job.status} />
-                  {needsSheet(job) && <NeedsSheetBadge />}
+                  {needsSheet(job) && <SheetPendingBadge />}
                   <Icons.chevronR size={13} color="#CBD5E1" />
                 </Link>
               ))
