@@ -7,6 +7,8 @@ import { useOrganization } from '../../context/OrganizationContext'
 import { useLogout } from '../../features/auth/hooks'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
+import { useTour } from '../../features/tour/TourContext'
+import { TECHNICIAN_TOUR_STEPS } from '../../features/tour/tourSteps'
 
 export function TechnicianMobileHeader() {
   const navigate = useNavigate()
@@ -14,6 +16,7 @@ export function TechnicianMobileHeader() {
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const logout = useLogout()
   const isOnline = useOnlineStatus()
+  const { start: startTour } = useTour()
 
   const [showOrgMenu, setShowOrgMenu]         = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -187,6 +190,7 @@ export function TechnicianMobileHeader() {
       <div ref={profileMenuRef} className="relative flex-shrink-0">
         <button
           type="button"
+          data-tour="account-link"
           onClick={() => { setShowProfileMenu((v) => !v); setShowOrgMenu(false) }}
           aria-label="Profile menu"
           aria-expanded={showProfileMenu}
@@ -204,6 +208,14 @@ export function TechnicianMobileHeader() {
             >
               <Icons.user size={15} color="#64748B" />
               Manage account
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowProfileMenu(false); if (activeOrg) startTour(TECHNICIAN_TOUR_STEPS, `${activeOrg.id}_technician`) }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-base hover:bg-surface-2 transition-colors text-left"
+            >
+              <Icons.pin size={15} color="#64748B" />
+              Take a tour
             </button>
             <div className="h-px bg-border mx-3 my-1" />
             <button

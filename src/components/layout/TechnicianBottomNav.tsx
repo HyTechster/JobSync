@@ -18,6 +18,7 @@ function NavItem({
   badge,
   unread,
   pendingTo,
+  tourTarget,
 }: {
   to: string
   Icon: (typeof Icons)[keyof typeof Icons]
@@ -25,11 +26,13 @@ function NavItem({
   badge: boolean
   unread: number
   pendingTo: string | null
+  tourTarget?: string
 }) {
   const isPending = pendingTo === to
   return (
     <NavLink
       to={to}
+      data-tour={tourTarget}
       className={({ isActive }) =>
         `flex-1 flex flex-col items-center justify-center gap-[3px] transition-colors ${
           isActive || isPending ? 'text-emerald-700' : 'text-text-muted'
@@ -78,6 +81,7 @@ export function TechnicianBottomNav() {
             badge={badge}
             unread={unread}
             pendingTo={pendingTo}
+            tourTarget={label === 'Jobs' ? 'nav-jobs' : label === 'Sheets' ? 'nav-sheets' : label === 'Alerts' ? 'nav-alerts' : undefined}
           />
         ))}
       </div>

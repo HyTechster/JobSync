@@ -55,6 +55,7 @@ export default function AdminAlerts() {
           </p>
         </div>
         <button
+          data-tour="create-alert-btn"
           onClick={() => setShowCreate(true)}
           className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-sm font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5 md:gap-2"
         >

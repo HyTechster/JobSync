@@ -6,6 +6,8 @@ import { useAuthStore } from '../../store/authStore'
 import { useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
+import { useTour } from '../../features/tour/TourContext'
+import { ADMIN_TOUR_STEPS } from '../../features/tour/tourSteps'
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
@@ -22,6 +24,7 @@ export function AdminSidebar() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
+  const { start: startTour } = useTour()
   const [showOrgMenu, setShowOrgMenu] = useState(false)
   const [showSignOut, setShowSignOut] = useState(false)
 
@@ -163,10 +166,12 @@ export function AdminSidebar() {
       <nav className="flex-1 px-2 flex flex-col gap-0.5">
         {NAV_ITEMS.map(({ to, label, Icon }) => {
           const isActive = pathname.startsWith(to)
+          const tourTarget = label === 'Jobs' ? 'nav-jobs' : label === 'Job Sheets' ? 'nav-sheets' : undefined
           return (
             <button
               key={to}
               type="button"
+              data-tour={tourTarget}
               onClick={() => handleNav(to)}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left ${
                 isActive
@@ -183,9 +188,20 @@ export function AdminSidebar() {
 
       {/* User profile */}
       <div className="px-3.5 py-3.5 border-t border-border">
+        {activeOrg && (
+          <button
+            type="button"
+            onClick={() => { setShowOrgMenu(false); startTour(ADMIN_TOUR_STEPS, `${activeOrg.id}_admin`) }}
+            className="mb-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-xs font-semibold text-text-muted hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 transition-colors"
+          >
+            <Icons.pin size={13} color="currentColor" />
+            Take a tour
+          </button>
+        )}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">
           <Link
             to="/account"
+            data-tour="account-link"
             className="flex items-center gap-2.5 flex-1 min-w-0 rounded-lg hover:bg-surface-2 transition-colors -mx-2 px-2 py-1"
           >
             <div className="w-8 h-8 rounded-full bg-brand-700 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">

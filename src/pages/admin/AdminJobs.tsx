@@ -51,6 +51,7 @@ export default function AdminJobs() {
     const jobId = searchParams.get('job')
     if (!jobId || allJobs.length === 0) return
     const target = allJobs.find((j) => j.id === jobId)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (target) setEditJob(target)
     setSearchParams({}, { replace: true })
   }, [searchParams, setSearchParams, allJobs])
@@ -102,6 +103,7 @@ export default function AdminJobs() {
         subtitle="All job orders across customers and technicians"
         right={
           <button
+            data-tour="create-job-btn"
             onClick={() => setShowCreate(true)}
             className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5 md:gap-2"
           >

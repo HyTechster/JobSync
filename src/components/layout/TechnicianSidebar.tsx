@@ -7,6 +7,8 @@ import { useLogout } from '../../features/auth/hooks'
 import { useOrganization } from '../../context/OrganizationContext'
 import { useUnreadAlertCount } from '../../features/alerts/hooks'
 import { SignOutConfirmDialog } from '../ui/SignOutConfirmDialog'
+import { useTour } from '../../features/tour/TourContext'
+import { TECHNICIAN_TOUR_STEPS } from '../../features/tour/tourSteps'
 
 const NAV_ITEMS = [
   { to: '/technician/dashboard',  label: 'Dashboard',  Icon: Icons.dashboard },
@@ -23,6 +25,7 @@ export function TechnicianSidebar() {
   const { pathname } = useLocation()
   const { activeOrg, memberships, setActiveOrganization } = useOrganization()
   const { data: unread = 0 } = useUnreadAlertCount(activeOrg?.id ?? null)
+  const { start: startTour } = useTour()
   const [showOrgMenu, setShowOrgMenu] = useState(false)
   const [showSignOut, setShowSignOut] = useState(false)
   const orgMenuRef = useRef<HTMLDivElement>(null)
@@ -141,10 +144,12 @@ export function TechnicianSidebar() {
         {NAV_ITEMS.map(({ to, label, Icon }) => {
           const isActive = pathname.startsWith(to)
           const showBadge = label === 'Alerts' && unread > 0
+          const tourTarget = label === 'My Jobs' ? 'nav-jobs' : label === 'Job Sheets' ? 'nav-sheets' : label === 'Alerts' ? 'nav-alerts' : undefined
           return (
             <button
               key={to}
               type="button"
+              data-tour={tourTarget}
               onClick={() => handleNav(to)}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left ${
                 isActive ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-text-base hover:bg-surface-2'
@@ -164,9 +169,20 @@ export function TechnicianSidebar() {
 
       {/* User profile */}
       <div className="px-3.5 py-3.5 border-t border-border">
+        {activeOrg && (
+          <button
+            type="button"
+            onClick={() => { setShowOrgMenu(false); startTour(TECHNICIAN_TOUR_STEPS, `${activeOrg.id}_technician`) }}
+            className="mb-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-xs font-semibold text-text-muted hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+          >
+            <Icons.pin size={13} color="currentColor" />
+            Take a tour
+          </button>
+        )}
         <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">
           <button
             type="button"
+            data-tour="account-link"
             onClick={() => handleNav('/account')}
             className="flex items-center gap-2.5 flex-1 min-w-0 rounded-lg hover:bg-surface-2 transition-colors -mx-2 px-2 py-1"
           >

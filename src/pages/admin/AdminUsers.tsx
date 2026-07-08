@@ -67,6 +67,7 @@ export default function AdminUsers() {
         right={
           !isManager ? (
             <button
+              data-tour="invite-btn"
               onClick={() => setShowInvite(true)}
               className="h-[34px] md:h-[38px] px-3 md:px-4 rounded-lg bg-brand-700 text-white text-[13px] md:text-[14px] font-semibold hover:bg-brand-800 transition-colors inline-flex items-center gap-1.5"
             >

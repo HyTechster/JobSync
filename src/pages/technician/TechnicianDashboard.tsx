@@ -160,7 +160,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Stat cards — 2 col mobile, 4 col desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div data-tour="dash-stats" className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {STATS.map((s) => (
           <MiniStat key={s.label} {...s} loading={loading} />
         ))}

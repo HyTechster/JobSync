@@ -23,10 +23,12 @@ export function AdminBottomNav() {
       <div className="flex h-[56px]">
         {NAV.map(({ to, Icon, label }) => {
           const isActive = pathname.startsWith(to)
+          const tourTarget = label === 'Jobs' ? 'nav-jobs' : label === 'Sheets' ? 'nav-sheets' : undefined
           return (
             <button
               key={to}
               type="button"
+              data-tour={tourTarget}
               onClick={() => flushSync(() => navigate(to))}
               className={`flex-1 flex flex-col items-center justify-center gap-[2px] transition-colors ${
                 isActive ? 'text-brand-700' : 'text-text-muted hover:text-text-base'

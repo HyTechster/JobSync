@@ -6,6 +6,11 @@ import { TechnicianBottomNav } from './TechnicianBottomNav'
 import { OfflineBanner } from '../shared/OfflineBanner'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useOfflineSync } from '../../hooks/useOfflineSync'
+import { TourOverlay } from '../../features/tour/TourOverlay'
+import { useTourAutoStart } from '../../features/tour/useTourAutoStart'
+import { TECHNICIAN_TOUR_STEPS } from '../../features/tour/tourSteps'
+import { useOrganization } from '../../context/OrganizationContext'
+import { useMyJobs } from '../../features/jobs/hooks'
 
 function PageSpinner() {
   return (
@@ -18,6 +23,12 @@ function PageSpinner() {
 export function TechnicianShell() {
   const isOnline = useOnlineStatus()
   useOfflineSync()
+
+  const { activeOrgId } = useOrganization()
+  const { data: jobs, isLoading: jobsLoading } = useMyJobs(activeOrgId)
+  const shouldTriggerTour = !jobsLoading && (jobs?.length ?? 0) === 0
+
+  useTourAutoStart('technician', activeOrgId, shouldTriggerTour, TECHNICIAN_TOUR_STEPS)
 
   return (
     <div className="min-h-screen bg-surface-2">
@@ -52,6 +63,8 @@ export function TechnicianShell() {
       <div className="md:hidden">
         <TechnicianBottomNav />
       </div>
+
+      <TourOverlay />
     </div>
   )
 }

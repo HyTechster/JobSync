@@ -3,6 +3,11 @@ import { Suspense, Component, type ReactNode } from 'react'
 import { AdminSidebar } from './AdminSidebar'
 import { AdminMobileHeader } from './AdminMobileHeader'
 import { AdminBottomNav } from './AdminBottomNav'
+import { TourOverlay } from '../../features/tour/TourOverlay'
+import { useTourAutoStart } from '../../features/tour/useTourAutoStart'
+import { ADMIN_TOUR_STEPS } from '../../features/tour/tourSteps'
+import { useOrganization } from '../../context/OrganizationContext'
+import { useDashboardStats } from '../../features/jobs/hooks'
 
 interface ErrorBoundaryState { error: Error | null }
 
@@ -41,6 +46,12 @@ function PageSpinner() {
 }
 
 export function AdminShell() {
+  const { activeOrgId } = useOrganization()
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(activeOrgId)
+  const shouldTriggerTour = !statsLoading && stats?.total === 0 && stats?.technicians === 0
+
+  useTourAutoStart('admin', activeOrgId, shouldTriggerTour, ADMIN_TOUR_STEPS)
+
   return (
     <div className="min-h-screen bg-surface-2">
       {/* Mobile-only top header */}
@@ -70,6 +81,8 @@ export function AdminShell() {
       <div className="md:hidden">
         <AdminBottomNav />
       </div>
+
+      <TourOverlay />
     </div>
   )
 }
