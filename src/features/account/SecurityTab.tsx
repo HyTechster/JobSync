@@ -54,6 +54,7 @@ export function SecurityTab() {
   const [showAllHistory, setShowAllHistory] = useState(false)
   const logoutAll = useLogoutAll()
   const currentDevice = getDeviceInfo()
+  const isGoogleAccount = session?.user.app_metadata?.provider === 'google'
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PwForm>({
     resolver: zodResolver(pwSchema),
@@ -92,43 +93,52 @@ export function SecurityTab() {
           <p className="text-xs text-text-muted mt-0.5">Use a strong password you don't use elsewhere</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 flex flex-col gap-4 max-w-md">
-          <div>
-            <label htmlFor="cur-pw" className="block text-xs font-semibold text-text-base mb-1.5">Current password</label>
-            <input id="cur-pw" type="password" {...register('currentPassword')} className={inputCls} />
-            {errors.currentPassword && <p className="text-xs text-danger mt-1">{errors.currentPassword.message}</p>}
-          </div>
-          <div>
-            <label htmlFor="new-pw" className="block text-xs font-semibold text-text-base mb-1.5">New password</label>
-            <input id="new-pw" type="password" {...register('newPassword')} className={inputCls} />
-            {errors.newPassword && <p className="text-xs text-danger mt-1">{errors.newPassword.message}</p>}
-          </div>
-          <div>
-            <label htmlFor="conf-pw" className="block text-xs font-semibold text-text-base mb-1.5">Confirm new password</label>
-            <input id="conf-pw" type="password" {...register('confirmPassword')} className={inputCls} />
-            {errors.confirmPassword && <p className="text-xs text-danger mt-1">{errors.confirmPassword.message}</p>}
-          </div>
-
-          {changePassword.isError && (
-            <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              {changePassword.error instanceof Error ? changePassword.error.message : 'Failed to update password'}
+        {isGoogleAccount ? (
+          <div className="px-6 py-5">
+            <p className="text-sm text-text-muted leading-relaxed">
+              You signed in with Google, so this account doesn't have a JobSync password to
+              change. Manage your sign-in credentials from your Google Account settings instead.
             </p>
-          )}
-          {changePassword.isSuccess && (
-            <p className="text-sm text-success bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-              Password updated successfully
-            </p>
-          )}
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-6 py-5 flex flex-col gap-4 max-w-md">
+            <div>
+              <label htmlFor="cur-pw" className="block text-xs font-semibold text-text-base mb-1.5">Current password</label>
+              <input id="cur-pw" type="password" {...register('currentPassword')} className={inputCls} />
+              {errors.currentPassword && <p className="text-xs text-danger mt-1">{errors.currentPassword.message}</p>}
+            </div>
+            <div>
+              <label htmlFor="new-pw" className="block text-xs font-semibold text-text-base mb-1.5">New password</label>
+              <input id="new-pw" type="password" {...register('newPassword')} className={inputCls} />
+              {errors.newPassword && <p className="text-xs text-danger mt-1">{errors.newPassword.message}</p>}
+            </div>
+            <div>
+              <label htmlFor="conf-pw" className="block text-xs font-semibold text-text-base mb-1.5">Confirm new password</label>
+              <input id="conf-pw" type="password" {...register('confirmPassword')} className={inputCls} />
+              {errors.confirmPassword && <p className="text-xs text-danger mt-1">{errors.confirmPassword.message}</p>}
+            </div>
 
-          <button
-            type="submit"
-            disabled={changePassword.isPending}
-            className="self-start h-9 px-5 bg-brand-700 hover:bg-brand-800 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
-          >
-            {changePassword.isPending && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-            Update password
-          </button>
-        </form>
+            {changePassword.isError && (
+              <p className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {changePassword.error instanceof Error ? changePassword.error.message : 'Failed to update password'}
+              </p>
+            )}
+            {changePassword.isSuccess && (
+              <p className="text-sm text-success bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                Password updated successfully
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={changePassword.isPending}
+              className="self-start h-9 px-5 bg-brand-700 hover:bg-brand-800 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+            >
+              {changePassword.isPending && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              Update password
+            </button>
+          </form>
+        )}
       </section>
 
       {/* Sessions */}

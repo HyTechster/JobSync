@@ -5,7 +5,8 @@
 -- later "fix" script against the ones it supersedes, cross-checked against a
 -- live introspection dump of the production database for exact column types.
 -- Includes the org-scoping fix from sqlscripts/049 for job_sheets and
--- alert_recipients admin visibility.
+-- alert_recipients admin visibility, and the recursion fix from
+-- sqlscripts/050 for alert_recipients' admin policy.
 --
 -- Run in: Supabase SQL Editor, on a fresh project, in one go.
 -- ============================================================================
@@ -575,6 +576,28 @@ as $$
   );
 $$;
 
+-- SECURITY DEFINER so alert_recipients' admin policy can check the parent
+-- alert's organization without re-triggering alerts' own RLS (which queries
+-- alert_recipients back — that cycle is what caused "infinite recursion
+-- detected in policy for relation alert_recipients").
+create or replace function public.is_alert_org_admin_or_manager(p_alert_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.alerts a
+    inner join public.organization_members om
+            on om.organization_id = a.organization_id
+           and om.user_id         = auth.uid()
+           and om.role in ('admin', 'manager')
+    where a.id = p_alert_id
+  )
+$$;
+
 -- ── Triggers ──────────────────────────────────────────────────────────────────
 
 create trigger set_updated_at before update on public.job_orders
@@ -838,18 +861,11 @@ create policy "technicians_see_own_alerts" on public.alerts
 -- ── alert_recipients ──────────────────────────────────────────────────────────
 
 -- alert_recipients has no organization_id of its own, so scope through the
--- parent alert (same join pattern used by alert_jobs' admin policy below).
+-- parent alert via a SECURITY DEFINER helper — a plain subquery join to
+-- alerts here would re-trigger alerts' own RLS (which queries
+-- alert_recipients), causing infinite recursion.
 create policy "Admins manage alert_recipients" on public.alert_recipients
-  using (
-    exists (
-      select 1 from public.alerts a
-      inner join public.organization_members om
-              on om.organization_id = a.organization_id
-             and om.user_id         = auth.uid()
-             and om.role in ('admin', 'manager')
-      where a.id = alert_recipients.alert_id
-    )
-  );
+  using (public.is_alert_org_admin_or_manager(alert_recipients.alert_id));
 
 create policy "Technicians see own alert_recipients" on public.alert_recipients
   for select using (recipient_id = auth.uid());
